@@ -10,6 +10,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { getAddresses } from "@/constants/addresses";
 import { uploadJSONToIPFS, uploadFileToIPFS } from "@/lib/ipfs";
 import type { Address, CelebrationType } from "@/types";
+import { keccak256 } from "viem";
 import type { WalletClient } from "viem";
 
 const CREATE_DROP_ABI = [
@@ -66,13 +67,16 @@ export interface CreateDropParams {
 }
 
 async function buildDropMetadataBytes(params: CreateDropParams): Promise<{ metadataBytes: `0x${string}`; imageIPFS: string }> {
-  // If a File is provided, upload it first and use its CID
+  // If a File is provided, upload it first and use its CID.
+  // Only store the CID (not a data URI) — data URIs can't be used as IPFS urls.
   let imageIPFS = params.imageIPFS ?? "";
   if (params.imageFile) {
     try {
       const { url } = await uploadFileToIPFS(params.imageFile);
-      // url may be "ipfs://CID" or a data URI (fallback)
-      imageIPFS = url.startsWith("ipfs://") ? url.slice(7) : url;
+      if (url.startsWith("ipfs://")) {
+        imageIPFS = url.slice(7); // store only the CID
+      }
+      // if fallback returned a data URI we intentionally leave imageIPFS empty
     } catch {
       console.warn("[useCreateDrop] imageFile upload failed — no image will be stored");
     }
@@ -101,26 +105,26 @@ async function buildDropMetadataBytes(params: CreateDropParams): Promise<{ metad
   try {
     const ipfsUrl = await uploadJSONToIPFS(metadata, `drop-badge-${params.name}-${params.year}`);
 
-    // Encode as JSONURL: 0x6f357c6a + keccak256(content) + utf8(ipfsUrl)
-    const content = JSON.stringify(metadata);
+    // Only build JSONURL bytes when we have a real IPFS URL (not a data URI fallback)
+    if (!ipfsUrl.startsWith("ipfs://")) {
+      console.warn("[useCreateDrop] metadata IPFS upload unavailable — drop created without on-chain metadata");
+      return { metadataBytes: "0x", imageIPFS };
+    }
+
+    // Encode as JSONURL: 0x6f357c6a + keccak256(utf8(content)) + utf8(ipfsUrl)
     const encoder = new TextEncoder();
-    const contentBytes = encoder.encode(content);
-    const hashBuffer = await crypto.subtle.digest("SHA-256", contentBytes);
-    const hashHex = Array.from(new Uint8Array(hashBuffer))
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
+    const contentBytes = encoder.encode(JSON.stringify(metadata));
+    const hashHex = keccak256(contentBytes).slice(2); // strip 0x — gives 64 hex chars (32 bytes)
 
     const urlBytes = encoder.encode(ipfsUrl);
-    const metadataBytes = ("0x6f357c6a" +
-      hashHex +
-      Array.from(urlBytes).map((b) => b.toString(16).padStart(2, "0")).join("")) as `0x${string}`;
+    const urlHex = Array.from(urlBytes).map((b) => b.toString(16).padStart(2, "0")).join("");
+    const metadataBytes = `0x6f357c6a${hashHex}${urlHex}` as `0x${string}`;
 
     return { metadataBytes, imageIPFS };
   } catch {
-    // IPFS unavailable (no proxy running, no Pinata JWT) — create the drop without
-    // on-chain metadata. The drop is fully functional; metadata can be added later.
+    // IPFS unavailable — create the drop without on-chain metadata.
     console.warn("[useCreateDrop] IPFS upload skipped — no proxy or JWT configured");
-    return { metadataBytes: "0x", imageIPFS: "" };
+    return { metadataBytes: "0x", imageIPFS };
   }
 }
 

@@ -2,7 +2,7 @@
  * Read and write celebrations data from/to a Universal Profile's ERC725Y storage.
  */
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { createPublicClient, http } from "viem";
+import { createPublicClient, http, keccak256 } from "viem";
 import { readAllCelebrationData } from "@/lib/erc725";
 import { uploadJSONToIPFS } from "@/lib/ipfs";
 import { KEY_BIRTHDAY, KEY_SETTINGS, KEY_EVENTS_ARRAY, KEY_WISHLIST_ARRAY } from "@/constants/erc725Keys";
@@ -65,11 +65,21 @@ async function resolveAccount(walletClient: WalletClient, upAddress: Address): P
   }
 }
 
-/** Read the current uint128 array length stored at an ERC725Y array key. */
-async function readArrayLength(upAddress: Address, arrayKey: string, chainId = 4201): Promise<number> {
+/** Wait for a transaction to be mined and return the receipt. */
+function makePublicClient(chainId = 4201) {
   const rpc = chainId === 42 ? LUKSO_MAINNET_RPC : LUKSO_TESTNET_RPC;
   const chain = chainId === 42 ? luksoMainnet : luksoTestnet;
-  const client = createPublicClient({ chain, transport: http(rpc) });
+  return createPublicClient({ chain, transport: http(rpc) });
+}
+
+async function waitForTx(txHash: `0x${string}`, chainId = 4201) {
+  const client = makePublicClient(chainId);
+  await client.waitForTransactionReceipt({ hash: txHash });
+}
+
+/** Read the current uint128 array length stored at an ERC725Y array key. */
+async function readArrayLength(upAddress: Address, arrayKey: string, chainId = 4201): Promise<number> {
+  const client = makePublicClient(chainId);
   const raw = await client.readContract({
     address: upAddress,
     abi: [{ name: "getData", type: "function", stateMutability: "view",
@@ -82,7 +92,7 @@ async function readArrayLength(upAddress: Address, arrayKey: string, chainId = 4
   return parseInt(raw as string, 16);
 }
 
-export function useSetBirthday({ walletClient, upAddress }: WriteContext) {
+export function useSetBirthday({ walletClient, upAddress, chainId = 4201 }: WriteContext) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -91,7 +101,7 @@ export function useSetBirthday({ walletClient, upAddress }: WriteContext) {
       const hex = ("0x" + Array.from(encoded).map((b) => b.toString(16).padStart(2, "0")).join("")) as `0x${string}`;
       const account = await resolveAccount(walletClient, upAddress);
 
-      return walletClient.writeContract({
+      const txHash = await walletClient.writeContract({
         address: upAddress,
         abi: ERC725Y_ABI,
         functionName: "setData",
@@ -99,37 +109,30 @@ export function useSetBirthday({ walletClient, upAddress }: WriteContext) {
         account,
         chain: null,
       });
+      await waitForTx(txHash, chainId);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["profileData", upAddress] });
+      queryClient.invalidateQueries({ queryKey: ["profileData"] });
     },
   });
 }
 
-export function useSetSettings({ walletClient, upAddress }: WriteContext) {
+export function useSetSettings({ walletClient, upAddress, chainId = 4201 }: WriteContext) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (settings: ProfileSettings) => {
       const ipfsUrl = await uploadJSONToIPFS(settings, `celebrations-settings-${upAddress}`);
 
-      const json = JSON.stringify(settings);
-      const hashBuffer = await crypto.subtle.digest(
-        "SHA-256",
-        new TextEncoder().encode(json)
-      );
-      const hashHex = Array.from(new Uint8Array(hashBuffer))
-        .map((b) => b.toString(16).padStart(2, "0"))
-        .join("");
-
+      const contentBytes = new TextEncoder().encode(JSON.stringify(settings));
+      const hashHex = keccak256(contentBytes).slice(2); // 64 hex chars, no 0x
       const urlHex = Array.from(new TextEncoder().encode(ipfsUrl))
         .map((b) => b.toString(16).padStart(2, "0"))
         .join("");
-
-      const encodedValue = ("0x6f357c6a" + hashHex + urlHex) as `0x${string}`;
+      const encodedValue = `0x6f357c6a${hashHex}${urlHex}` as `0x${string}`;
 
       const account = await resolveAccount(walletClient, upAddress);
-      return walletClient.writeContract({
+      const txHash = await walletClient.writeContract({
         address: upAddress,
         abi: ERC725Y_ABI,
         functionName: "setData",
@@ -137,9 +140,10 @@ export function useSetSettings({ walletClient, upAddress }: WriteContext) {
         account,
         chain: null,
       });
+      await waitForTx(txHash, chainId);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["profileData", upAddress] });
+      queryClient.invalidateQueries({ queryKey: ["profileData"] });
     },
   });
 }
@@ -162,14 +166,14 @@ export function useAddEvent({ walletClient, upAddress, chainId = 4201 }: WriteCo
       const newCount = currentLength + 1;
       const lengthValue = ("0x" + newCount.toString(16).padStart(64, "0")) as `0x${string}`;
 
-      const contentHash = await hashJSON(event);
+      const contentHash = hashJSON(event);
       const urlHex = Array.from(new TextEncoder().encode(ipfsUrl))
         .map((b) => b.toString(16).padStart(2, "0"))
         .join("");
       const elementValue = ("0x6f357c6a" + contentHash + urlHex) as `0x${string}`;
 
       const account = await resolveAccount(walletClient, upAddress);
-      return walletClient.writeContract({
+      const txHash = await walletClient.writeContract({
         address: upAddress,
         abi: ERC725Y_ABI,
         functionName: "setDataBatch",
@@ -180,9 +184,10 @@ export function useAddEvent({ walletClient, upAddress, chainId = 4201 }: WriteCo
         account,
         chain: null,
       });
+      await waitForTx(txHash, chainId);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["profileData", upAddress] });
+      queryClient.invalidateQueries({ queryKey: ["profileData"] });
     },
     onError: (err) => {
       console.error("[useAddEvent] mutation error:", err);
@@ -206,14 +211,14 @@ export function useAddWishlistItem({ walletClient, upAddress, chainId = 4201 }: 
       const newCount = currentLength + 1;
       const lengthValue = ("0x" + newCount.toString(16).padStart(64, "0")) as `0x${string}`;
 
-      const contentHash = await hashJSON(item);
+      const contentHash = hashJSON(item);
       const urlHex = Array.from(new TextEncoder().encode(ipfsUrl))
         .map((b) => b.toString(16).padStart(2, "0"))
         .join("");
       const elementValue = ("0x6f357c6a" + contentHash + urlHex) as `0x${string}`;
 
       const account = await resolveAccount(walletClient, upAddress);
-      return walletClient.writeContract({
+      const txHash = await walletClient.writeContract({
         address: upAddress,
         abi: ERC725Y_ABI,
         functionName: "setDataBatch",
@@ -224,17 +229,15 @@ export function useAddWishlistItem({ walletClient, upAddress, chainId = 4201 }: 
         account,
         chain: null,
       });
+      await waitForTx(txHash, chainId);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["profileData", upAddress] });
+      queryClient.invalidateQueries({ queryKey: ["profileData"] });
     },
   });
 }
 
-async function hashJSON(obj: object): Promise<string> {
-  const json = JSON.stringify(obj);
-  const buffer = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(json));
-  return Array.from(new Uint8Array(buffer))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
+function hashJSON(obj: object): string {
+  const bytes = new TextEncoder().encode(JSON.stringify(obj));
+  return keccak256(bytes).slice(2); // 64 hex chars, no 0x prefix
 }

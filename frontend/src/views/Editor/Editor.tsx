@@ -46,6 +46,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
   const { mutateAsync: setBirthday, isPending: isSavingBirthday } = useSetBirthday({
     walletClient: walletClient!,
     upAddress: contextProfile as Address,
+    chainId,
   });
 
   const { mutateAsync: addEvent } = useAddEvent({
