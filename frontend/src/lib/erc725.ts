@@ -1,20 +1,39 @@
 /**
  * ERC725.js instance factory and helper wrappers for the Celebrations app.
- * ERC725.js handles encoding/decoding of ERC725Y key-value pairs per LSP2 spec,
- * including JSONURL encoding for IPFS references.
+ *
+ * Simple scalar keys (birthday, profileCreatedAt) are read directly via viem
+ * to avoid erc725.js BigInt / encoding bugs on empty values.
+ *
+ * JSONURL array keys (events, wishlist, settings) still use erc725.js for
+ * schema-aware array pagination, then we extract the URL ourselves.
  */
 import ERC725 from "@erc725/erc725.js";
-import { CELEBRATIONS_SCHEMA } from "@/constants/erc725Keys";
+import { createPublicClient, http } from "viem";
+import { CELEBRATIONS_SCHEMA, KEY_BIRTHDAY, KEY_PROFILE_CREATED_AT } from "@/constants/erc725Keys";
 import { LUKSO_TESTNET_RPC, LUKSO_MAINNET_RPC } from "@/constants/addresses";
 import type { ProfileCelebrationData, ProfileSettings, Celebration, WishlistItem } from "@/types";
 import { fetchIPFSJson } from "./ipfs";
 
+// ── Shared ABI for ERC725Y getData ────────────────────────────────────────────
+
+const GET_DATA_ABI = [{
+  name: "getData",
+  type: "function",
+  stateMutability: "view",
+  inputs:  [{ name: "dataKey",   type: "bytes32" }],
+  outputs: [{ name: "dataValue", type: "bytes"   }],
+}] as const;
+
+function makeClient(chainId: number) {
+  const rpc = chainId === 42 ? LUKSO_MAINNET_RPC : LUKSO_TESTNET_RPC;
+  return createPublicClient({ transport: http(rpc) });
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 /**
- * erc725.js getData() returns { url, hash } objects for JSONURL valueContent,
- * not plain strings. This helper handles both shapes so the read functions
- * work correctly regardless of library version.
+ * erc725.js getData() returns { url, hash } objects for JSONURL valueContent.
+ * This helper handles both shapes so reads work regardless of library version.
  */
 function extractUrl(value: unknown): string {
   if (typeof value === "string") return value;
@@ -24,39 +43,57 @@ function extractUrl(value: unknown): string {
   throw new Error(`[erc725] Cannot extract URL from: ${JSON.stringify(value)}`);
 }
 
-// ── Factory ───────────────────────────────────────────────────────────────────
+/** Decode raw ERC725Y bytes to a UTF-8 string (bypasses erc725.js). */
+function bytesToString(hex: string): string | undefined {
+  if (!hex || hex === "0x") return undefined;
+  const bytes = hex.slice(2).match(/../g)?.map((b) => parseInt(b, 16));
+  if (!bytes?.length) return undefined;
+  return new TextDecoder().decode(new Uint8Array(bytes));
+}
+
+// ── Factory (still used for JSONURL array reads) ───────────────────────────────
 
 export function createERC725(address: string, chainId: number): ERC725 {
   const rpc = chainId === 42 ? LUKSO_MAINNET_RPC : LUKSO_TESTNET_RPC;
   return new ERC725(CELEBRATIONS_SCHEMA as never, address, rpc, {
-    ipfsGateway: import.meta.env.VITE_PINATA_GATEWAY_URL ?? "https://gateway.pinata.cloud",
+    ipfsGateway: import.meta.env.VITE_PINATA_GATEWAY ?? "https://gateway.pinata.cloud",
   });
 }
 
 // ── Read helpers ──────────────────────────────────────────────────────────────
 
+/** Read birthday directly via viem — avoids erc725.js string decoding quirks. */
 export async function readBirthday(
   address: string,
   chainId: number
 ): Promise<string | undefined> {
-  const erc725 = createERC725(address, chainId);
   try {
-    const result = await erc725.getData("CelebrationsBirthday");
-    return result.value as string | undefined;
+    const raw = await makeClient(chainId).readContract({
+      address: address as `0x${string}`,
+      abi: GET_DATA_ABI,
+      functionName: "getData",
+      args: [KEY_BIRTHDAY as `0x${string}`],
+    });
+    return bytesToString(raw as string);
   } catch {
     return undefined;
   }
 }
 
+/** Read profileCreatedAt directly via viem — avoids erc725.js BigInt crash on empty uint256. */
 export async function readProfileCreatedAt(
   address: string,
   chainId: number
 ): Promise<number | undefined> {
-  const erc725 = createERC725(address, chainId);
   try {
-    const result = await erc725.getData("CelebrationsProfileCreatedAt");
-    const val = result.value;
-    return val ? Number(val) : undefined;
+    const raw = await makeClient(chainId).readContract({
+      address: address as `0x${string}`,
+      abi: GET_DATA_ABI,
+      functionName: "getData",
+      args: [KEY_PROFILE_CREATED_AT as `0x${string}`],
+    });
+    if (!raw || raw === "0x") return undefined;
+    return Number(BigInt(raw as string));
   } catch {
     return undefined;
   }
@@ -70,7 +107,6 @@ export async function readSettings(
   try {
     const result = await erc725.getData("CelebrationsSettings");
     if (!result.value) return undefined;
-    // getData returns { url, hash } for JSONURL — we must fetch the URL ourselves
     const url = extractUrl(result.value);
     return await fetchIPFSJson<ProfileSettings>(url);
   } catch {
@@ -86,7 +122,6 @@ export async function readEvents(
   try {
     const result = await erc725.getData("CelebrationsEvents[]");
     if (!Array.isArray(result.value)) return [];
-    // erc725.js getData returns { url, hash } objects for JSONURL elements — extract the URL
     const celebrations = await Promise.all(
       (result.value as unknown[]).map((item) => fetchIPFSJson<Celebration>(extractUrl(item)))
     );
@@ -117,7 +152,6 @@ export async function readAllCelebrationData(
   address: string,
   chainId: number
 ): Promise<ProfileCelebrationData> {
-  // Each read is individually guarded so one failure doesn't block the rest
   const [birthday, profileCreatedAt, events, wishlist, settings] = await Promise.all([
     readBirthday(address, chainId).catch(() => undefined),
     readProfileCreatedAt(address, chainId).catch(() => undefined),
@@ -148,12 +182,7 @@ export function defaultSettings(): ProfileSettings {
 
 // ── Encode helpers ────────────────────────────────────────────────────────────
 
-/**
- * Encode a birthday string for storage in ERC725Y.
- * Returns the ABI-encoded bytes to pass to setData().
- */
 export function encodeBirthday(date: string): string {
-  // Simple string encoding — erc725.js handles it for valueType: 'string'
   const erc725 = new ERC725(CELEBRATIONS_SCHEMA as never);
   const encoded = erc725.encodeData([
     { keyName: "CelebrationsBirthday", value: date },

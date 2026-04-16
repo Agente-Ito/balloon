@@ -34,19 +34,31 @@ const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? "")
 
 const app = express();
 
-app.use(cors({
+const corsOptions: Parameters<typeof cors>[0] = {
   origin: (origin, cb) => {
-    // Allow requests with no Origin header (server-to-server, curl, etc.)
     if (!origin) return cb(null, true);
     if (ALLOWED_ORIGINS.length === 0 || ALLOWED_ORIGINS.includes(origin)) {
       return cb(null, true);
     }
     cb(new Error(`CORS: origin ${origin} not allowed`));
   },
-  methods: ["GET", "OPTIONS"],
-}));
+  methods: ["GET", "POST", "PUT", "OPTIONS"],
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use("/api", router);
+
+// Global error handler — must set CORS headers manually so the browser
+// can read the error response even when something crashes inside a route.
+app.use((err: Error, req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  const origin = req.headers.origin;
+  if (!origin || ALLOWED_ORIGINS.length === 0 || ALLOWED_ORIGINS.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin ?? "*");
+  }
+  console.error("[indexer] Unhandled error:", err.message);
+  res.status(500).json({ error: err.message });
+});
 
 app.listen(PORT, () => {
   console.log(`[indexer] API listening on http://localhost:${PORT}/api`);
