@@ -7,6 +7,9 @@
     @apply bg-lukso-dark text-white font-sans antialiased;
     /* Grid apps are embedded in iframes — no scrollbar on the outer body */
     overflow: hidden;
+    /* Subtle purple noise texture to match brand depth */
+    background-image: radial-gradient(ellipse at 20% 0%, #3D2890 0%, transparent 60%),
+                      radial-gradient(ellipse at 80% 100%, #2A1060 0%, transparent 60%);
   }
 
   * {

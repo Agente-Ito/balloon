@@ -12,6 +12,7 @@ import { Avatar } from "@/components/Avatar";
 import { NetworkBadge } from "@/components/NetworkBadge";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { BalloonIcon } from "@/components/BalloonIcon";
+import { BalloonLogo } from "@/components/BalloonLogo";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { useT } from "@/hooks/useT";
 import { CELEBRATION_EMOJIS } from "@/constants/celebrationTypes";
@@ -71,11 +72,11 @@ export function GridCard({ chainId }: GridCardProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <Avatar address={contextProfile} size={36} />
-          <div>
-            <p className="text-sm font-semibold leading-tight tracking-tight">balloon</p>
+          <Avatar address={contextProfile} size={32} />
+          <div className="flex flex-col gap-0.5">
+            <BalloonLogo className="h-7 w-auto" />
             {contextProfile && (
-              <p className="text-xs text-white/30 font-mono leading-tight">
+              <p className="text-[10px] text-white/30 font-mono leading-tight">
                 {contextProfile.slice(0, 6)}…{contextProfile.slice(-4)}
               </p>
             )}

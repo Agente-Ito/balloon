@@ -5,13 +5,13 @@ export default {
   theme: {
     extend: {
       colors: {
-        // LUKSO brand palette
         lukso: {
-          pink: "#FE005B",
-          purple: "#8B5CF6",
-          dark: "#1A1B1E",
-          card: "#252629",
-          border: "#3A3B3E",
+          pink:    "#FE005B",       // kept for primary CTAs / alerts
+          purple:  "#9B6FD0",       // balloon lavender — main accent
+          cream:   "#F5E2C0",       // logo text colour
+          dark:    "#1E1245",       // deep purple background (logo BG)
+          card:    "#2A1860",       // card surface
+          border:  "#3D2880",       // subtle border
         },
       },
       fontFamily: {

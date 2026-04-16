@@ -109,10 +109,22 @@ export function useSetBirthday({ walletClient, upAddress, chainId = 4201 }: Writ
         account,
         chain: null,
       });
-      await waitForTx(txHash, chainId);
+      // Wait for confirmation — swallow timeout errors so the UI still updates
+      try { await waitForTx(txHash, chainId); } catch { /* confirmed or timed out */ }
+      return birthday;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["profileData"] });
+    onSuccess: (birthday) => {
+      // Immediately patch the cache so the UI reflects the new value without
+      // waiting for a fresh RPC call (which may still return the old value
+      // for a few seconds after the receipt due to node propagation lag).
+      queryClient.setQueriesData<{ birthday?: string }>(
+        { queryKey: ["profileData"] },
+        (old) => old ? { ...old, birthday } : old,
+      );
+      // Then invalidate in the background to eventually sync from chain
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["profileData"] });
+      }, 4000);
     },
   });
 }
@@ -158,10 +170,10 @@ export function useAddEvent({ walletClient, upAddress, chainId = 4201 }: WriteCo
 
       const ipfsUrl = await uploadJSONToIPFS(event, `celebrations-event-${event.id}`);
 
-      // Build array element key: first 16 bytes of array key + 00*8 + 4-byte index
-      const arrayKey = KEY_EVENTS_ARRAY.slice(0, 34); // "0x" + 32 hex chars
+      // Build array element key: first 16 bytes of array key + 00*12 + 4-byte index (= 32 bytes per LSP2)
+      const arrayKey = KEY_EVENTS_ARRAY.slice(0, 34); // "0x" + 32 hex chars = 16 bytes
       const indexHex = currentLength.toString(16).padStart(8, "0");
-      const elementKey = (arrayKey + "0000000000000000" + indexHex) as `0x${string}`;
+      const elementKey = (arrayKey + "000000000000000000000000" + indexHex) as `0x${string}`;
 
       const newCount = currentLength + 1;
       const lengthValue = ("0x" + newCount.toString(16).padStart(64, "0")) as `0x${string}`;
@@ -206,7 +218,7 @@ export function useAddWishlistItem({ walletClient, upAddress, chainId = 4201 }: 
 
       const arrayKey = KEY_WISHLIST_ARRAY.slice(0, 34);
       const indexHex = currentLength.toString(16).padStart(8, "0");
-      const elementKey = (arrayKey + "0000000000000000" + indexHex) as `0x${string}`;
+      const elementKey = (arrayKey + "000000000000000000000000" + indexHex) as `0x${string}`;
 
       const newCount = currentLength + 1;
       const lengthValue = ("0x" + newCount.toString(16).padStart(64, "0")) as `0x${string}`;
