@@ -8,6 +8,7 @@ import { CalendarGrid } from "./CalendarGrid";
 import { DayPopover } from "./DayPopover";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Avatar } from "@/components/Avatar";
+import { LanguageToggle } from "@/components/LanguageToggle";
 import { useT } from "@/hooks/useT";
 import type { CelebrationDay, Address } from "@/types";
 import type { WalletClient, PublicClient } from "viem";
@@ -48,7 +49,7 @@ export function CalendarView({ chainId }: CalendarViewProps) {
           ← Back
         </button>
         <span className="text-sm font-semibold">{t.calendarTitle}</span>
-        <div className="w-16" />
+        <LanguageToggle />
       </div>
 
       {/* Month navigation */}

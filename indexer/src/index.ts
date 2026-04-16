@@ -12,6 +12,7 @@ import { startBadgeListener } from "./listeners/badges";
 import { startGreetingListener } from "./listeners/greetings";
 import { startFollowListener } from "./listeners/followEvents";
 import { startDropListener } from "./listeners/drops";
+import { seedDefaultSeries } from "./workers/seedSeries";
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
@@ -42,7 +43,7 @@ const corsOptions: Parameters<typeof cors>[0] = {
     }
     cb(new Error(`CORS: origin ${origin} not allowed`));
   },
-  methods: ["GET", "POST", "PUT", "OPTIONS"],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
 };
 
 app.use(cors(corsOptions));
@@ -62,6 +63,7 @@ app.use((err: Error, req: express.Request, res: express.Response, _next: express
 
 app.listen(PORT, () => {
   console.log(`[indexer] API listening on http://localhost:${PORT}/api`);
+  seedDefaultSeries();
 });
 
 // ── Start listeners ───────────────────────────────────────────────────────────

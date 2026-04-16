@@ -3,8 +3,10 @@ import { useDrops } from "@/hooks/useDrops";
 import { useDropEligibility } from "@/hooks/useDropEligibility";
 import { useClaimDrop } from "@/hooks/useClaimDrop";
 import { useSocialCalendar } from "@/hooks/useSocialCalendar";
+import { useAllSeries } from "@/hooks/useSeries";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Avatar } from "@/components/Avatar";
+import { LanguageToggle } from "@/components/LanguageToggle";
 import { useT } from "@/hooks/useT";
 import type { IndexedDrop, Address } from "@/types";
 import type { WalletClient } from "viem";
@@ -112,11 +114,15 @@ function DropCard({
   );
 }
 
+const MONTH_NAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
 export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewProps) {
-  const { connectedAccount, setView } = useAppStore();
+  const { connectedAccount, setView, setActiveSeriesId } = useAppStore();
   const t = useT();
 
   const { data: socialData, isLoading: socialLoading } = useSocialCalendar(connectedAccount);
+  const { data: allSeries } = useAllSeries();
+  const openSeries = (allSeries ?? []).filter((s) => s.submissionOpen);
   const followingAddresses = socialData?.drops.map((d) => d.host) ?? [];
 
   const { data: socialDrops, isLoading: socialDropsLoading } = useDrops({
@@ -146,6 +152,7 @@ export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewPr
             {t.create}
           </button>
         )}
+        <LanguageToggle />
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-6">
@@ -184,6 +191,38 @@ export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewPr
             </div>
           )}
         </section>
+
+        {/* ── Community art series ───────────────────────────────────────── */}
+        {openSeries.length > 0 && (
+          <section>
+            <h2 className="text-xs font-medium text-white/40 uppercase tracking-wide mb-1">
+              🎨 Community Badge Art
+            </h2>
+            <p className="text-xs text-white/25 mb-3">
+              Vote for the official badge image for these upcoming holidays.
+            </p>
+            <div className="flex flex-col gap-2">
+              {openSeries.map((s) => (
+                <button
+                  key={s.id}
+                  onClick={() => { setActiveSeriesId(s.id); setView("series"); }}
+                  className="card w-full text-left flex items-center gap-3 hover:border-lukso-purple/40 transition-colors"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-lukso-purple/15 flex items-center justify-center text-xl flex-shrink-0">
+                    🎨
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium">{s.name}</p>
+                    <p className="text-xs text-white/40">
+                      {MONTH_NAMES[(s.month ?? 1) - 1]} {s.day} · Vote for the official badge
+                    </p>
+                  </div>
+                  <span className="text-white/20 text-sm flex-shrink-0">›</span>
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
     </div>
   );

@@ -12,6 +12,10 @@ interface AppStore {
   currentView: AppView;
   setView: (view: AppView) => void;
 
+  // Active series (for SeriesView)
+  activeSeriesId: string | null;
+  setActiveSeriesId: (id: string | null) => void;
+
   // Active celebration (for CelebrationView)
   activeCelebrationDate: string | null;
   setActiveCelebrationDate: (date: string | null) => void;
@@ -48,6 +52,9 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   currentView: "grid",
   setView: (view) => set({ currentView: view }),
+
+  activeSeriesId: null,
+  setActiveSeriesId: (id) => set({ activeSeriesId: id }),
 
   activeCelebrationDate: null,
   setActiveCelebrationDate: (date) => set({ activeCelebrationDate: date }),

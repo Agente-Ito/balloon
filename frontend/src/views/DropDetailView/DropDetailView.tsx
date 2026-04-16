@@ -11,6 +11,7 @@ import { useDropEligibility } from "@/hooks/useDropEligibility";
 import { useClaimDrop } from "@/hooks/useClaimDrop";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Avatar } from "@/components/Avatar";
+import { LanguageToggle } from "@/components/LanguageToggle";
 import { useT } from "@/hooks/useT";
 import type { Address } from "@/types";
 import type { WalletClient } from "viem";
@@ -86,6 +87,7 @@ export function DropDetailView({ walletClient, chainId }: DropDetailViewProps) {
           ←
         </button>
         <h1 className="text-sm font-semibold flex-1 truncate">{drop.name}</h1>
+        <LanguageToggle />
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-5">

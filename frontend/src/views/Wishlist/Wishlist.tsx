@@ -3,6 +3,7 @@ import { useProfileData } from "@/hooks/useUniversalProfile";
 import { WishlistItemRow } from "./WishlistItem";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Avatar } from "@/components/Avatar";
+import { LanguageToggle } from "@/components/LanguageToggle";
 import type { WalletClient, PublicClient } from "viem";
 
 interface WishlistProps {
@@ -26,14 +27,17 @@ export function Wishlist({ chainId }: WishlistProps) {
           ← Back
         </button>
         <span className="font-semibold">Wishlist</span>
-        {isOwner && (
-          <button
-            onClick={() => setView("editor")}
-            className="text-xs text-lukso-purple hover:text-lukso-purple/80"
-          >
-            Edit
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {isOwner && (
+            <button
+              onClick={() => setView("editor")}
+              className="text-xs text-lukso-purple hover:text-lukso-purple/80"
+            >
+              Edit
+            </button>
+          )}
+          <LanguageToggle />
+        </div>
       </div>
 
       {/* Profile hint */}

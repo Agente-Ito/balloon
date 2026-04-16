@@ -3,11 +3,13 @@ import toast from "react-hot-toast";
 import { useT } from "@/hooks/useT";
 import { useAppStore } from "@/store/useAppStore";
 import { useProfileData, useSetBirthday, useAddEvent, useAddWishlistItem } from "@/hooks/useUniversalProfile";
+import { useLSP3Name } from "@/hooks/useLSP3Name";
 import { EventForm } from "./EventForm";
 import { WishlistForm } from "./WishlistForm";
 import { SettingsForm } from "./SettingsForm";
 import { DropForm } from "./DropForm";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { LanguageToggle } from "@/components/LanguageToggle";
 import { CELEBRATION_EMOJIS } from "@/constants/celebrationTypes";
 import { useCreateDrop, type CreateDropParams } from "@/hooks/useCreateDrop";
 import { useDrops } from "@/hooks/useDrops";
@@ -67,6 +69,9 @@ export function Editor({ walletClient, chainId }: EditorProps) {
   // UP creation date → anniversary hint
   const { data: upCreationDate } = useUPCreationDate(contextProfile as Address | null, chainId);
   const anniversaryInfo = upCreationDate ? computeAnniversary(upCreationDate) : null;
+
+  // LSP3 profile name — used to personalize drop prefills
+  const { data: profileName } = useLSP3Name(contextProfile as Address | null, chainId);
 
   // After saving an event, offer to create a drop from it
   const [pendingDropFromEvent, setPendingDropFromEvent] = useState<Celebration | null>(null);
@@ -198,7 +203,9 @@ export function Editor({ walletClient, chainId }: EditorProps) {
       }
       if (pendingDropDate) {
         const [yy, mm, dd] = pendingDropDate.split("-");
+        const name = profileName ? `${profileName}'s Birthday` : "";
         return {
+          name,
           month: Number(mm),
           day: Number(dd),
           year: Number(yy) || new Date().getFullYear(),
@@ -206,9 +213,14 @@ export function Editor({ walletClient, chainId }: EditorProps) {
       }
       if (anniversaryInfo) {
         const d = anniversaryInfo.nextDate;
+        const namePrefix = profileName ?? "My UP";
+        const annName = profileName
+          ? `${profileName}'s ${anniversaryInfo.upcomingYears}-Year Anniversary on LUKSO`
+          : `My UP ${anniversaryInfo.upcomingYears}-Year Anniversary`;
+        const annDesc = `${namePrefix} is celebrating ${anniversaryInfo.upcomingYears} year${anniversaryInfo.upcomingYears !== 1 ? "s" : ""} on LUKSO! Claim this badge to celebrate.`;
         return {
-          name: `My UP ${anniversaryInfo.upcomingYears}-Year Anniversary`,
-          description: `I'm celebrating ${anniversaryInfo.upcomingYears} year${anniversaryInfo.upcomingYears !== 1 ? "s" : ""} on LUKSO! Claim this badge to celebrate with me.`,
+          name: annName,
+          description: annDesc,
           celebrationType: CelebrationType.UPAnniversary,
           month: d.getMonth() + 1,
           day: d.getDate(),
@@ -276,7 +288,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
           {t.back}
         </button>
         <span className="font-semibold">{t.editorTitle}</span>
-        <div className="w-12" />
+        <LanguageToggle />
       </div>
 
       {/* Tabs */}

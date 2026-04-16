@@ -154,6 +154,18 @@ export function createSchema(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_submissions_series ON series_submissions(series_id);
     CREATE INDEX IF NOT EXISTS idx_submissions_artist ON series_submissions(artist);
 
+    -- ── Series votes (community voting on submissions) ───────────────────────
+    CREATE TABLE IF NOT EXISTS series_votes (
+      id            INTEGER PRIMARY KEY AUTOINCREMENT,
+      series_id     TEXT NOT NULL,
+      submission_id INTEGER NOT NULL,
+      voter         TEXT NOT NULL,
+      voted_at      INTEGER NOT NULL DEFAULT (unixepoch()),
+      UNIQUE(series_id, voter)
+    );
+    CREATE INDEX IF NOT EXISTS idx_series_votes_series ON series_votes(series_id);
+    CREATE INDEX IF NOT EXISTS idx_series_votes_voter  ON series_votes(voter);
+
     -- ── Indexer state (last processed block per listener) ────────────────────
     CREATE TABLE IF NOT EXISTS indexer_state (
       listener      TEXT PRIMARY KEY,
@@ -161,4 +173,27 @@ export function createSchema(db: Database.Database): void {
       updated_at    INTEGER NOT NULL DEFAULT (unixepoch())
     );
   `);
+
+  runMigrations(db);
+}
+
+/**
+ * Idempotent migrations — adds new columns to existing tables without
+ * dropping data. Each ALTER TABLE is wrapped in try/catch so it silently
+ * skips columns that already exist (SQLite does not support IF NOT EXISTS
+ * on ALTER TABLE ADD COLUMN in older versions).
+ */
+export function runMigrations(db: Database.Database): void {
+  const migrations: [string, string][] = [
+    ["drop_series", "ALTER TABLE drop_series ADD COLUMN voting_deadline INTEGER"],
+  ];
+
+  for (const [table, sql] of migrations) {
+    try {
+      db.exec(sql);
+    } catch {
+      // Column likely already exists — ignore
+      void table;
+    }
+  }
 }

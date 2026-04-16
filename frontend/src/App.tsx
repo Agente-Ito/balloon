@@ -8,6 +8,7 @@ import { Editor } from "@/views/Editor/Editor";
 import { Wishlist } from "@/views/Wishlist/Wishlist";
 import { DropsDiscoverView } from "@/views/DropsDiscoverView/DropsDiscoverView";
 import { DropDetailView } from "@/views/DropDetailView/DropDetailView";
+import { SeriesView } from "@/views/SeriesView/SeriesView";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { BalloonBurst } from "@/components/BalloonBurst";
 import { ContractsProvider } from "@/app/providers/ContractsProvider";
@@ -65,6 +66,7 @@ export default function App() {
         {currentView === "wishlist" && <Wishlist {...sharedProps} />}
         {currentView === "drops" && <DropsDiscoverView walletClient={sharedProps.walletClient} chainId={sharedProps.chainId} />}
         {currentView === "drop-detail" && <DropDetailView walletClient={sharedProps.walletClient} chainId={sharedProps.chainId} />}
+        {currentView === "series" && <SeriesView walletClient={sharedProps.walletClient} chainId={sharedProps.chainId} />}
       </div>
       {/* Global balloon burst — overlays any view on celebrate actions */}
       <BalloonBurst />

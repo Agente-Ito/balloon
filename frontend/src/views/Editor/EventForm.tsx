@@ -229,7 +229,7 @@ export function EventForm({ onSave, onCancel }: EventFormProps) {
 
       {/* Recurring toggle */}
       <div className="card">
-        <label className="flex items-center justify-between cursor-pointer">
+        <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-sm font-medium">{t.eventRepeats}</p>
             <p className="text-xs text-white/40">{t.eventRepeatsSub}</p>
@@ -237,11 +237,11 @@ export function EventForm({ onSave, onCancel }: EventFormProps) {
           <button
             type="button"
             onClick={() => setRecurring(!recurring)}
-            className={`w-12 h-6 rounded-full transition-colors relative ${recurring ? "bg-lukso-purple" : "bg-white/10"}`}
+            className={`w-12 h-6 rounded-full transition-colors relative flex-shrink-0 ${recurring ? "bg-lukso-purple" : "bg-white/10"}`}
           >
-            <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${recurring ? "translate-x-6" : "translate-x-0.5"}`} />
+            <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${recurring ? "translate-x-6" : "translate-x-0"}`} />
           </button>
-        </label>
+        </div>
       </div>
 
       <div className="flex gap-3 pt-2">

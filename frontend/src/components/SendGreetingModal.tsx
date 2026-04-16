@@ -3,6 +3,7 @@ import toast from "react-hot-toast";
 import { useSendGreeting } from "@/hooks/useSendGreeting";
 import { CELEBRATION_LABELS, CELEBRATION_EMOJIS } from "@/constants/celebrationTypes";
 import { LoadingSpinner } from "./LoadingSpinner";
+import { useLSP3Name } from "@/hooks/useLSP3Name";
 import type { Address, CelebrationType } from "@/types";
 import type { WalletClient } from "viem";
 
@@ -29,6 +30,7 @@ export function SendGreetingModal({
     senderAddress,
     chainId
   );
+  const { data: senderName } = useLSP3Name(senderAddress, chainId);
 
   const handleSend = async () => {
     if (!message.trim()) {
@@ -89,6 +91,12 @@ export function SendGreetingModal({
             {charsLeft}
           </span>
         </div>
+
+        {senderName && (
+          <p className="text-xs text-white/40 mb-3 text-right italic">
+            — From {senderName}
+          </p>
+        )}
 
         <p className="text-xs text-white/30 mb-4">
           This card will be minted as an NFT on LUKSO and permanently sent to their Universal Profile.

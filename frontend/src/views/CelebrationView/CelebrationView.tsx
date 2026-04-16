@@ -16,6 +16,7 @@ import { BadgeList } from "./BadgeList";
 import { GreetingCardList } from "./GreetingCardList";
 import { CELEBRATION_EMOJIS, CELEBRATION_LABELS } from "@/constants/celebrationTypes";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { LanguageToggle } from "@/components/LanguageToggle";
 import type { WalletClient, PublicClient } from "viem";
 import type { CelebrationType } from "@/types";
 
@@ -77,7 +78,7 @@ export function CelebrationView({ walletClient, chainId }: CelebrationViewProps)
         <span className="text-xs text-white/30 font-mono">
           {activeCelebrationDate && format(parseISO(activeCelebrationDate), "MMM d, yyyy")}
         </span>
-        <div className="w-16" />
+        <LanguageToggle />
       </div>
 
       {/* Hero */}

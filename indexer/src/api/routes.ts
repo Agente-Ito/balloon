@@ -9,6 +9,7 @@ import { getDrops, getDropById, getClaimsForDrop, getDropsClaimedBy } from "../r
 import {
   getAllSeries, getSeriesById, createSeries,
   getSubmissionsForSeries, addSubmission, selectSubmission, reopenSubmissions,
+  getSubmissionsWithVotes, castVote, removeVote,
 } from "../resolvers/series";
 import { getDb } from "../storage/db";
 
@@ -267,12 +268,18 @@ router.get("/series/:id", (req: Request, res: Response) => {
   return res.json(series);
 });
 
-/** GET /series/:id/submissions    → all submissions for this series */
+/**
+ * GET /series/:id/submissions?viewer=0x...
+ * Returns submissions with vote counts. If viewer is provided, votedByViewer is set.
+ */
 router.get("/series/:id/submissions", (req: Request, res: Response) => {
   if (!getSeriesById(req.params.id)) {
     return res.status(404).json({ error: "Series not found" });
   }
-  return res.json(getSubmissionsForSeries(req.params.id));
+  const viewer = req.query.viewer && typeof req.query.viewer === "string"
+    ? req.query.viewer
+    : undefined;
+  return res.json(getSubmissionsWithVotes(req.params.id, viewer));
 });
 
 /**
@@ -328,6 +335,50 @@ router.put("/series/:id/reopen", (req: Request, res: Response) => {
   }
   reopenSubmissions(req.params.id);
   return res.json({ ok: true });
+});
+
+/**
+ * POST /series/:id/vote
+ * Body: { submissionId: number, voter: string }
+ * Casts (or changes) the voter's vote for this series.
+ */
+router.post("/series/:id/vote", (req: Request, res: Response) => {
+  const series = getSeriesById(req.params.id);
+  if (!series) return res.status(404).json({ error: "Series not found" });
+  if (!series.submissionOpen) {
+    return res.status(409).json({ error: "Submissions are closed for this series" });
+  }
+  const { submissionId, voter } = req.body as Record<string, unknown>;
+  if (!submissionId || !voter) {
+    return res.status(400).json({ error: "submissionId and voter are required" });
+  }
+  try {
+    castVote(req.params.id, Number(submissionId), voter as string);
+    const submissions = getSubmissionsWithVotes(req.params.id, voter as string);
+    return res.json({ ok: true, submissions });
+  } catch (err) {
+    return res.status(500).json({ error: String(err) });
+  }
+});
+
+/**
+ * DELETE /series/:id/vote
+ * Body: { voter: string }
+ * Removes the voter's vote for this series.
+ */
+router.delete("/series/:id/vote", (req: Request, res: Response) => {
+  const series = getSeriesById(req.params.id);
+  if (!series) return res.status(404).json({ error: "Series not found" });
+  const { voter } = req.body as Record<string, unknown>;
+  if (!voter) {
+    return res.status(400).json({ error: "voter is required" });
+  }
+  try {
+    removeVote(req.params.id, voter as string);
+    return res.json({ ok: true });
+  } catch (err) {
+    return res.status(500).json({ error: String(err) });
+  }
 });
 
 // ── Indexer state ─────────────────────────────────────────────────────────────

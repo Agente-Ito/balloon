@@ -160,7 +160,37 @@ export type AppView =
   | "editor"
   | "wishlist"
   | "drops"
-  | "drop-detail";
+  | "drop-detail"
+  | "series";
+
+// ── Drop series (community art voting) ────────────────────────────────────────
+
+export interface DropSeries {
+  id: string;
+  name: string;
+  description: string | null;
+  celebrationType: number;
+  month: number;
+  day: number;
+  curator: string;
+  submissionOpen: boolean;
+  selectedDropId: string | null;
+  votingDeadline: number | null;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface SeriesSubmission {
+  id: number;
+  seriesId: string;
+  artist: string;
+  imageIPFS: string;
+  message: string | null;
+  selected: boolean;
+  submittedAt: number;
+  voteCount: number;
+  votedByViewer: boolean;
+}
 
 export interface CelebrationDay {
   date: string; // "YYYY-MM-DD"
