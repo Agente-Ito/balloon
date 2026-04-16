@@ -1,0 +1,27 @@
+name = "celebrations-ipfs-proxy"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+
+# ── KV namespace for rate limiting ────────────────────────────────────────────
+# Before first deploy run:
+#   npx wrangler kv:namespace create UPLOAD_KV
+#   npx wrangler kv:namespace create UPLOAD_KV --preview
+# Then paste the returned IDs below.
+[[kv_namespaces]]
+binding = "UPLOAD_KV"
+id = "ed04721983e143288bb3f0240a580057"
+preview_id = "c09709aeb6ea4ab78b8ef7902c6bf91d"
+
+# ── Public vars ───────────────────────────────────────────────────────────────
+[vars]
+# "false" = no signature check (good for testnet)
+# "true"  = requires wallet signature → set before mainnet
+REQUIRE_SIGNATURE = "false"
+MAX_UPLOADS_PER_DAY = "20"
+MAX_FILE_SIZE_BYTES = "10485760"
+# Add your deployed Cloudflare Pages/Workers URL here for production
+ALLOWED_ORIGINS = "http://localhost:5173,https://grid.lukso.network"
+
+# ── Secrets ───────────────────────────────────────────────────────────────────
+# Store with:  npx wrangler secret put PINATA_JWT
+# For local dev, put in worker/.dev.vars (never commit that file)

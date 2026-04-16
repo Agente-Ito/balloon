@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-lukso-dark text-white font-sans antialiased;
+    /* Grid apps are embedded in iframes — no scrollbar on the outer body */
+    overflow: hidden;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  ::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-lukso-border rounded-full;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply px-4 py-2 rounded-xl bg-lukso-pink text-white font-medium text-sm
+           hover:opacity-90 active:opacity-75 transition-opacity
+           disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply px-4 py-2 rounded-xl bg-lukso-card border border-lukso-border text-white font-medium text-sm
+           hover:bg-white/10 active:opacity-75 transition-colors
+           disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+
+  .card {
+    @apply bg-lukso-card border border-lukso-border rounded-2xl p-4;
+  }
+
+  .input {
+    @apply w-full bg-white/5 border border-lukso-border rounded-xl px-3 py-2 text-sm text-white
+           placeholder-white/30 focus:outline-none focus:border-lukso-purple transition-colors;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .btn-ghost {
+    @apply px-3 py-1.5 rounded-lg text-white/50 font-medium text-sm
+           hover:bg-white/10 hover:text-white active:opacity-75 transition-colors
+           disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+}

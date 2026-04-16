@@ -1,0 +1,25 @@
+{
+  "name": "@celebrations/indexer",
+  "version": "0.1.0",
+  "description": "Event indexer for the Celebrations dApp — listens to on-chain events and serves them via REST API",
+  "private": true,
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "ts-node-dev --respawn src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^9.4.3",
+    "dotenv": "^17.4.2",
+    "express": "^4.18.3",
+    "viem": "^2.0.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.8",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.11.5",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.3.3"
+  }
+}

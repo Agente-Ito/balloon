@@ -1,0 +1,50 @@
+{
+  "name": "celebrations",
+  "version": "1.0.0",
+  "description": "Celebrations dApp on LUKSO Universal Profiles Grid",
+  "private": true,
+  "workspaces": [
+    "frontend"
+  ],
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy:testnet": "hardhat ignition deploy ignition/modules/Celebrations.ts --network luksoTestnet",
+    "deploy:mainnet": "hardhat ignition deploy ignition/modules/Celebrations.ts --network lukso",
+    "deploy:all": "hardhat run scripts/deploy/deployAll.ts --network luksoTestnet",
+    "deploy:badge": "hardhat run scripts/deploy/deployBadge.ts --network luksoTestnet",
+    "deploy:card": "hardhat run scripts/deploy/deployGreetingCard.ts --network luksoTestnet",
+    "deploy:delegate": "hardhat run scripts/deploy/deployDelegate.ts --network luksoTestnet",
+    "deploy:drop": "hardhat run scripts/deploy/deployDrop.ts --network luksoTestnet",
+    "register-delegate": "hardhat run scripts/setup/registerDelegate.ts --network luksoTestnet",
+    "verify:badge": "hardhat run scripts/verify/verifyCelebrationsBadge.ts --network luksoTestnet",
+    "verify:card": "hardhat run scripts/verify/verifyGreetingCard.ts --network luksoTestnet",
+    "encode-keys": "hardhat run scripts/encodeERC725YKeys.ts",
+    "typechain": "hardhat typechain",
+    "frontend:dev": "cd frontend && npm run dev",
+    "frontend:build": "cd frontend && npm run build",
+    "indexer:dev": "cd indexer && npm run dev",
+    "indexer:build": "cd indexer && npm run build"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-ignition-ethers": "^0.15.10",
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@types/node": "^20.0.0",
+    "hardhat": "^2.22.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.0"
+  },
+  "dependencies": {
+    "@erc725/erc725.js": "^0.22.0",
+    "@erc725/smart-contracts": "^7.0.0",
+    "@lukso/lsp-smart-contracts": "^0.15.0",
+    "@lukso/lsp1-contracts": "^0.15.0",
+    "@lukso/lsp2-contracts": "^0.15.0",
+    "@lukso/lsp4-contracts": "^0.15.0",
+    "@lukso/lsp7-contracts": "^0.15.0",
+    "@lukso/lsp8-contracts": "^0.15.0",
+    "@openzeppelin/contracts": "^4.9.6",
+    "dotenv": "^16.4.0",
+    "ethers": "^6.13.0"
+  }
+}

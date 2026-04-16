@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+indexer/node_modules/
+
+# Build outputs
+artifacts/
+cache/
+typechain-types/
+dist/
+frontend/dist/
+indexer/dist/
+*.tsbuildinfo
+
+# Environment files — NEVER commit these
+.env
+.env.local
+.env.*.local
+**/.env
+**/.env.local
+**/.env.*.local
+worker/.dev.vars
+**/.dev.vars
+
+# Cloudflare Wrangler local state
+.wrangler/
+worker/.wrangler/
+
+# Test coverage
+coverage/
+coverage.json
+
+# Indexer data (SQLite DB + synced JSON)
+indexer/data/
+
+# OS / editor
+.DS_Store
+*.swp
+.idea/
+.vscode/settings.json

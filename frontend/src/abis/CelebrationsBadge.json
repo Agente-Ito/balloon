@@ -1,0 +1,109 @@
+[
+  {
+    "type": "constructor",
+    "inputs": [{ "name": "_delegate", "type": "address" }],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "mintBadge",
+    "inputs": [
+      { "name": "to", "type": "address" },
+      { "name": "celebrationType", "type": "uint8" },
+      { "name": "year", "type": "uint16" },
+      { "name": "soulbound", "type": "bool" },
+      { "name": "metadataBytes", "type": "bytes" },
+      { "name": "force", "type": "bool" }
+    ],
+    "outputs": [{ "name": "tokenId", "type": "bytes32" }],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "computeTokenId",
+    "inputs": [
+      { "name": "owner", "type": "address" },
+      { "name": "celebrationType", "type": "uint8" },
+      { "name": "year", "type": "uint16" }
+    ],
+    "outputs": [{ "name": "", "type": "bytes32" }],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "badgeExists",
+    "inputs": [
+      { "name": "owner", "type": "address" },
+      { "name": "celebrationType", "type": "uint8" },
+      { "name": "year", "type": "uint16" }
+    ],
+    "outputs": [{ "name": "", "type": "bool" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "tokenIdsOf",
+    "inputs": [{ "name": "tokenOwner", "type": "address" }],
+    "outputs": [{ "name": "", "type": "bytes32[]" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "isSoulbound",
+    "inputs": [{ "name": "tokenId", "type": "bytes32" }],
+    "outputs": [{ "name": "", "type": "bool" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "transfer",
+    "inputs": [
+      { "name": "from", "type": "address" },
+      { "name": "to", "type": "address" },
+      { "name": "tokenId", "type": "bytes32" },
+      { "name": "force", "type": "bool" },
+      { "name": "data", "type": "bytes" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setDelegate",
+    "inputs": [{ "name": "_delegate", "type": "address" }],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "delegate",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "address" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "event",
+    "name": "BadgeMinted",
+    "inputs": [
+      { "name": "recipient", "type": "address", "indexed": true },
+      { "name": "tokenId", "type": "bytes32", "indexed": true },
+      { "name": "celebrationType", "type": "uint8", "indexed": false },
+      { "name": "year", "type": "uint16", "indexed": false }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "BadgeSoulbound",
+    "inputs": [{ "name": "tokenId", "type": "bytes32" }]
+  },
+  {
+    "type": "error",
+    "name": "UnauthorizedMinter",
+    "inputs": [{ "name": "caller", "type": "address" }]
+  },
+  {
+    "type": "error",
+    "name": "BadgeAlreadyMinted",
+    "inputs": [{ "name": "tokenId", "type": "bytes32" }]
+  }
+]
