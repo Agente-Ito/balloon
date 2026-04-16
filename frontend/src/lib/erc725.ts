@@ -9,6 +9,21 @@ import { LUKSO_TESTNET_RPC, LUKSO_MAINNET_RPC } from "@/constants/addresses";
 import type { ProfileCelebrationData, ProfileSettings, Celebration, WishlistItem } from "@/types";
 import { fetchIPFSJson } from "./ipfs";
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+/**
+ * erc725.js getData() returns { url, hash } objects for JSONURL valueContent,
+ * not plain strings. This helper handles both shapes so the read functions
+ * work correctly regardless of library version.
+ */
+function extractUrl(value: unknown): string {
+  if (typeof value === "string") return value;
+  if (value && typeof value === "object" && "url" in value) {
+    return (value as { url: string }).url;
+  }
+  throw new Error(`[erc725] Cannot extract URL from: ${JSON.stringify(value)}`);
+}
+
 // ── Factory ───────────────────────────────────────────────────────────────────
 
 export function createERC725(address: string, chainId: number): ERC725 {
@@ -55,8 +70,9 @@ export async function readSettings(
   try {
     const result = await erc725.getData("CelebrationsSettings");
     if (!result.value) return undefined;
-    // JSONURL: erc725.js resolves the IPFS URL and returns the fetched JSON
-    return result.value as unknown as ProfileSettings;
+    // getData returns { url, hash } for JSONURL — we must fetch the URL ourselves
+    const url = extractUrl(result.value);
+    return await fetchIPFSJson<ProfileSettings>(url);
   } catch {
     return undefined;
   }
@@ -70,9 +86,9 @@ export async function readEvents(
   try {
     const result = await erc725.getData("CelebrationsEvents[]");
     if (!Array.isArray(result.value)) return [];
-    // Each element is a JSONURL that points to a Celebration JSON on IPFS
+    // erc725.js getData returns { url, hash } objects for JSONURL elements — extract the URL
     const celebrations = await Promise.all(
-      (result.value as string[]).map((url) => fetchIPFSJson<Celebration>(url))
+      (result.value as unknown[]).map((item) => fetchIPFSJson<Celebration>(extractUrl(item)))
     );
     return celebrations;
   } catch {
@@ -89,7 +105,7 @@ export async function readWishlist(
     const result = await erc725.getData("CelebrationsWishlist[]");
     if (!Array.isArray(result.value)) return [];
     const items = await Promise.all(
-      (result.value as string[]).map((url) => fetchIPFSJson<WishlistItem>(url))
+      (result.value as unknown[]).map((item) => fetchIPFSJson<WishlistItem>(extractUrl(item)))
     );
     return items;
   } catch {
@@ -101,12 +117,13 @@ export async function readAllCelebrationData(
   address: string,
   chainId: number
 ): Promise<ProfileCelebrationData> {
+  // Each read is individually guarded so one failure doesn't block the rest
   const [birthday, profileCreatedAt, events, wishlist, settings] = await Promise.all([
-    readBirthday(address, chainId),
-    readProfileCreatedAt(address, chainId),
-    readEvents(address, chainId),
-    readWishlist(address, chainId),
-    readSettings(address, chainId),
+    readBirthday(address, chainId).catch(() => undefined),
+    readProfileCreatedAt(address, chainId).catch(() => undefined),
+    readEvents(address, chainId).catch(() => [] as Celebration[]),
+    readWishlist(address, chainId).catch(() => [] as WishlistItem[]),
+    readSettings(address, chainId).catch(() => undefined),
   ]);
 
   return {

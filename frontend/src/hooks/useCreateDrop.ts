@@ -9,7 +9,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { getAddresses } from "@/constants/addresses";
 import { uploadJSONToIPFS, uploadFileToIPFS } from "@/lib/ipfs";
-import type { Address, CelebrationType } from "@/types";
+import type { Address, CelebrationType, IndexedDrop } from "@/types";
 import { keccak256 } from "viem";
 import type { WalletClient } from "viem";
 
@@ -168,11 +168,41 @@ export function useCreateDrop(
         chain: null,
       });
 
-      return { txHash: hash };
+      return { txHash: hash, imageIPFS };
     },
-    onSuccess: (_, params) => {
-      queryClient.invalidateQueries({ queryKey: ["drops", { host: params.host }] });
-      queryClient.invalidateQueries({ queryKey: ["drops"] });
+    onSuccess: ({ imageIPFS }, params) => {
+      // Optimistically insert the new drop into every cached drops query so it
+      // appears immediately without waiting for the indexer (which can take 15+ s).
+      const optimistic: IndexedDrop = {
+        dropId: `pending-${Date.now()}`,
+        host: params.host,
+        celebrationType: String(params.celebrationType),
+        year: params.year,
+        month: params.month,
+        day: params.day,
+        startAt: params.startAt ? Math.floor(params.startAt.getTime() / 1000) : 0,
+        endAt: params.endAt ? Math.floor(params.endAt.getTime() / 1000) : null,
+        maxSupply: params.maxSupply ?? null,
+        claimed: 0,
+        name: params.name,
+        imageIPFS: imageIPFS || null,
+        requireFollow: params.requireFollowsHost ?? false,
+        minFollowers: params.minFollowers ?? 0,
+        requiredLSP7: params.requiredLSP7 ?? [],
+        requiredLSP8: params.requiredLSP8 ?? [],
+        blockNumber: 0,
+        isActive: true,
+      };
+
+      queryClient.setQueriesData<IndexedDrop[]>(
+        { queryKey: ["drops"] },
+        (old) => (old ? [optimistic, ...old] : [optimistic]),
+      );
+
+      // Invalidate after 20 s so the real indexed record replaces the placeholder
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["drops"] });
+      }, 20_000);
     },
   });
 }

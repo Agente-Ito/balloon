@@ -2,7 +2,7 @@
  * DropForm — form for creating a new badge drop campaign.
  * Supports pre-filling from events, anniversary, and holiday templates.
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { CreateDropParams } from "@/hooks/useCreateDrop";
 import type { Address, CelebrationType } from "@/types";
 import { HOLIDAY_DROP_TEMPLATES, holidayTemplateToFile } from "@/constants/dropTemplates";
@@ -67,28 +67,6 @@ function AddressListField({
   );
 }
 
-/** Small preview of the badge image that will be minted */
-function ImagePreview({ file, label }: { file: File; label: string }) {
-  const [dataUrl, setDataUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    const reader = new FileReader();
-    reader.onload = (e) => setDataUrl(e.target?.result as string);
-    reader.readAsDataURL(file);
-  }, [file]);
-
-  if (!dataUrl) return null;
-
-  return (
-    <div>
-      <p className="text-xs text-white/40 mb-1">{label}</p>
-      <div className="w-20 h-20 rounded-2xl overflow-hidden border border-lukso-border">
-        <img src={dataUrl} alt="Badge preview" className="w-full h-full object-cover" />
-      </div>
-    </div>
-  );
-}
-
 export function DropForm({ host, onSave, onCancel, isSaving, prefill }: DropFormProps) {
   const t = useT();
   const currentYear = new Date().getFullYear();
@@ -109,6 +87,8 @@ export function DropForm({ host, onSave, onCancel, isSaving, prefill }: DropForm
   const [maxSupply,   setMaxSupply]   = useState("");
   const [endDate,     setEndDate]     = useState("");
   const [imageFile,   setImageFile]   = useState<File | undefined>(prefill?.imageFile);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Eligibility
   const [showEligibility, setShowEligibility] = useState(false);
@@ -120,6 +100,20 @@ export function DropForm({ host, onSave, onCancel, isSaving, prefill }: DropForm
   // Templates picker
   const [showTemplates, setShowTemplates] = useState(false);
   const [selectedTplId, setSelectedTplId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!imageFile) { setImagePreview(null); return; }
+    const url = URL.createObjectURL(imageFile);
+    setImagePreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [imageFile]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageFile(file);
+    setSelectedTplId(null);
+  };
 
   const hasConditions = requireFollow || !!minFollowers || lsp7List.length > 0 || lsp8List.length > 0;
 
@@ -203,8 +197,29 @@ export function DropForm({ host, onSave, onCancel, isSaving, prefill }: DropForm
         )}
       </div>
 
-      {/* ── Image preview ──────────────────────────────────────────── */}
-      {imageFile && <ImagePreview file={imageFile} label={t.dropFormBadgePreview} />}
+      {/* ── Badge image ────────────────────────────────────────────── */}
+      <div>
+        <p className="text-xs text-white/40 mb-1.5">{t.dropFormBadgePreview}</p>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="w-16 h-16 rounded-2xl bg-white/5 border border-dashed border-white/20 flex items-center justify-center overflow-hidden hover:border-lukso-purple/50 transition-colors flex-shrink-0"
+          >
+            {imagePreview
+              ? <img src={imagePreview} alt="badge" className="w-full h-full object-cover" />
+              : <span className="text-2xl">🖼️</span>}
+          </button>
+          <div className="flex-1 text-xs text-white/40">
+            {imageFile
+              ? <><span className="text-white/60">{imageFile.name}</span><button type="button" onClick={() => { setImageFile(undefined); setSelectedTplId(null); }} className="block text-white/30 hover:text-white/60 mt-1">Remove</button></>
+              : selectedTplId
+                ? <span className="text-white/60">{t.dropFormTemplateApplied}</span>
+                : t.dropFormBadgeHint ?? "Upload your own or pick a template above"}
+          </div>
+        </div>
+        <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+      </div>
 
       {/* ── Basics ─────────────────────────────────────────────────── */}
       <div>

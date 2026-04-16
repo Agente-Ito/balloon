@@ -42,17 +42,23 @@ export async function uploadFileToIPFS(file: File): Promise<{ url: string; hash:
   const hash = keccak256(new Uint8Array(buffer));
 
   if (PROXY_URL) {
-    const form = new FormData();
-    form.append("file", file);
-    const res = await fetch(`${PROXY_URL}/upload/file`, { method: "POST", body: form });
-    if (!res.ok) throw new Error(`Proxy upload failed: ${await res.text()}`);
-    const { cid } = await res.json() as { cid: string };
-    return { url: `ipfs://${cid}`, hash };
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch(`${PROXY_URL}/upload/file`, { method: "POST", body: form });
+      if (res.ok) {
+        const { cid } = await res.json() as { cid: string };
+        return { url: `ipfs://${cid}`, hash };
+      }
+      console.warn("[ipfs] Proxy file upload failed:", res.status, await res.text().catch(() => ""));
+    } catch (err) {
+      console.warn("[ipfs] Proxy unreachable for file upload:", err);
+    }
+    // Fall through to data URI fallback
   }
 
-  // 3. Fallback: encode as data URI so the badge image is still displayable
-  const buf = await file.arrayBuffer();
-  const bytes = new Uint8Array(buf);
+  // Fallback: encode as data URI so the image is still displayable locally
+  const bytes = new Uint8Array(buffer);
   let b64 = "";
   for (let i = 0; i < bytes.length; i++) b64 += String.fromCharCode(bytes[i]);
   return { url: `data:${file.type};base64,${btoa(b64)}`, hash };
