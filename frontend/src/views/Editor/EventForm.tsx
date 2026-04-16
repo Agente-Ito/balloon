@@ -76,10 +76,14 @@ export function EventForm({ onSave, onCancel }: EventFormProps) {
       try {
         setIsUploading(true);
         const result = await uploadFileToIPFS(fileToUpload);
-        imageUrl = result.url;
+        // Only use IPFS URLs — data URIs are too large to store on-chain
+        if (result.url.startsWith("ipfs://")) {
+          imageUrl = result.url;
+        } else {
+          toast("Image upload skipped — event saved without image", { icon: "⚠️" });
+        }
       } catch (err) {
-        const msg = err instanceof Error ? err.message : "Upload failed";
-        console.warn("[EventForm] image upload failed, saving without image:", msg);
+        console.warn("[EventForm] image upload failed:", err);
         toast("Image upload skipped — event saved without image", { icon: "⚠️" });
       } finally {
         setIsUploading(false);

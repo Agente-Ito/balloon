@@ -169,6 +169,10 @@ export function useAddEvent({ walletClient, upAddress, chainId = 4201 }: WriteCo
       const currentLength = await readArrayLength(upAddress, KEY_EVENTS_ARRAY, chainId);
 
       const ipfsUrl = await uploadJSONToIPFS(event, `celebrations-event-${event.id}`);
+      // Abort if IPFS is unavailable — data URIs are too large to store on-chain
+      if (!ipfsUrl.startsWith("ipfs://")) {
+        throw new Error("IPFS upload unavailable. Check your VITE_IPFS_PROXY_URL and try again.");
+      }
 
       // Build array element key: first 16 bytes of array key + 00*12 + 4-byte index (= 32 bytes per LSP2)
       const arrayKey = KEY_EVENTS_ARRAY.slice(0, 34); // "0x" + 32 hex chars = 16 bytes
@@ -215,6 +219,9 @@ export function useAddWishlistItem({ walletClient, upAddress, chainId = 4201 }: 
       const currentLength = await readArrayLength(upAddress, KEY_WISHLIST_ARRAY, chainId);
 
       const ipfsUrl = await uploadJSONToIPFS(item, `celebrations-wishlist-${item.id}`);
+      if (!ipfsUrl.startsWith("ipfs://")) {
+        throw new Error("IPFS upload unavailable. Check your VITE_IPFS_PROXY_URL and try again.");
+      }
 
       const arrayKey = KEY_WISHLIST_ARRAY.slice(0, 34);
       const indexHex = currentLength.toString(16).padStart(8, "0");

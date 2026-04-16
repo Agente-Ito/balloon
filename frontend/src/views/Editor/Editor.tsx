@@ -80,7 +80,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
   const birthdayDisplay = (() => {
     if (!currentBirthday) return "Not set";
     if (currentBirthday.startsWith("--")) {
-      const [, mm, dd] = currentBirthday.split("-");
+      const [, , mm, dd] = currentBirthday.split("-");
       return `${MONTH_NAMES[parseInt(mm) - 1]} ${dd}`;
     }
     const [yyyy, mm, dd] = currentBirthday.split("-");
