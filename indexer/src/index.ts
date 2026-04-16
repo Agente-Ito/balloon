@@ -6,6 +6,7 @@
  */
 import "dotenv/config";
 import express from "express";
+import cors from "cors";
 import { router } from "./api/routes";
 import { startBadgeListener } from "./listeners/badges";
 import { startGreetingListener } from "./listeners/greetings";
@@ -22,10 +23,28 @@ const GREETING_ADDRESS      = (process.env.GREETING_CARD_ADDRESS ?? "0x000000000
 const FOLLOW_REGISTRY_ADDR  = (process.env.LSP26_ADDRESS ?? "0x0000000000000000000000000000000000000000") as `0x${string}`;
 const DROP_ADDRESS          = (process.env.CELEBRATIONS_DROP_ADDRESS ?? "0x0000000000000000000000000000000000000000") as `0x${string}`;
 
+// Origins allowed to call this API.
+// In production set ALLOWED_ORIGINS="https://your-frontend.vercel.app,https://grid.lukso.network"
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
 // ── Express ───────────────────────────────────────────────────────────────────
 
 const app = express();
 
+app.use(cors({
+  origin: (origin, cb) => {
+    // Allow requests with no Origin header (server-to-server, curl, etc.)
+    if (!origin) return cb(null, true);
+    if (ALLOWED_ORIGINS.length === 0 || ALLOWED_ORIGINS.includes(origin)) {
+      return cb(null, true);
+    }
+    cb(new Error(`CORS: origin ${origin} not allowed`));
+  },
+  methods: ["GET", "OPTIONS"],
+}));
 app.use(express.json());
 app.use("/api", router);
 
