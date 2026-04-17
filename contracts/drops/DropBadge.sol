@@ -38,8 +38,8 @@ contract DropBadge is LSP8IdentifiableDigitalAsset, IDropBadge {
 
     constructor()
         LSP8IdentifiableDigitalAsset(
-            "Celebrations Drop Badge",
-            "CLBDRP",
+            "Balloon Drop",
+            "BALLOON",
             msg.sender,
             LSP4_TOKEN_TYPE_NFT,
             TOKEN_ID_FORMAT_HASH

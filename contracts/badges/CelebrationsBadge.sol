@@ -37,8 +37,8 @@ contract CelebrationsBadge is
 
     constructor(address _delegate)
         LSP8IdentifiableDigitalAsset(
-            "Celebrations Badge",
-            "CLBDG",
+            "Balloon Badge",
+            "BALLOON",
             msg.sender,
             LSP4_TOKEN_TYPE_NFT,
             TOKEN_ID_FORMAT_HASH

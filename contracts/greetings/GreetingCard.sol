@@ -37,8 +37,8 @@ contract GreetingCard is
 
     constructor()
         LSP8IdentifiableDigitalAsset(
-            "Celebrations Greeting Card",
-            "CLBGC",
+            "Balloon Card",
+            "BALLOON",
             msg.sender,
             _LSP4_TOKEN_TYPE_NFT,
             _TOKEN_ID_FORMAT_NUMBER
