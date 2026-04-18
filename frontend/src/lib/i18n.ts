@@ -293,6 +293,14 @@ const translations = {
     // ── Anniversary (dismissed state) ─────────────────────────────────────────
     anniversaryLabel:     "UP Anniversary",
     anniversaryCreateDropShort: "Create drop",
+
+    // ── Drop prefill templates (use {name} and {n} as placeholders) ───────────
+    anniversaryDropNameProfile:  "{name}'s {n}-Year Anniversary on LUKSO",
+    anniversaryDropNameNoProfile: "My UP {n}-Year Anniversary",
+    anniversaryDropDesc:         "{name} is celebrating {n} {unit} on LUKSO! Claim this badge to celebrate.",
+    anniversaryDropDescUnit:     "year",
+    anniversaryDropDescUnitPlural: "years",
+    birthdayDropName:            "{name}'s Birthday",
   },
 
   es: {
@@ -581,6 +589,14 @@ const translations = {
     // ── Aniversario (estado descartado) ───────────────────────────────────────
     anniversaryLabel:     "Aniversario de UP",
     anniversaryCreateDropShort: "Crear drop",
+
+    // ── Plantillas de prefill para drops ──────────────────────────────────────
+    anniversaryDropNameProfile:  "Aniversario de {n} años de {name} en LUKSO",
+    anniversaryDropNameNoProfile: "Mi aniversario de {n} años en LUKSO",
+    anniversaryDropDesc:         "¡{name} está celebrando {n} {unit} en LUKSO! Reclama este badge para celebrar.",
+    anniversaryDropDescUnit:     "año",
+    anniversaryDropDescUnitPlural: "años",
+    birthdayDropName:            "Cumpleaños de {name}",
   },
 } as const;
 

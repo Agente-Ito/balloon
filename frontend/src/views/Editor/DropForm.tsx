@@ -72,10 +72,10 @@ export function DropForm({ host, onSave, onCancel, isSaving, prefill }: DropForm
   const currentYear = new Date().getFullYear();
 
   const CT_OPTIONS = [
-    { value: 0, label: `🎂 ${t.typeBirthday}` },
-    { value: 1, label: `🆙 ${t.typeAnniversary}` },
-    { value: 2, label: `🎉 ${t.typeHoliday}` },
-    { value: 3, label: `✨ ${t.typeCustom}` },
+    { value: 0, label: t.typeBirthday },
+    { value: 1, label: t.typeAnniversary },
+    { value: 2, label: t.typeHoliday },
+    { value: 3, label: t.typeCustom },
   ];
 
   const [name,        setName]        = useState(prefill?.name ?? "");

@@ -239,7 +239,9 @@ export function Editor({ walletClient, chainId }: EditorProps) {
       }
       if (pendingDropDate) {
         const [yy, mm, dd] = pendingDropDate.split("-");
-        const name = profileName ? `${profileName}'s Birthday` : "";
+        const name = profileName
+          ? t.birthdayDropName.replace("{name}", profileName)
+          : "";
         return {
           name,
           month: Number(mm),
@@ -249,11 +251,18 @@ export function Editor({ walletClient, chainId }: EditorProps) {
       }
       if (anniversaryInfo) {
         const d = anniversaryInfo.nextDate;
-        const namePrefix = profileName ?? "My UP";
+        const n = String(anniversaryInfo.upcomingYears);
+        const namePrefix = profileName ?? "LUKSO";
         const annName = profileName
-          ? `${profileName}'s ${anniversaryInfo.upcomingYears}-Year Anniversary on LUKSO`
-          : `My UP ${anniversaryInfo.upcomingYears}-Year Anniversary`;
-        const annDesc = `${namePrefix} is celebrating ${anniversaryInfo.upcomingYears} year${anniversaryInfo.upcomingYears !== 1 ? "s" : ""} on LUKSO! Claim this badge to celebrate.`;
+          ? t.anniversaryDropNameProfile.replace("{name}", profileName).replace("{n}", n)
+          : t.anniversaryDropNameNoProfile.replace("{n}", n);
+        const unit = anniversaryInfo.upcomingYears !== 1
+          ? t.anniversaryDropDescUnitPlural
+          : t.anniversaryDropDescUnit;
+        const annDesc = t.anniversaryDropDesc
+          .replace("{name}", namePrefix)
+          .replace("{n}", n)
+          .replace("{unit}", unit);
         return {
           name: annName,
           description: annDesc,
