@@ -26,7 +26,7 @@ export function GreetingCardList({ profileAddress, chainId }: GreetingCardListPr
   return (
     <div className="space-y-2">
       {cards.map((card) => (
-        <GreetingCardTile key={card.tokenId} card={card} />
+        <GreetingCardTile key={card.tokenId} card={card} chainId={chainId} />
       ))}
     </div>
   );

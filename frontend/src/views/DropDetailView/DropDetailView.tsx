@@ -13,6 +13,7 @@ import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Avatar } from "@/components/Avatar";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { useT } from "@/hooks/useT";
+import { useLSP3Name } from "@/hooks/useLSP3Name";
 import type { Address } from "@/types";
 import type { WalletClient } from "viem";
 import { format, fromUnixTime } from "date-fns";
@@ -39,6 +40,7 @@ export function DropDetailView({ walletClient, chainId }: DropDetailViewProps) {
     chainId
   );
   const claimMutation = useClaimDrop(walletClient ?? null, chainId);
+  const { data: hostName } = useLSP3Name(drop?.host as Address | undefined ?? null, chainId);
 
   const handleClaim = async () => {
     if (!connectedAccount || !dropId) return;
@@ -99,18 +101,18 @@ export function DropDetailView({ walletClient, chainId }: DropDetailViewProps) {
             className="w-full max-w-[200px] mx-auto rounded-2xl object-cover aspect-square"
           />
         ) : (
-          <div className="w-full max-w-[200px] mx-auto rounded-2xl bg-lukso-pink/20 flex items-center justify-center text-6xl aspect-square">
-            🎁
+          <div className="w-full max-w-[200px] mx-auto rounded-2xl bg-lukso-pink/20 flex items-center justify-center aspect-square">
+            <span className="w-16 h-16 rounded-full bg-lukso-pink/40" />
           </div>
         )}
 
         {/* Host */}
         <div className="flex items-center gap-2">
-          <Avatar address={drop.host as Address} size={24} />
+          <Avatar address={drop.host as Address} size={24} chainId={chainId} />
           <div>
             <p className="text-xs text-white/40">{t.dropCreatedBy}</p>
-            <p className="text-xs font-mono text-white/70">
-              {drop.host.slice(0, 8)}…{drop.host.slice(-6)}
+            <p className="text-xs font-medium text-lukso-purple">
+              {hostName ?? `${drop.host.slice(0, 8)}…${drop.host.slice(-6)}`}
             </p>
           </div>
         </div>
@@ -140,24 +142,26 @@ export function DropDetailView({ walletClient, chainId }: DropDetailViewProps) {
             <p className="text-xs font-medium text-white/60 mb-1">{t.dropRequirements}</p>
             {drop.requireFollow && (
               <div className="flex items-center gap-2 text-xs text-white/50">
-                <span>👥</span> {t.dropMustFollow}
+                <span className="w-1.5 h-1.5 rounded-full bg-lukso-purple flex-shrink-0" />
+                {t.dropMustFollow}
               </div>
             )}
             {drop.minFollowers > 0 && (
               <div className="flex items-center gap-2 text-xs text-white/50">
-                <span>📣</span> {t.dropAtLeast} {drop.minFollowers} {t.dropFollowerReq}
+                <span className="w-1.5 h-1.5 rounded-full bg-lukso-pink flex-shrink-0" />
+                {t.dropAtLeast} {drop.minFollowers} {t.dropFollowerReq}
               </div>
             )}
             {drop.requiredLSP7.map((addr) => (
               <div key={addr} className="flex items-center gap-2 text-xs text-white/50">
-                <span>🪙</span> Hold LSP7 token{" "}
-                <span className="font-mono">{addr.slice(0, 8)}…</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 flex-shrink-0" />
+                LSP7 <span className="font-mono">{addr.slice(0, 8)}…</span>
               </div>
             ))}
             {drop.requiredLSP8.map((addr) => (
               <div key={addr} className="flex items-center gap-2 text-xs text-white/50">
-                <span>🖼</span> Hold LSP8 NFT from{" "}
-                <span className="font-mono">{addr.slice(0, 8)}…</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" />
+                LSP8 <span className="font-mono">{addr.slice(0, 8)}…</span>
               </div>
             ))}
           </div>

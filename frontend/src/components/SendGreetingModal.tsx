@@ -1,9 +1,11 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { useSendGreeting } from "@/hooks/useSendGreeting";
-import { CELEBRATION_LABELS, CELEBRATION_EMOJIS } from "@/constants/celebrationTypes";
+import { CELEBRATION_LABELS } from "@/constants/celebrationTypes";
 import { LoadingSpinner } from "./LoadingSpinner";
+import { Avatar } from "./Avatar";
 import { useLSP3Name } from "@/hooks/useLSP3Name";
+import { useT } from "@/hooks/useT";
 import type { Address, CelebrationType } from "@/types";
 import type { WalletClient } from "viem";
 
@@ -24,6 +26,7 @@ export function SendGreetingModal({
   walletClient,
   chainId,
 }: SendGreetingModalProps) {
+  const t = useT();
   const [message, setMessage] = useState("");
   const { mutateAsync: sendGreeting, isPending } = useSendGreeting(
     walletClient ?? null,
@@ -31,55 +34,59 @@ export function SendGreetingModal({
     chainId
   );
   const { data: senderName } = useLSP3Name(senderAddress, chainId);
+  const { data: recipientName } = useLSP3Name(recipientAddress, chainId);
 
   const handleSend = async () => {
     if (!message.trim()) {
-      toast.error("Write a message first!");
+      toast.error(t.toastNoWallet);
       return;
     }
     try {
       await sendGreeting({ to: recipientAddress, celebrationType, message: message.trim() });
-      toast.success("Greeting card sent! 💌");
+      toast.success(t.toastGreetingSent);
       onClose();
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Failed to send";
+      const msg = err instanceof Error ? err.message : t.toastGreetingFailed;
       if (msg.includes("GreetingRateLimited")) {
-        toast.error("You already sent a card today. Try again tomorrow!");
+        toast.error(t.toastGreetingRateLimited);
       } else {
         toast.error(msg.slice(0, 80));
       }
     }
   };
 
-  const emoji = CELEBRATION_EMOJIS[celebrationType];
   const label = CELEBRATION_LABELS[celebrationType];
   const charsLeft = 280 - message.length;
+
+  const recipientDisplay = recipientName
+    ?? `${recipientAddress.slice(0, 8)}…${recipientAddress.slice(-4)}`;
+  const senderDisplay = senderName
+    ?? `${senderAddress.slice(0, 8)}…${senderAddress.slice(-4)}`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm">
       <div className="w-full max-w-md bg-lukso-card border-t border-lukso-border rounded-t-3xl p-6 animate-slide-up">
         <div className="flex items-center justify-between mb-5">
-          <div className="flex items-center gap-2">
-            <span className="text-xl">{emoji}</span>
-            <h2 className="text-lg font-semibold">Send Greeting</h2>
-          </div>
+          <h2 className="text-lg font-semibold">{t.celebrationSendGreeting}</h2>
           <button onClick={onClose} className="text-white/40 hover:text-white text-xl leading-none">
-            ×
+            {t.close}
           </button>
         </div>
 
-        <p className="text-sm text-white/50 mb-4">
-          Sending a <span className="text-white">{label}</span> greeting card to{" "}
-          <span className="font-mono text-lukso-purple">
-            {recipientAddress.slice(0, 8)}...{recipientAddress.slice(-4)}
-          </span>
-        </p>
+        {/* Recipient */}
+        <div className="flex items-center gap-2 mb-4">
+          <Avatar address={recipientAddress} size={32} chainId={chainId} />
+          <div>
+            <p className="text-xs text-white/40">{t.cardTo}</p>
+            <p className="text-sm font-medium text-lukso-purple">{recipientDisplay}</p>
+          </div>
+        </div>
 
         <div className="relative mb-2">
           <textarea
             value={message}
             onChange={(e) => setMessage(e.target.value.slice(0, 280))}
-            placeholder={`Write your ${label.toLowerCase()} message…`}
+            placeholder={`${t.greetingPlaceholder} ${label.toLowerCase()}…`}
             rows={4}
             className="input resize-none"
           />
@@ -92,27 +99,22 @@ export function SendGreetingModal({
           </span>
         </div>
 
-        {senderName && (
-          <p className="text-xs text-white/40 mb-3 text-right italic">
-            — From {senderName}
-          </p>
-        )}
-
-        <p className="text-xs text-white/30 mb-4">
-          This card will be minted as an NFT on LUKSO and permanently sent to their Universal Profile.
+        {/* Sender signature */}
+        <p className="text-xs text-white/40 mb-3 text-right italic">
+          — {t.cardFrom} {senderDisplay}
         </p>
 
+        <p className="text-xs text-white/30 mb-4">{t.greetingNftNote}</p>
+
         <div className="flex gap-3">
-          <button onClick={onClose} className="btn-secondary flex-1">
-            Cancel
-          </button>
+          <button onClick={onClose} className="btn-secondary flex-1">{t.cancel}</button>
           <button
             onClick={handleSend}
             disabled={isPending || !message.trim()}
             className="btn-primary flex-1 flex items-center justify-center gap-2"
           >
             {isPending ? <LoadingSpinner size="sm" /> : null}
-            {isPending ? "Sending…" : "Send Card 💌"}
+            {isPending ? t.greetingSending : t.celebrationSendGreeting}
           </button>
         </div>
       </div>

@@ -1,34 +1,27 @@
-/**
- * Reads LSP3 profile image from a Universal Profile and displays it.
- * Falls back to a generated gradient avatar based on the address.
- */
-import { useState, useEffect } from "react";
+import { useLSP3Avatar } from "@/hooks/useLSP3Avatar";
 import type { Address } from "@/types";
 
 interface AvatarProps {
   address: Address | null;
   size?: number;
   className?: string;
+  /** When provided, loads the real LSP3 profile image from the UP. */
+  chainId?: number;
 }
 
-
-export function Avatar({ address, size = 40, className = "" }: AvatarProps) {
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!address) return;
-    setImageUrl(null); // reset on address change — gradient fallback used until image resolves
-  }, [address]);
+export function Avatar({ address, size = 40, className = "", chainId }: AvatarProps) {
+  const { data: imageUrl } = useLSP3Avatar(address, chainId);
 
   if (!address) return <GradientAvatar address="0x0000" size={size} className={className} />;
+
   if (imageUrl) {
     return (
       <img
         src={imageUrl}
-        alt={`Avatar for ${address.slice(0, 8)}`}
+        alt=""
         style={{ width: size, height: size }}
-        className={`rounded-full object-cover ${className}`}
-        onError={() => setImageUrl(null)}
+        className={`rounded-full object-cover flex-shrink-0 ${className}`}
+        onError={() => {/* silent — hook will return undefined on retry failure */}}
       />
     );
   }
@@ -50,7 +43,7 @@ function GradientAvatar({
 
   return (
     <div
-      className={`rounded-full flex items-center justify-center text-white font-bold ${className}`}
+      className={`rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 ${className}`}
       style={{
         width: size,
         height: size,

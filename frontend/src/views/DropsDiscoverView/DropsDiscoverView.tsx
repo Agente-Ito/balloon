@@ -8,6 +8,7 @@ import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Avatar } from "@/components/Avatar";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { useT } from "@/hooks/useT";
+import { useLSP3Name } from "@/hooks/useLSP3Name";
 import type { IndexedDrop, Address } from "@/types";
 import type { WalletClient } from "viem";
 
@@ -25,6 +26,7 @@ function DropCard({
   chainId: number;
 }) {
   const t = useT();
+  const { data: hostName } = useLSP3Name(drop.host as Address, chainId);
   const { data: eligibility, isLoading: eligLoading } = useDropEligibility(drop.dropId, viewer, chainId);
   const claimMutation = useClaimDrop(walletClient ?? null, chainId);
 
@@ -54,16 +56,16 @@ function DropCard({
             className="w-12 h-12 rounded-xl object-cover flex-shrink-0"
           />
         ) : (
-          <div className="w-12 h-12 rounded-xl bg-lukso-pink/20 flex items-center justify-center text-2xl flex-shrink-0">
-            🎁
+          <div className="w-12 h-12 rounded-xl bg-lukso-pink/20 flex items-center justify-center flex-shrink-0">
+            <span className="w-6 h-6 rounded-full bg-lukso-pink/40" />
           </div>
         )}
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-sm truncate">{drop.name}</p>
           <div className="flex items-center gap-1.5 mt-0.5">
-            <Avatar address={drop.host} size={16} />
-            <span className="text-xs text-white/40 font-mono truncate">
-              {drop.host.slice(0, 6)}…{drop.host.slice(-4)}
+            <Avatar address={drop.host} size={16} chainId={chainId} />
+            <span className="text-xs text-lukso-purple truncate">
+              {hostName ?? `${drop.host.slice(0, 6)}…${drop.host.slice(-4)}`}
             </span>
           </div>
         </div>
@@ -196,7 +198,7 @@ export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewPr
         {openSeries.length > 0 && (
           <section>
             <h2 className="text-xs font-medium text-white/40 uppercase tracking-wide mb-1">
-              🎨 Community Badge Art
+              Community Badge Art
             </h2>
             <p className="text-xs text-white/25 mb-3">
               Vote for the official badge image for these upcoming holidays.
@@ -208,8 +210,8 @@ export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewPr
                   onClick={() => { setActiveSeriesId(s.id); setView("series"); }}
                   className="card w-full text-left flex items-center gap-3 hover:border-lukso-purple/40 transition-colors"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-lukso-purple/15 flex items-center justify-center text-xl flex-shrink-0">
-                    🎨
+                  <div className="w-10 h-10 rounded-xl bg-lukso-purple/15 flex items-center justify-center flex-shrink-0">
+                    <span className="w-5 h-5 rounded-full bg-lukso-purple/50" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium">{s.name}</p>

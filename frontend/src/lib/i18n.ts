@@ -279,6 +279,14 @@ const translations = {
     // ── Badge & card lists ────────────────────────────────────────────────────
     badgeListEmpty:       "No badges yet",
     cardListEmpty:        "No greeting cards received yet",
+    cardFrom:             "From",
+    cardTo:               "To",
+    greetingPlaceholder:  "Write your message for",
+    greetingNftNote:      "This card will be minted as an NFT on LUKSO and permanently sent to their Universal Profile.",
+    greetingSending:      "Sending…",
+    toastGreetingSent:    "Greeting card sent!",
+    toastGreetingFailed:  "Failed to send greeting",
+    toastGreetingRateLimited: "You already sent a card today. Try again tomorrow!",
 
     // ── Wishlist view ─────────────────────────────────────────────────────────
     wishlistPrivate:      "Wishlist is private",
@@ -289,6 +297,18 @@ const translations = {
     wishlistItemNFT:      "NFT",
     wishlistItemToken:    "Token",
     wishlistItemNote:     "Note",
+
+    // ── Mint badge modal ──────────────────────────────────────────────────────
+    badgeUploadHint:      "Upload image",
+    badgeSoulbound:       "Soulbound",
+    badgeSoulboundDesc:   "Cannot be transferred after minting",
+    badgeCustomImage:     "Custom image · IPFS",
+    badgeTemplate:        "Template:",
+    badgeNoImage:         "No image selected",
+    badgeOnePerYear:      "1 per year",
+    badgeMinting:         "Minting…",
+    badgeMint:            "Mint Badge",
+    badgePickTemplate:    "Pick a template for the badge art",
 
     // ── Anniversary (dismissed state) ─────────────────────────────────────────
     anniversaryLabel:     "UP Anniversary",
@@ -575,6 +595,14 @@ const translations = {
     // ── Listas de badges y tarjetas ───────────────────────────────────────────
     badgeListEmpty:       "Sin badges aún",
     cardListEmpty:        "Sin tarjetas de saludo recibidas",
+    cardFrom:             "De",
+    cardTo:               "Para",
+    greetingPlaceholder:  "Escribe tu mensaje para",
+    greetingNftNote:      "Esta tarjeta se minteará como NFT en LUKSO y se enviará permanentemente a su Perfil Universal.",
+    greetingSending:      "Enviando…",
+    toastGreetingSent:    "¡Tarjeta de saludo enviada!",
+    toastGreetingFailed:  "Error al enviar el saludo",
+    toastGreetingRateLimited: "Ya enviaste una tarjeta hoy. ¡Intenta mañana!",
 
     // ── Vista de wishlist ─────────────────────────────────────────────────────
     wishlistPrivate:      "Lista de deseos privada",
@@ -585,6 +613,18 @@ const translations = {
     wishlistItemNFT:      "NFT",
     wishlistItemToken:    "Token",
     wishlistItemNote:     "Nota",
+
+    // ── Modal de crear badge ──────────────────────────────────────────────────
+    badgeUploadHint:      "Subir imagen",
+    badgeSoulbound:       "No transferible",
+    badgeSoulboundDesc:   "No se puede transferir después de crear",
+    badgeCustomImage:     "Imagen propia · IPFS",
+    badgeTemplate:        "Plantilla:",
+    badgeNoImage:         "Sin imagen",
+    badgeOnePerYear:      "1 por año",
+    badgeMinting:         "Creando badge…",
+    badgeMint:            "Crear badge",
+    badgePickTemplate:    "Elige una plantilla para el badge",
 
     // ── Aniversario (estado descartado) ───────────────────────────────────────
     anniversaryLabel:     "Aniversario de UP",

@@ -4,8 +4,11 @@ import { useMintBadge } from "@/hooks/useMintBadge";
 import { uploadFileToIPFS } from "@/lib/ipfs";
 import { generateTemplateSVG, templateToFile } from "@/lib/celebrationTemplates";
 import { TemplatePicker } from "./TemplatePicker";
-import { CELEBRATION_LABELS, CELEBRATION_EMOJIS } from "@/constants/celebrationTypes";
+import { Avatar } from "./Avatar";
+import { CELEBRATION_LABELS } from "@/constants/celebrationTypes";
 import { LoadingSpinner } from "./LoadingSpinner";
+import { useLSP3Name } from "@/hooks/useLSP3Name";
+import { useT } from "@/hooks/useT";
 import type { Address, CelebrationType } from "@/types";
 import type { CelebrationTemplate } from "@/lib/celebrationTemplates";
 import type { WalletClient } from "viem";
@@ -27,6 +30,7 @@ export function MintBadgeModal({
   walletClient,
   chainId,
 }: MintBadgeModalProps) {
+  const t = useT();
   const [soulbound, setSoulbound] = useState(true);
   const [selectedTemplate, setSelectedTemplate] = useState<CelebrationTemplate | null>(null);
   const [customImageFile, setCustomImageFile] = useState<File | null>(null);
@@ -34,9 +38,11 @@ export function MintBadgeModal({
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { mutateAsync: mintBadge, isPending } = useMintBadge(walletClient ?? null, chainId);
+  const { data: recipientName } = useLSP3Name(recipientAddress, chainId);
 
-  const emoji = CELEBRATION_EMOJIS[celebrationType];
   const label = CELEBRATION_LABELS[celebrationType];
+  const recipientDisplay = recipientName
+    ?? `${recipientAddress.slice(0, 10)}…${recipientAddress.slice(-6)}`;
   const isBusy = isPending || isUploading;
 
   // Reactive SVG preview: regenerate whenever template selection changes (label is fixed here)
@@ -100,11 +106,20 @@ export function MintBadgeModal({
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm">
       <div className="w-full max-w-md bg-lukso-card border-t border-lukso-border rounded-t-3xl p-6 animate-slide-up">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold">Mint Commemorative Badge</h2>
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-lg font-semibold">{t.celebrationMintBadge}</h2>
           <button onClick={onClose} className="text-white/40 hover:text-white text-xl leading-none">
-            ×
+            {t.close}
           </button>
+        </div>
+
+        {/* Recipient */}
+        <div className="flex items-center gap-2 mb-4">
+          <Avatar address={recipientAddress} size={32} chainId={chainId} />
+          <div>
+            <p className="text-xs text-white/40">{t.cardTo}</p>
+            <p className="text-sm font-medium text-lukso-purple">{recipientDisplay}</p>
+          </div>
         </div>
 
         {/* Preview */}
@@ -112,16 +127,17 @@ export function MintBadgeModal({
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="w-24 h-24 rounded-2xl bg-lukso-pink/20 flex items-center justify-center text-5xl overflow-hidden hover:ring-2 hover:ring-lukso-purple/50 transition-all group relative"
-            title="Upload your own image"
+            className="w-24 h-24 rounded-2xl bg-lukso-pink/20 flex items-center justify-center overflow-hidden hover:ring-2 hover:ring-lukso-purple/50 transition-all group relative"
+            title={t.badgeUploadHint}
+            aria-label={t.badgeUploadHint}
           >
             {imagePreview ? (
               <img src={imagePreview} alt="badge" className="w-full h-full object-cover" />
             ) : (
               <>
-                <span className="group-hover:opacity-0 transition-opacity">{emoji}</span>
-                <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 text-sm text-white/70 transition-opacity">
-                  + Photo
+                <span className={`w-10 h-10 rounded-full bg-lukso-pink/40 group-hover:opacity-0 transition-opacity`} />
+                <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 text-xs text-white/70 transition-opacity">
+                  {t.badgeUploadHint}
                 </span>
               </>
             )}
@@ -129,12 +145,9 @@ export function MintBadgeModal({
           <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
           <div className="text-center">
             <p className="font-semibold">{label} {year}</p>
-            <p className="text-sm text-white/50 font-mono mt-0.5">
-              {recipientAddress.slice(0, 10)}...{recipientAddress.slice(-6)}
-            </p>
             {(customImageFile || selectedTemplate) && (
               <button onClick={clearImage} className="text-xs text-white/30 hover:text-white/60 mt-1">
-                Remove image
+                {t.eventRemove}
               </button>
             )}
           </div>
@@ -143,7 +156,7 @@ export function MintBadgeModal({
         {/* Template picker — hidden once a custom image is uploaded */}
         {!customImageFile && (
           <div className="mb-4">
-            <p className="text-[10px] text-white/30 mb-1.5 text-center">Pick a template for the badge art</p>
+            <p className="text-[10px] text-white/30 mb-1.5 text-center">{t.badgePickTemplate}</p>
             <TemplatePicker
               selected={selectedTemplate?.id ?? null}
               onSelect={(tpl) => {
@@ -158,8 +171,8 @@ export function MintBadgeModal({
         <div className="card mb-4">
           <label className="flex items-center justify-between cursor-pointer">
             <div>
-              <p className="text-sm font-medium">Soulbound</p>
-              <p className="text-xs text-white/40 mt-0.5">Cannot be transferred after minting</p>
+              <p className="text-sm font-medium">{t.badgeSoulbound}</p>
+              <p className="text-xs text-white/40 mt-0.5">{t.badgeSoulboundDesc}</p>
             </div>
             <button
               onClick={() => setSoulbound(!soulbound)}
@@ -177,13 +190,13 @@ export function MintBadgeModal({
         </div>
 
         <p className="text-xs text-white/30 text-center mb-4">
-          {customImageFile ? "Custom image → IPFS" : selectedTemplate ? `Template: ${selectedTemplate.label}` : "No image selected"} · 1 per year
+          {customImageFile ? t.badgeCustomImage : selectedTemplate ? `${t.badgeTemplate} ${selectedTemplate.label}` : t.badgeNoImage} · {t.badgeOnePerYear}
         </p>
 
         {/* Actions */}
         <div className="flex gap-3">
           <button onClick={onClose} className="btn-secondary flex-1">
-            Cancel
+            {t.cancel}
           </button>
           <button
             onClick={handleMint}
@@ -191,7 +204,7 @@ export function MintBadgeModal({
             className="btn-primary flex-1 flex items-center justify-center gap-2"
           >
             {isBusy ? <LoadingSpinner size="sm" /> : null}
-            {isUploading ? "Uploading…" : isPending ? "Minting…" : "Mint Badge"}
+            {isUploading ? t.eventUploading : isPending ? t.badgeMinting : t.badgeMint}
           </button>
         </div>
       </div>

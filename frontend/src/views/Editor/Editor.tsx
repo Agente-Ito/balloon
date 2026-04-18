@@ -71,7 +71,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
   const anniversaryInfo = upCreationDate ? computeAnniversary(upCreationDate) : null;
 
   // LSP3 profile name — used to personalize drop prefills
-  const { data: profileName } = useLSP3Name(contextProfile as Address | null, chainId);
+  const { data: profileName, isLoading: isNameLoading } = useLSP3Name(contextProfile as Address | null, chainId);
 
   // After saving an event, offer to create a drop from it
   const [pendingDropFromEvent, setPendingDropFromEvent] = useState<Celebration | null>(null);
@@ -224,6 +224,17 @@ export function Editor({ walletClient, chainId }: EditorProps) {
   }
 
   if (subView === "addDrop") {
+    // When the prefill needs the profile name (anniversary or birthday-from-calendar),
+    // wait for it to finish loading so the DropForm initializes with the correct value.
+    const prefillNeedsName = !pendingDropFromEvent && (!!pendingDropDate || !!anniversaryInfo);
+    if (prefillNeedsName && isNameLoading) {
+      return (
+        <div className="h-full flex items-center justify-center">
+          <LoadingSpinner />
+        </div>
+      );
+    }
+
     // Build pre-fill priority: event→drop > calendar date > anniversary > blank
     const prefill = (() => {
       if (pendingDropFromEvent) {
@@ -252,7 +263,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
       if (anniversaryInfo) {
         const d = anniversaryInfo.nextDate;
         const n = String(anniversaryInfo.upcomingYears);
-        const namePrefix = profileName ?? "LUKSO";
+        const namePrefix = profileName ?? contextProfile?.slice(0, 8) ?? "";
         const annName = profileName
           ? t.anniversaryDropNameProfile.replace("{name}", profileName).replace("{n}", n)
           : t.anniversaryDropNameNoProfile.replace("{n}", n);
