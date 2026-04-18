@@ -14,9 +14,10 @@ import { SendGreetingModal } from "@/components/SendGreetingModal";
 import { GiftAssetModal } from "@/components/GiftAssetModal";
 import { BadgeList } from "./BadgeList";
 import { GreetingCardList } from "./GreetingCardList";
-import { CELEBRATION_EMOJIS, CELEBRATION_LABELS } from "@/constants/celebrationTypes";
+import { CELEBRATION_COLORS, CELEBRATION_LABELS } from "@/constants/celebrationTypes";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { LanguageToggle } from "@/components/LanguageToggle";
+import { useT } from "@/hooks/useT";
 import type { WalletClient, PublicClient } from "viem";
 import type { CelebrationType } from "@/types";
 
@@ -37,6 +38,7 @@ export function CelebrationView({ walletClient, chainId }: CelebrationViewProps)
     setView,
   } = useAppStore();
 
+  const t = useT();
   const [activeTab, setActiveTab] = useState<"badges" | "cards">("badges");
   const [openModal, setOpenModal] = useState<Modal>(null);
 
@@ -73,7 +75,7 @@ export function CelebrationView({ walletClient, chainId }: CelebrationViewProps)
           onClick={() => setView("calendar")}
           className="text-white/40 hover:text-white text-sm"
         >
-          ← Calendar
+          {t.celebrationBack}
         </button>
         <span className="text-xs text-white/30 font-mono">
           {activeCelebrationDate && format(parseISO(activeCelebrationDate), "MMM d, yyyy")}
@@ -85,9 +87,7 @@ export function CelebrationView({ walletClient, chainId }: CelebrationViewProps)
       <div className="flex flex-col items-center gap-3 px-4 py-6">
         <div className="relative">
           <Avatar address={contextProfile} size={72} />
-          <span className="absolute -bottom-1 -right-1 text-2xl">
-            {CELEBRATION_EMOJIS[celebrationType]}
-          </span>
+          <span className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-lukso-bg ${CELEBRATION_COLORS[celebrationType]}`} />
         </div>
 
         <div className="text-center">
@@ -106,8 +106,9 @@ export function CelebrationView({ walletClient, chainId }: CelebrationViewProps)
         {dayData && dayData.celebrations.length > 1 && (
           <div className="flex gap-2">
             {dayData.celebrations.slice(1).map((c) => (
-              <span key={c.id} className="badge bg-white/5 text-white/60">
-                {CELEBRATION_EMOJIS[c.type]} {c.title}
+              <span key={c.id} className="badge bg-white/5 text-white/60 flex items-center gap-1">
+                <span className={`w-2 h-2 rounded-full ${CELEBRATION_COLORS[c.type]}`} />
+                {c.title}
               </span>
             ))}
           </div>
@@ -120,10 +121,10 @@ export function CelebrationView({ walletClient, chainId }: CelebrationViewProps)
         {isOwner && (
           <button
             onClick={() => setOpenModal("badge")}
-            className="card flex flex-col items-center gap-1 py-3 hover:border-lukso-pink/40 transition-colors"
+            className="card flex flex-col items-center gap-2 py-3 hover:border-lukso-pink/40 transition-colors"
           >
-            <span className="text-xl">🎖️</span>
-            <span className="text-xs text-center text-white/70 leading-tight">Mint Badge</span>
+            <span className="w-5 h-5 rounded-full bg-lukso-pink/60" />
+            <span className="text-xs text-center text-white/70 leading-tight">{t.celebrationMintBadge}</span>
           </button>
         )}
 
@@ -132,11 +133,11 @@ export function CelebrationView({ walletClient, chainId }: CelebrationViewProps)
           <button
             onClick={() => setOpenModal("greeting")}
             disabled={canSendData?.canSend === false}
-            className="card flex flex-col items-center gap-1 py-3 hover:border-lukso-purple/40 transition-colors disabled:opacity-40"
+            className="card flex flex-col items-center gap-2 py-3 hover:border-lukso-purple/40 transition-colors disabled:opacity-40"
           >
-            <span className="text-xl">💌</span>
+            <span className="w-5 h-5 rounded-full bg-lukso-purple/60" />
             <span className="text-xs text-center text-white/70 leading-tight">
-              {canSendData?.canSend === false ? "Sent today" : "Send Greeting"}
+              {canSendData?.canSend === false ? t.celebrationSentToday : t.celebrationSendGreeting}
             </span>
           </button>
         )}
@@ -145,20 +146,20 @@ export function CelebrationView({ walletClient, chainId }: CelebrationViewProps)
         {!isOwner && (
           <button
             onClick={() => setOpenModal("gift")}
-            className="card flex flex-col items-center gap-1 py-3 hover:border-green-500/40 transition-colors"
+            className="card flex flex-col items-center gap-2 py-3 hover:border-green-500/40 transition-colors"
           >
-            <span className="text-xl">🎁</span>
-            <span className="text-xs text-center text-white/70 leading-tight">Gift Asset</span>
+            <span className="w-5 h-5 rounded-full bg-green-500/60" />
+            <span className="text-xs text-center text-white/70 leading-tight">{t.celebrationGiftAsset}</span>
           </button>
         )}
 
         {/* Wishlist — always visible */}
         <button
           onClick={() => setView("wishlist")}
-          className="card flex flex-col items-center gap-1 py-3 hover:border-white/20 transition-colors"
+          className="card flex flex-col items-center gap-2 py-3 hover:border-white/20 transition-colors"
         >
-          <span className="text-xl">📋</span>
-          <span className="text-xs text-center text-white/70 leading-tight">Wishlist</span>
+          <span className="w-5 h-5 rounded-full bg-white/20" />
+          <span className="text-xs text-center text-white/70 leading-tight">{t.celebrationWishlistBtn}</span>
         </button>
       </div>
 
@@ -174,7 +175,7 @@ export function CelebrationView({ walletClient, chainId }: CelebrationViewProps)
                 : "text-white/40 hover:text-white/70"
             }`}
           >
-            {tab === "badges" ? "🎖️ Badges" : "💌 Cards"}
+            {tab === "badges" ? t.celebrationTabBadges : t.celebrationTabCards}
           </button>
         ))}
       </div>

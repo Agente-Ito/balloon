@@ -1,6 +1,7 @@
 import { useReceivedGreetingCards } from "@/hooks/useGreetingCards";
 import { GreetingCardTile } from "@/components/GreetingCardTile";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { useT } from "@/hooks/useT";
 import type { Address } from "@/types";
 
 interface GreetingCardListProps {
@@ -9,6 +10,7 @@ interface GreetingCardListProps {
 }
 
 export function GreetingCardList({ profileAddress, chainId }: GreetingCardListProps) {
+  const t = useT();
   const { data: cards, isLoading } = useReceivedGreetingCards(profileAddress, chainId);
 
   if (isLoading) return <LoadingSpinner size="sm" className="mx-auto" />;
@@ -16,7 +18,7 @@ export function GreetingCardList({ profileAddress, chainId }: GreetingCardListPr
   if (!cards || cards.length === 0) {
     return (
       <div className="text-center py-4">
-        <p className="text-sm text-white/30">No greeting cards received yet</p>
+        <p className="text-sm text-white/30">{t.cardListEmpty}</p>
       </div>
     );
   }

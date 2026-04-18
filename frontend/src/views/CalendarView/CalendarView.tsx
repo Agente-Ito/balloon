@@ -10,6 +10,7 @@ import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Avatar } from "@/components/Avatar";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { useT } from "@/hooks/useT";
+import { CELEBRATION_COLORS } from "@/constants/celebrationTypes";
 import type { CelebrationDay, Address } from "@/types";
 import type { WalletClient, PublicClient } from "viem";
 
@@ -46,7 +47,7 @@ export function CalendarView({ chainId }: CalendarViewProps) {
       {/* Toolbar */}
       <div className="flex items-center justify-between px-4 pt-4 pb-2">
         <button onClick={() => setView("grid")} className="text-white/40 hover:text-white text-sm flex items-center gap-1">
-          ← Back
+          {t.back}
         </button>
         <span className="text-sm font-semibold">{t.calendarTitle}</span>
         <LanguageToggle />
@@ -98,18 +99,19 @@ export function CalendarView({ chainId }: CalendarViewProps) {
                     onClick={() => setSelectedDay(day)}
                     className="card w-full text-left hover:border-lukso-border/80 transition-colors flex items-center gap-3"
                   >
-                    <div className="flex -space-x-1">
+                    <div className="flex -space-x-1.5">
                       {day.celebrations.slice(0, 2).map((c, i) => (
-                        <span key={i} className="text-xl">
-                          {c.type === 0 ? "🎂" : c.type === 1 ? "🆙" : c.type === 2 ? "🎉" : "✨"}
-                        </span>
+                        <span
+                          key={i}
+                          className={`w-3 h-3 rounded-full border-2 border-lukso-bg ${CELEBRATION_COLORS[c.type]}`}
+                        />
                       ))}
                     </div>
                     <div className="flex-1">
                       <p className="text-sm font-medium">
                         {day.celebrations.length === 1
                           ? day.celebrations[0].title
-                          : `${day.celebrations.length} celebrations`}
+                          : `${day.celebrations.length} ${t.calendarCelebrations}`}
                       </p>
                       <p className="text-xs text-white/40">{format(new Date(day.date), "MMMM d")}</p>
                     </div>
@@ -139,10 +141,10 @@ export function CalendarView({ chainId }: CalendarViewProps) {
                       {p.address.slice(0, 8)}…{p.address.slice(-6)}
                     </p>
                     <p className="text-xs text-white/40">
-                      Birthday — {format(new Date(2000, p.birthdayMonth - 1, p.birthdayDay), "MMMM d")}
+                      {t.calendarBirthday} — {format(new Date(2000, p.birthdayMonth - 1, p.birthdayDay), "MMMM d")}
                     </p>
                   </div>
-                  <span className="text-xl">🎂</span>
+                  <span className={`w-3 h-3 rounded-full bg-pink-500 flex-shrink-0`} />
                 </div>
               ))}
           </div>
@@ -165,11 +167,11 @@ export function CalendarView({ chainId }: CalendarViewProps) {
                 }}
                 className="card w-full text-left flex items-center gap-3 hover:border-lukso-border/80 transition-colors"
               >
-                <span className="text-xl">🎁</span>
+                <span className="w-3 h-3 rounded-full bg-lukso-purple flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{drop.name}</p>
                   <p className="text-xs text-white/40">
-                    {drop.claimed} claimed
+                    {drop.claimed} {t.calendarClaimed}
                     {drop.maxSupply != null ? ` / ${drop.maxSupply}` : ""}
                   </p>
                 </div>

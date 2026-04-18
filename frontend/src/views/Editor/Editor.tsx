@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { useT } from "@/hooks/useT";
 import { useAppStore } from "@/store/useAppStore";
@@ -10,7 +10,7 @@ import { SettingsForm } from "./SettingsForm";
 import { DropForm } from "./DropForm";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { LanguageToggle } from "@/components/LanguageToggle";
-import { CELEBRATION_EMOJIS } from "@/constants/celebrationTypes";
+import { CELEBRATION_COLORS } from "@/constants/celebrationTypes";
 import { useCreateDrop, type CreateDropParams } from "@/hooks/useCreateDrop";
 import { useDrops } from "@/hooks/useDrops";
 import { useUPCreationDate } from "@/hooks/useUPCreationDate";
@@ -79,18 +79,53 @@ export function Editor({ walletClient, chainId }: EditorProps) {
   const [birthdayMonth, setBirthdayMonth] = useState("");
   const [birthdayDay, setBirthdayDay] = useState("");
   const [birthdayYear, setBirthdayYear] = useState("");
+  const [isBirthdayEditing, setIsBirthdayEditing] = useState(false);
 
-  // Populate fields when profileData loads
   const currentBirthday = profileData?.birthday ?? "";
-  const birthdayDisplay = (() => {
-    if (!currentBirthday) return "Not set";
+
+  // Pre-populate form fields when profile data loads
+  useEffect(() => {
+    if (!currentBirthday) return;
     if (currentBirthday.startsWith("--")) {
-      const [, , mm, dd] = currentBirthday.split("-");
+      const mm = currentBirthday.slice(2, 4);
+      const dd = currentBirthday.slice(5, 7);
+      setBirthdayMonth(String(parseInt(mm)));
+      setBirthdayDay(String(parseInt(dd)));
+      setBirthdayYear("");
+    } else {
+      const [yyyy, mm, dd] = currentBirthday.split("-");
+      setBirthdayMonth(String(parseInt(mm)));
+      setBirthdayDay(String(parseInt(dd)));
+      setBirthdayYear(yyyy ?? "");
+    }
+  }, [currentBirthday]);
+
+  const birthdayDisplay = (() => {
+    if (!currentBirthday) return null;
+    if (currentBirthday.startsWith("--")) {
+      const mm = currentBirthday.slice(2, 4);
+      const dd = currentBirthday.slice(5, 7);
       return `${MONTH_NAMES[parseInt(mm) - 1]} ${dd}`;
     }
     const [yyyy, mm, dd] = currentBirthday.split("-");
     return `${MONTH_NAMES[parseInt(mm) - 1]} ${dd}, ${yyyy}`;
   })();
+
+  // Anniversary dismiss — persisted per year so it re-shows next anniversary
+  const anniversaryDismissKey = anniversaryInfo
+    ? `celebrations:anniversary-dismissed:${anniversaryInfo.nextDate.getFullYear()}`
+    : null;
+  const [anniversaryDismissed, setAnniversaryDismissed] = useState(false);
+
+  useEffect(() => {
+    if (!anniversaryDismissKey) return;
+    setAnniversaryDismissed(localStorage.getItem(anniversaryDismissKey) === "1");
+  }, [anniversaryDismissKey]);
+
+  const dismissAnniversary = () => {
+    if (anniversaryDismissKey) localStorage.setItem(anniversaryDismissKey, "1");
+    setAnniversaryDismissed(true);
+  };
 
   const handleSaveBirthday = async () => {
     if (!birthdayMonth || !birthdayDay) return;
@@ -105,6 +140,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
     try {
       await setBirthday(value);
       toast.success(t.toastBirthdaySaved);
+      setIsBirthdayEditing(false);
     } catch (err) {
       console.error("[handleSaveBirthday]", err);
       const msg = err instanceof Error ? err.message : String(err);
@@ -336,34 +372,129 @@ export function Editor({ walletClient, chainId }: EditorProps) {
               </div>
             )}
 
-            {/* UP Anniversary hint */}
-            {anniversaryInfo && !pendingDropFromEvent && (
+            {/* Birthday — display mode when set, edit mode when not set or user clicks Change */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs text-white/40 uppercase tracking-wide font-medium">
+                  {t.birthday}
+                </p>
+                {birthdayDisplay && !isBirthdayEditing && (
+                  <button
+                    onClick={() => setIsBirthdayEditing(true)}
+                    className="text-xs text-lukso-purple hover:text-lukso-purple/80"
+                  >
+                    {t.change}
+                  </button>
+                )}
+              </div>
+
+              {birthdayDisplay && !isBirthdayEditing ? (
+                <div className="card flex items-center justify-between">
+                  <p className="text-sm font-medium">{birthdayDisplay}</p>
+                  <span className="text-xs text-white/30">{t.birthday}</span>
+                </div>
+              ) : (
+                <div className="card">
+                  {!birthdayDisplay && (
+                    <p className="text-xs text-white/50 mb-3">{t.birthdayCurrent} <span className="text-white/40">Not set</span></p>
+                  )}
+                  <div className="grid grid-cols-3 gap-2 mb-2">
+                    <div>
+                      <label className="block text-[10px] text-white/40 mb-1">{t.birthdayMonth}</label>
+                      <select
+                        value={birthdayMonth}
+                        onChange={(e) => setBirthdayMonth(e.target.value)}
+                        className="input text-sm py-1.5"
+                      >
+                        <option value="">—</option>
+                        {MONTH_NAMES.map((m, i) => (
+                          <option key={m} value={String(i + 1)}>{m}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] text-white/40 mb-1">{t.birthdayDay}</label>
+                      <select
+                        value={birthdayDay}
+                        onChange={(e) => setBirthdayDay(e.target.value)}
+                        className="input text-sm py-1.5"
+                      >
+                        <option value="">—</option>
+                        {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+                          <option key={d} value={String(d)}>{d}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] text-white/40 mb-1">{t.birthdayYear} <span className="text-white/25">{t.birthdayYearOpt}</span></label>
+                      <input
+                        type="number"
+                        value={birthdayYear}
+                        onChange={(e) => setBirthdayYear(e.target.value)}
+                        placeholder="e.g. 1990"
+                        min={1900}
+                        max={new Date().getFullYear()}
+                        className="input text-sm py-1.5"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    {isBirthdayEditing && (
+                      <button
+                        onClick={() => setIsBirthdayEditing(false)}
+                        className="btn-ghost flex-1 text-xs py-1.5 border border-lukso-border"
+                      >
+                        {t.cancel}
+                      </button>
+                    )}
+                    <button
+                      onClick={handleSaveBirthday}
+                      disabled={isSavingBirthday || !birthdayMonth || !birthdayDay}
+                      className="btn-primary flex-1 flex items-center justify-center gap-1"
+                    >
+                      {isSavingBirthday ? <LoadingSpinner size="sm" /> : t.birthdaySave}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* UP Anniversary hint — below birthday, dismissible per year */}
+            {anniversaryInfo && !pendingDropFromEvent && !anniversaryDismissed && (
               <div className={`card border animate-bounce-in ${
                 anniversaryInfo.isToday
                   ? "bg-lukso-purple/20 border-lukso-purple/50"
                   : "bg-white/5 border-lukso-border"
               }`}>
-                {anniversaryInfo.isToday ? (
-                  <>
-                    <p className="text-sm font-semibold text-lukso-purple mb-1">
+                <div className="flex items-start justify-between gap-2 mb-1">
+                  {anniversaryInfo.isToday ? (
+                    <p className="text-sm font-semibold text-lukso-purple">
                       {t.anniversaryToday}
                     </p>
-                    <p className="text-xs text-white/50 mb-3">
-                      {t.anniversaryTodaySub} <strong className="text-white">{anniversaryInfo.upcomingYears} {anniversaryInfo.upcomingYears !== 1 ? t.anniversaryTodayUnit2 : t.anniversaryTodayUnit}</strong>
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-sm font-semibold mb-1">
+                  ) : (
+                    <p className="text-sm font-semibold">
                       {t.anniversaryUpcoming}
                     </p>
-                    <p className="text-xs text-white/50 mb-3">
-                      {t.anniversaryUpcomingSub} <strong className="text-white">{anniversaryInfo.upcomingYears}</strong> {t.anniversaryUpcomingOn}{" "}
-                      <strong className="text-white">
-                        {format(anniversaryInfo.nextDate, "MMMM d, yyyy")}
-                      </strong>
-                    </p>
-                  </>
+                  )}
+                  <button
+                    onClick={dismissAnniversary}
+                    className="text-white/20 hover:text-white/50 text-xs leading-none mt-0.5 flex-shrink-0"
+                    aria-label="Dismiss"
+                  >
+                    ✕
+                  </button>
+                </div>
+                {anniversaryInfo.isToday ? (
+                  <p className="text-xs text-white/50 mb-3">
+                    {t.anniversaryTodaySub} <strong className="text-white">{anniversaryInfo.upcomingYears} {anniversaryInfo.upcomingYears !== 1 ? t.anniversaryTodayUnit2 : t.anniversaryTodayUnit}</strong>
+                  </p>
+                ) : (
+                  <p className="text-xs text-white/50 mb-3">
+                    {t.anniversaryUpcomingSub} <strong className="text-white">{anniversaryInfo.upcomingYears}</strong> {t.anniversaryUpcomingOn}{" "}
+                    <strong className="text-white">
+                      {format(anniversaryInfo.nextDate, "MMMM d, yyyy")}
+                    </strong>
+                  </p>
                 )}
                 <button
                   onClick={() => { setPendingDropFromEvent(null); setSubView("addDrop"); }}
@@ -373,65 +504,6 @@ export function Editor({ walletClient, chainId }: EditorProps) {
                 </button>
               </div>
             )}
-
-            {/* Birthday */}
-            <div>
-              <p className="text-xs text-white/40 uppercase tracking-wide font-medium mb-2">
-                {t.birthday}
-              </p>
-              <div className="card">
-                <p className="text-xs text-white/50 mb-3">
-                  {t.birthdayCurrent} <span className="text-white">{birthdayDisplay}</span>
-                </p>
-                <div className="grid grid-cols-3 gap-2 mb-2">
-                  <div>
-                    <label className="block text-[10px] text-white/40 mb-1">{t.birthdayMonth}</label>
-                    <select
-                      value={birthdayMonth}
-                      onChange={(e) => setBirthdayMonth(e.target.value)}
-                      className="input text-sm py-1.5"
-                    >
-                      <option value="">—</option>
-                      {MONTH_NAMES.map((m, i) => (
-                        <option key={m} value={String(i + 1)}>{m}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-[10px] text-white/40 mb-1">{t.birthdayDay}</label>
-                    <select
-                      value={birthdayDay}
-                      onChange={(e) => setBirthdayDay(e.target.value)}
-                      className="input text-sm py-1.5"
-                    >
-                      <option value="">—</option>
-                      {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
-                        <option key={d} value={String(d)}>{d}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-[10px] text-white/40 mb-1">{t.birthdayYear} <span className="text-white/25">{t.birthdayYearOpt}</span></label>
-                    <input
-                      type="number"
-                      value={birthdayYear}
-                      onChange={(e) => setBirthdayYear(e.target.value)}
-                      placeholder="e.g. 1990"
-                      min={1900}
-                      max={new Date().getFullYear()}
-                      className="input text-sm py-1.5"
-                    />
-                  </div>
-                </div>
-                <button
-                  onClick={handleSaveBirthday}
-                  disabled={isSavingBirthday || !birthdayMonth || !birthdayDay}
-                  className="btn-primary w-full flex items-center justify-center gap-1"
-                >
-                  {isSavingBirthday ? <LoadingSpinner size="sm" /> : t.birthdaySave}
-                </button>
-              </div>
-            </div>
 
             {/* Custom events */}
             <div>
@@ -447,7 +519,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
                 </button>
               </div>
 
-              {profileData?.events.length === 0 ? (
+              {profileData?.events.length === 0 && !anniversaryDismissed ? (
                 <div className="card text-center py-4">
                   <p className="text-sm text-white/30">{t.eventsEmpty}</p>
                 </div>
@@ -455,7 +527,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
                 <div className="space-y-2">
                   {profileData?.events.map((event) => (
                     <div key={event.id} className="card flex items-center gap-3">
-                      <span className="text-xl">{CELEBRATION_EMOJIS[event.type]}</span>
+                      <span className={`w-3 h-3 rounded-full flex-shrink-0 ${CELEBRATION_COLORS[event.type]}`} />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium">{event.title}</p>
                         <p className="text-xs text-white/40">
@@ -464,6 +536,24 @@ export function Editor({ walletClient, chainId }: EditorProps) {
                       </div>
                     </div>
                   ))}
+                  {/* Anniversary shown here once the banner is dismissed */}
+                  {anniversaryInfo && anniversaryDismissed && (
+                    <div className="card flex items-center gap-3 border-white/5">
+                      <span className="w-3 h-3 rounded-full flex-shrink-0 bg-purple-500" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-white/60">{t.anniversaryLabel}</p>
+                        <p className="text-xs text-white/30">
+                          {format(anniversaryInfo.nextDate, "MMMM d, yyyy")}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => { setPendingDropFromEvent(null); setSubView("addDrop"); }}
+                        className="text-xs text-lukso-purple hover:text-lukso-purple/80 flex-shrink-0"
+                      >
+                        {t.anniversaryCreateDropShort}
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -486,11 +576,10 @@ export function Editor({ walletClient, chainId }: EditorProps) {
 
             {profileData?.wishlist.length === 0 ? (
               <div className="card text-center py-6">
-                <p className="text-2xl mb-2">📭</p>
-                <p className="text-sm text-white/30">{t.wishlistEmpty}</p>
+                <p className="text-sm text-white/30 mb-3">{t.wishlistEmpty}</p>
                 <button
                   onClick={() => setSubView("addWishlist")}
-                  className="btn-secondary mt-3 text-xs px-3 py-1"
+                  className="btn-secondary text-xs px-3 py-1"
                 >
                   {t.wishlistAdd}
                 </button>
@@ -499,8 +588,8 @@ export function Editor({ walletClient, chainId }: EditorProps) {
               <div className="space-y-2">
                 {profileData?.wishlist.map((item) => (
                   <div key={item.id} className="card flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-lg">
-                      🎁
+                    <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
+                      <span className="w-4 h-4 rounded-full bg-white/10" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium">{item.name}</p>
@@ -529,8 +618,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
 
             {!myDrops || myDrops.length === 0 ? (
               <div className="card text-center py-6">
-                <p className="text-2xl mb-2">🎁</p>
-                <p className="text-sm text-white/30 mb-3">{t.dropsEmpty}</p>
+                <p className="text-sm text-white/30 mb-1">{t.dropsEmpty}</p>
                 <p className="text-xs text-white/20 mb-3">{t.dropsEmptySub}</p>
                 <button
                   onClick={() => setSubView("addDrop")}

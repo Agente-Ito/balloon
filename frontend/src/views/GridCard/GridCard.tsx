@@ -15,7 +15,7 @@ import { BalloonIcon } from "@/components/BalloonIcon";
 import { BalloonLogo } from "@/components/BalloonLogo";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { useT } from "@/hooks/useT";
-import { CELEBRATION_EMOJIS } from "@/constants/celebrationTypes";
+import { CELEBRATION_COLORS } from "@/constants/celebrationTypes";
 import type { Address } from "@/types";
 import type { WalletClient, PublicClient } from "viem";
 
@@ -86,7 +86,7 @@ export function GridCard({ chainId }: GridCardProps) {
           <LanguageToggle />
           {badges && badges.length > 0 && (
             <span className="badge bg-lukso-pink/20 text-lukso-pink">
-              {badges.length} {badges.length === 1 ? "badge" : "badges"}
+              {badges.length} {badges.length === 1 ? t.gridBadge : t.gridBadges}
             </span>
           )}
           <NetworkBadge chainId={chainId} />
@@ -105,7 +105,7 @@ export function GridCard({ chainId }: GridCardProps) {
               <p className="text-sm font-semibold text-lukso-purple">
                 {(activeDrops ?? []).length === 1
                   ? (activeDrops ?? [])[0].name
-                  : `${(activeDrops ?? []).length} active drops!`}
+                  : `${(activeDrops ?? []).length} ${t.gridActiveDropsMulti}`}
               </p>
               <p className="text-xs text-lukso-purple/60">{t.gridViewDrops}</p>
             </div>
@@ -120,18 +120,19 @@ export function GridCard({ chainId }: GridCardProps) {
           className="card bg-lukso-pink/10 border-lukso-pink/30 text-left hover:bg-lukso-pink/20 transition-colors"
         >
           <div className="flex items-center gap-3">
-            <div className="flex -space-x-1">
+            <div className="flex -space-x-1.5">
               {todayCelebrations.slice(0, 3).map((c) => (
-                <span key={c.id} className="text-2xl">
-                  {CELEBRATION_EMOJIS[c.type]}
-                </span>
+                <span
+                  key={c.id}
+                  className={`w-3 h-3 rounded-full border-2 border-lukso-bg ${CELEBRATION_COLORS[c.type]}`}
+                />
               ))}
             </div>
             <div>
               <p className="text-sm font-semibold text-lukso-pink">
                 {todayCelebrations.length === 1
                   ? todayCelebrations[0].title
-                  : `${todayCelebrations.length} celebrations today!`}
+                  : `${todayCelebrations.length} ${t.gridCelebrationsToday}`}
               </p>
               <p className="text-xs text-lukso-pink/60">{t.calendarCelebrate}</p>
             </div>
@@ -149,9 +150,7 @@ export function GridCard({ chainId }: GridCardProps) {
             {t.gridUpcoming}
           </p>
           <div className="flex items-center gap-3">
-            <span className="text-3xl">
-              {CELEBRATION_EMOJIS[nextCelebration.celebrations[0].type]}
-            </span>
+            <span className={`w-4 h-4 rounded-full flex-shrink-0 ${CELEBRATION_COLORS[nextCelebration.celebrations[0].type]}`} />
             <div>
               <p className="text-sm font-semibold">
                 {nextCelebration.celebrations[0].title}
@@ -159,7 +158,7 @@ export function GridCard({ chainId }: GridCardProps) {
               <p className="text-xs text-white/40">
                 {format(parseISO(nextCelebration.date), "MMMM d")}
                 {" · "}
-                {differenceInDays(parseISO(nextCelebration.date), new Date())} days away
+                {differenceInDays(parseISO(nextCelebration.date), new Date())} {t.gridDaysAway}
               </p>
             </div>
           </div>
@@ -168,11 +167,14 @@ export function GridCard({ chainId }: GridCardProps) {
 
       {/* Empty state */}
       {!hasTodayCelebrations && !nextCelebration && (
-        <div className="card flex flex-col items-center gap-2 py-6 text-center">
-          <BalloonIcon size={40} color="#3A3B3E" className="animate-float-slow" />
-          <p className="text-sm text-white/50">{t.gridNoCelebrations}</p>
+        <div className="card flex flex-col items-center gap-3 py-8 text-center">
+          <BalloonIcon size={48} color="#8B5CF6" className="animate-float-slow opacity-60" />
+          <div>
+            <p className="text-sm font-semibold text-white/70">{t.gridNoCelebrations}</p>
+            <p className="text-xs text-white/30 mt-1">{t.gridNoCelebrationsSub}</p>
+          </div>
           {isOwner && (
-            <button onClick={() => setView("editor")} className="btn-primary mt-1 text-xs px-3 py-1">
+            <button onClick={() => setView("editor")} className="btn-primary text-xs px-4 py-1.5">
               {t.gridEditProfile}
             </button>
           )}
@@ -190,19 +192,19 @@ export function GridCard({ chainId }: GridCardProps) {
       {/* Quick actions */}
       <div className="grid grid-cols-3 gap-2 mt-auto">
         <button onClick={() => setView("calendar")} className="btn-secondary text-xs py-2.5">
-          📅 Calendar
+          {t.gridCalendar}
         </button>
         <button onClick={handleDropsClick} className="btn-secondary text-xs py-2.5 flex items-center justify-center gap-1 hover:animate-pop">
           <BalloonIcon size={14} color="#8B5CF6" />
-          Drops
+          {t.gridDropsBtn}
         </button>
         {isOwner ? (
           <button onClick={() => setView("editor")} className="btn-secondary text-xs py-2.5">
-            ✏️ Edit
+            {t.gridEdit}
           </button>
         ) : (
           <button onClick={() => setView("wishlist")} className="btn-secondary text-xs py-2.5">
-            🛍 Wishlist
+            {t.gridWishlistBtn}
           </button>
         )}
       </div>

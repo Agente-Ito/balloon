@@ -12,6 +12,7 @@ const translations = {
     back:        "← Back",
     save:        "Save",
     cancel:      "Cancel",
+    change:      "Change",
     add:         "+ Add",
     create:      "+ Create",
     loading:     "Loading…",
@@ -42,10 +43,10 @@ const translations = {
 
     // ── Editor ────────────────────────────────────────────────────────────────
     editorTitle:     "Edit Profile",
-    tabDates:        "📅 Dates",
-    tabDrops:        "🎈 Drops",
-    tabWishlist:     "🛍 Wishlist",
-    tabSettings:     "⚙️ Settings",
+    tabDates:        "Dates",
+    tabDrops:        "Drops",
+    tabWishlist:     "Wishlist",
+    tabSettings:     "Settings",
 
     birthday:        "Birthday",
     birthdayCurrent: "Current:",
@@ -79,24 +80,24 @@ const translations = {
     addDrop:         "Create Drop",
 
     dropForEvent:         "Drop for",
-    dropPromptTitle:      "🎈 Create a drop for this event?",
+    dropPromptTitle:      "Create a drop for this event?",
     dropPromptSub:        "Let followers claim a badge for",
     dropPromptSkip:       "Skip",
     dropPromptCreate:     "Create Drop",
 
-    anniversaryToday:     "🎈 Today is your UP anniversary!",
+    anniversaryToday:     "Today is your UP anniversary!",
     anniversaryTodaySub:  "You've been on LUKSO for",
     anniversaryTodayUnit: "year",
     anniversaryTodayUnit2: "years",
-    anniversaryTodayCta:  "Create Anniversary Drop 🎉",
-    anniversaryUpcoming:  "🆙 UP Anniversary",
+    anniversaryTodayCta:  "Create Anniversary Drop",
+    anniversaryUpcoming:  "UP Anniversary",
     anniversaryUpcomingSub: "Your UP turns",
     anniversaryUpcomingOn: "on",
     anniversaryUpcomingCta: "Pre-create Anniversary Drop",
     anniversaryDesc:      "on LUKSO! Claim this badge to celebrate with me.",
 
     // ── Drop form ─────────────────────────────────────────────────────────────
-    dropFormTemplates:    "🎉 Use a holiday template",
+    dropFormTemplates:    "Use a holiday template",
     dropFormTemplateApplied: "applied",
     dropFormTemplateBrowse: "▼ browse",
     dropFormTemplateHide: "▲ hide",
@@ -248,6 +249,50 @@ const translations = {
     toastFailedEvent:    "Failed to add event",
     toastFailedWishlist: "Failed to add item",
     toastFailedDrop:     "Failed to create drop",
+
+    // ── Grid card extra ───────────────────────────────────────────────────────
+    gridBadge:            "badge",
+    gridBadges:           "badges",
+    gridDaysAway:         "days away",
+    gridCalendar:         "Calendar",
+    gridDropsBtn:         "Drops",
+    gridEdit:             "Edit",
+    gridWishlistBtn:      "Wishlist",
+    gridCelebrationsToday: "celebrations today",
+    gridActiveDropsMulti:  "active drops",
+
+    // ── Calendar extra ────────────────────────────────────────────────────────
+    calendarBirthday:     "Birthday",
+    calendarClaimed:      "claimed",
+    calendarCelebrations: "celebrations",
+
+    // ── Celebration view ──────────────────────────────────────────────────────
+    celebrationBack:         "← Calendar",
+    celebrationMintBadge:    "Mint Badge",
+    celebrationSendGreeting: "Send Greeting",
+    celebrationSentToday:    "Sent today",
+    celebrationGiftAsset:    "Gift Asset",
+    celebrationWishlistBtn:  "Wishlist",
+    celebrationTabBadges:    "Badges",
+    celebrationTabCards:     "Cards",
+
+    // ── Badge & card lists ────────────────────────────────────────────────────
+    badgeListEmpty:       "No badges yet",
+    cardListEmpty:        "No greeting cards received yet",
+
+    // ── Wishlist view ─────────────────────────────────────────────────────────
+    wishlistPrivate:      "Wishlist is private",
+    wishlistItemsOf:      "'s wishlist",
+    wishlistEditBtn:      "Edit",
+    wishlistEmptyOwner:   "Add items",
+    wishlistViewBtn:      "View",
+    wishlistItemNFT:      "NFT",
+    wishlistItemToken:    "Token",
+    wishlistItemNote:     "Note",
+
+    // ── Anniversary (dismissed state) ─────────────────────────────────────────
+    anniversaryLabel:     "UP Anniversary",
+    anniversaryCreateDropShort: "Create drop",
   },
 
   es: {
@@ -255,6 +300,7 @@ const translations = {
     back:        "← Volver",
     save:        "Guardar",
     cancel:      "Cancelar",
+    change:      "Cambiar",
     add:         "+ Agregar",
     create:      "+ Crear",
     loading:     "Cargando…",
@@ -285,10 +331,10 @@ const translations = {
 
     // ── Editor ────────────────────────────────────────────────────────────────
     editorTitle:     "Editar perfil",
-    tabDates:        "📅 Fechas",
-    tabDrops:        "🎈 Drops",
-    tabWishlist:     "🛍 Wishlist",
-    tabSettings:     "⚙️ Ajustes",
+    tabDates:        "Fechas",
+    tabDrops:        "Drops",
+    tabWishlist:     "Wishlist",
+    tabSettings:     "Ajustes",
 
     birthday:        "Cumpleaños",
     birthdayCurrent: "Actual:",
@@ -322,24 +368,24 @@ const translations = {
     addDrop:         "Crear drop",
 
     dropForEvent:         "Drop para",
-    dropPromptTitle:      "🎈 ¿Crear un drop para este evento?",
+    dropPromptTitle:      "¿Crear un drop para este evento?",
     dropPromptSub:        "Permite que seguidores reclamen un badge para",
     dropPromptSkip:       "Omitir",
     dropPromptCreate:     "Crear drop",
 
-    anniversaryToday:     "🎈 ¡Hoy es tu aniversario en LUKSO!",
+    anniversaryToday:     "¡Hoy es tu aniversario en LUKSO!",
     anniversaryTodaySub:  "Llevas",
     anniversaryTodayUnit: "año",
     anniversaryTodayUnit2: "años",
-    anniversaryTodayCta:  "Crear drop de aniversario 🎉",
-    anniversaryUpcoming:  "🆙 Aniversario de UP",
+    anniversaryTodayCta:  "Crear drop de aniversario",
+    anniversaryUpcoming:  "Aniversario de UP",
     anniversaryUpcomingSub: "Tu UP cumple",
     anniversaryUpcomingOn: "el",
     anniversaryUpcomingCta: "Pre-crear drop de aniversario",
     anniversaryDesc:      "en LUKSO! Reclama este badge para celebrar conmigo.",
 
     // ── Formulario de drop ────────────────────────────────────────────────────
-    dropFormTemplates:    "🎉 Usar plantilla festiva",
+    dropFormTemplates:    "Usar plantilla festiva",
     dropFormTemplateApplied: "aplicada",
     dropFormTemplateBrowse: "▼ explorar",
     dropFormTemplateHide: "▲ ocultar",
@@ -491,6 +537,50 @@ const translations = {
     dropClaimedBy:           "Reclamado por",
     dropFirstClaim:          "Sin reclamaciones aún. ¡Sé el primero!",
     dropMore:                "más",
+
+    // ── Grid card extra ───────────────────────────────────────────────────────
+    gridBadge:            "badge",
+    gridBadges:           "badges",
+    gridDaysAway:         "días",
+    gridCalendar:         "Calendario",
+    gridDropsBtn:         "Drops",
+    gridEdit:             "Editar",
+    gridWishlistBtn:      "Wishlist",
+    gridCelebrationsToday: "celebraciones hoy",
+    gridActiveDropsMulti:  "drops activos",
+
+    // ── Calendario extra ──────────────────────────────────────────────────────
+    calendarBirthday:     "Cumpleaños",
+    calendarClaimed:      "reclamados",
+    calendarCelebrations: "celebraciones",
+
+    // ── Vista de celebración ──────────────────────────────────────────────────
+    celebrationBack:         "← Calendario",
+    celebrationMintBadge:    "Crear badge",
+    celebrationSendGreeting: "Enviar saludo",
+    celebrationSentToday:    "Enviado hoy",
+    celebrationGiftAsset:    "Regalar activo",
+    celebrationWishlistBtn:  "Lista de deseos",
+    celebrationTabBadges:    "Badges",
+    celebrationTabCards:     "Tarjetas",
+
+    // ── Listas de badges y tarjetas ───────────────────────────────────────────
+    badgeListEmpty:       "Sin badges aún",
+    cardListEmpty:        "Sin tarjetas de saludo recibidas",
+
+    // ── Vista de wishlist ─────────────────────────────────────────────────────
+    wishlistPrivate:      "Lista de deseos privada",
+    wishlistItemsOf:      " - lista de deseos",
+    wishlistEditBtn:      "Editar",
+    wishlistEmptyOwner:   "Agregar elementos",
+    wishlistViewBtn:      "Ver",
+    wishlistItemNFT:      "NFT",
+    wishlistItemToken:    "Token",
+    wishlistItemNote:     "Nota",
+
+    // ── Aniversario (estado descartado) ───────────────────────────────────────
+    anniversaryLabel:     "Aniversario de UP",
+    anniversaryCreateDropShort: "Crear drop",
   },
 } as const;
 

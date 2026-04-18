@@ -1,3 +1,4 @@
+import { useT } from "@/hooks/useT";
 import type { WishlistItem as WishlistItemType } from "@/types";
 
 interface WishlistItemProps {
@@ -5,7 +6,12 @@ interface WishlistItemProps {
 }
 
 export function WishlistItemRow({ item }: WishlistItemProps) {
-  const typeLabel = { lsp8: "NFT", lsp7: "Token", note: "Note" }[item.type];
+  const t = useT();
+  const typeLabel = {
+    lsp8: t.wishlistItemNFT,
+    lsp7: t.wishlistItemToken,
+    note: t.wishlistItemNote,
+  }[item.type];
   const typeColor = {
     lsp8: "bg-lukso-purple/20 text-lukso-purple",
     lsp7: "bg-green-500/20 text-green-400",
@@ -14,15 +20,15 @@ export function WishlistItemRow({ item }: WishlistItemProps) {
 
   return (
     <div className="card flex items-start gap-3">
-      <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center text-2xl flex-shrink-0">
+      <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center flex-shrink-0 overflow-hidden">
         {item.image ? (
           <img
             src={item.image}
             alt={item.name}
-            className="w-full h-full object-cover rounded-xl"
+            className="w-full h-full object-cover"
           />
         ) : (
-          "🎁"
+          <span className="w-5 h-5 rounded-full bg-white/10" />
         )}
       </div>
 
@@ -48,7 +54,7 @@ export function WishlistItemRow({ item }: WishlistItemProps) {
           rel="noopener noreferrer"
           className="btn-secondary text-xs px-2 py-1 flex-shrink-0"
         >
-          View ↗
+          {t.wishlistViewBtn} ↗
         </a>
       )}
     </div>

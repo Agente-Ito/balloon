@@ -1,6 +1,7 @@
 import { useBadges } from "@/hooks/useBadges";
 import { BadgeCard } from "@/components/BadgeCard";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { useT } from "@/hooks/useT";
 import type { Address } from "@/types";
 
 interface BadgeListProps {
@@ -9,6 +10,7 @@ interface BadgeListProps {
 }
 
 export function BadgeList({ profileAddress, chainId }: BadgeListProps) {
+  const t = useT();
   const { data: badges, isLoading } = useBadges(profileAddress, chainId);
 
   if (isLoading) return <LoadingSpinner size="sm" className="mx-auto" />;
@@ -16,7 +18,7 @@ export function BadgeList({ profileAddress, chainId }: BadgeListProps) {
   if (!badges || badges.length === 0) {
     return (
       <div className="text-center py-4">
-        <p className="text-sm text-white/30">No badges yet</p>
+        <p className="text-sm text-white/30">{t.badgeListEmpty}</p>
       </div>
     );
   }
