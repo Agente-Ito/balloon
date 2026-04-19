@@ -98,7 +98,7 @@ export function GridCard({ chainId }: GridCardProps) {
             name={lsp3?.name}
           />
           <div className="flex flex-col gap-0.5 min-w-0">
-            <BalloonLogo letterHeight={36} />
+            <BalloonLogo displayHeight={38} />
             {lsp3?.name && (
               <span
                 className="text-[11px] font-medium leading-tight truncate"
