@@ -61,9 +61,9 @@ export function BalloonLogo({ className = "", height = 40, compact = false }: Ba
   if (!imgFailed) {
     return (
       <img
-        src="/balloon-wordmark.jpeg"
+        src="/balloon-wordmark-v2.jpeg"
         alt="balloon"
-        style={{ height, width: "auto", objectFit: "contain" }}
+        style={{ height, width: "auto", objectFit: "contain", mixBlendMode: "multiply" }}
         className={className}
         onError={() => setImgFailed(true)}
         draggable={false}
