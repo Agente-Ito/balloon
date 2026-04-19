@@ -4,6 +4,7 @@ import { WishlistItemRow } from "./WishlistItem";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Avatar } from "@/components/Avatar";
 import { LanguageToggle } from "@/components/LanguageToggle";
+import { useLSP3Name } from "@/hooks/useLSP3Name";
 import { useT } from "@/hooks/useT";
 import type { WalletClient, PublicClient } from "viem";
 
@@ -17,6 +18,7 @@ export function Wishlist({ chainId }: WishlistProps) {
   const { contextProfile, isOwner, setView } = useAppStore();
   const t = useT();
   const { data: profileData, isLoading } = useProfileData(contextProfile, chainId);
+  const { data: profileName } = useLSP3Name(contextProfile, chainId);
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
@@ -46,8 +48,8 @@ export function Wishlist({ chainId }: WishlistProps) {
       {contextProfile && (
         <div className="flex items-center gap-2 px-4 py-2">
           <Avatar address={contextProfile} size={24} />
-          <p className="text-xs text-white/40 font-mono">
-            {contextProfile.slice(0, 8)}…{contextProfile.slice(-6)}{t.wishlistItemsOf}
+          <p className="text-xs text-white/40">
+            {(profileName ?? `${contextProfile.slice(0, 8)}…${contextProfile.slice(-6)}`) + t.wishlistItemsOf}
           </p>
         </div>
       )}

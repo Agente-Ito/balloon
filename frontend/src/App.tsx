@@ -7,6 +7,7 @@ import { CelebrationView } from "@/views/CelebrationView/CelebrationView";
 import { Editor } from "@/views/Editor/Editor";
 import { Wishlist } from "@/views/Wishlist/Wishlist";
 import { DropsDiscoverView } from "@/views/DropsDiscoverView/DropsDiscoverView";
+import { DropsManageView } from "@/views/DropsManageView/DropsManageView";
 import { DropDetailView } from "@/views/DropDetailView/DropDetailView";
 import { SeriesView } from "@/views/SeriesView/SeriesView";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
@@ -65,6 +66,7 @@ export default function App() {
         {currentView === "editor" && <Editor {...sharedProps} />}
         {currentView === "wishlist" && <Wishlist {...sharedProps} />}
         {currentView === "drops" && <DropsDiscoverView walletClient={sharedProps.walletClient} chainId={sharedProps.chainId} />}
+        {currentView === "drops-manage" && <DropsManageView walletClient={sharedProps.walletClient} chainId={sharedProps.chainId} />}
         {currentView === "drop-detail" && <DropDetailView walletClient={sharedProps.walletClient} chainId={sharedProps.chainId} />}
         {currentView === "series" && <SeriesView walletClient={sharedProps.walletClient} chainId={sharedProps.chainId} />}
       </div>

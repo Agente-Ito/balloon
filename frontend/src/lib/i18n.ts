@@ -48,6 +48,20 @@ const translations = {
     tabWishlist:     "Wishlist",
     tabSettings:     "Settings",
 
+    // ── Month names ───────────────────────────────────────────────────────────
+    monthJan:    "January",
+    monthFeb:    "February",
+    monthMar:    "March",
+    monthApr:    "April",
+    monthMay:    "May",
+    monthJun:    "June",
+    monthJul:    "July",
+    monthAug:    "August",
+    monthSep:    "September",
+    monthOct:    "October",
+    monthNov:    "November",
+    monthDec:    "December",
+
     birthday:        "Birthday",
     birthdayCurrent: "Current:",
     birthdayNotSet:  "Not set",
@@ -58,12 +72,14 @@ const translations = {
     birthdaySave:    "Save birthday",
 
     eventsTitle:     "Custom Events",
-    eventsEmpty:     "No custom events yet",
+    eventsEmpty:     "No events yet",
+    eventsEmptySub:  "Add your first celebration milestone",
     eventsRecurring: "Recurring",
     eventsOneTime:   "One-time",
 
     wishlistTitle:   "Wishlist Items",
-    wishlistEmpty:   "No wishlist items yet",
+    wishlistEmpty:   "Your wishlist is empty",
+    wishlistEmptySub: "Save gifts you'd love to receive",
     wishlistAdd:     "Add first item",
 
     dropsTitle:      "My Drops",
@@ -135,7 +151,8 @@ const translations = {
     typeCustom:      "Custom Event",
 
     // ── Drops discover / detail ───────────────────────────────────────────────
-    dropsDiscoverTitle:  "Badge Drops",
+    dropsDiscoverTitle:  "Explore Drops",
+    dropsDiscoverSubtitle: "Claim active drops from the community",
     dropsDiscoverActive: "Active drops",
     dropsDiscoverAll:    "All drops",
     dropDetailClaim:     "Claim badge",
@@ -180,10 +197,22 @@ const translations = {
     eventTemplateLabel: "Template:",
     eventOrUpload:      "Or tap to upload a custom image",
     eventRemove:        "Remove",
+    dropImageRemove:    "Remove",
+
+    // ── Holiday template names ────────────────────────────────────────────────
+    holidayNewYear:     "Happy New Year",
+    holidayValentines:  "Valentine's Day",
+    holidayEaster:      "Happy Easter",
+    holidayHalloween:   "Happy Halloween",
+    holidayChristmas:   "Merry Christmas",
+    holidayNewYearEve:  "New Year's Eve",
+    holidayDiwali:      "Happy Diwali",
+    holidayHanukkah:    "Happy Hanukkah",
     eventRepeats:       "Repeats annually",
     eventRepeatsSub:    "Celebrate every year on this date",
     eventSave:          "Save Event",
     eventUploading:     "Uploading…",
+    eventImageRemove:   "Remove",
 
     // ── Wishlist form ─────────────────────────────────────────────────────────
     wishlistType:            "Type",
@@ -239,16 +268,32 @@ const translations = {
     dropFirstClaim:          "No claims yet. Be the first!",
     dropMore:                "more",
 
+    // ── Drops manage UX ─────────────────────────────────────────────────────
+    dropsManageSubtitle:     "Create and manage your own campaigns",
+    dropsManageCta:          "Manage my drops",
+    dropsExploreCta:         "Explore drops",
+    dropsManageTitle:        "My Drops",
+    dropsManageTabExplore:   "Explore",
+    dropsManageTabManage:    "Manage",
+    dropsManageCancelDrop:   "Cancel drop",
+    dropsManageCancelConfirm:"Are you sure? This will close the drop immediately.",
+    dropsManageCancelYes:    "Yes, close it",
+    dropsManageCancelNo:     "Keep it",
+    dropsManageNotOwner:     "Connect your UP to manage drops",
+    uiShowDetails:           "Show details",
+    uiHideDetails:           "Hide details",
+
     // ── Toasts / errors ───────────────────────────────────────────────────────
-    toastBirthdaySaved:  "Birthday saved!",
-    toastEventAdded:     "Event added!",
-    toastWishlistAdded:  "Item added to wishlist!",
-    toastDropCreated:    "Drop created!",
-    toastNoWallet:       "No wallet connected — open this app inside the LUKSO Grid",
-    toastFailedBirthday: "Failed to save birthday",
-    toastFailedEvent:    "Failed to add event",
-    toastFailedWishlist: "Failed to add item",
-    toastFailedDrop:     "Failed to create drop",
+    toastBirthdaySaved:   "Birthday saved! 🎂",
+    toastEventAdded:      "Event added! 📅",
+    toastWishlistAdded:   "Item saved 💝",
+    toastDropCreated:     "Drop created! Let the celebrations begin 🎉",
+    toastNoWallet:        "No wallet connected — open this app inside the LUKSO Grid",
+    toastFailedBirthday:  "Hmm, couldn't save your birthday. Try again?",
+    toastFailedEvent:     "Couldn't add that event. Check your connection?",
+    toastFailedWishlist:  "Something went wrong adding that item. Try again?",
+    toastFailedDrop:      "Couldn't create the drop. Check if you have enough funds?",
+    toastFailedClaim:     "That claim didn't work. Are you eligible for this drop?",
 
     // ── Grid card extra ───────────────────────────────────────────────────────
     gridBadge:            "badge",
@@ -268,6 +313,10 @@ const translations = {
 
     // ── Celebration view ──────────────────────────────────────────────────────
     celebrationBack:         "← Calendar",
+    dropsBackToCalendar:     "← Calendar",
+    dropsManageViewTitle:    "My Drops",
+    dropDetailBack:          "← Drops",
+    editorHeaderTitle:       "Edit Profile",
     celebrationMintBadge:    "Mint Badge",
     celebrationSendGreeting: "Send Greeting",
     celebrationSentToday:    "Sent today",
@@ -361,8 +410,22 @@ const translations = {
     editorTitle:     "Editar perfil",
     tabDates:        "Fechas",
     tabDrops:        "Drops",
-    tabWishlist:     "Wishlist",
+    tabWishlist:     "Deseos",
     tabSettings:     "Ajustes",
+
+    // ── Nombres de meses ──────────────────────────────────────────────────────
+    monthJan:    "Enero",
+    monthFeb:    "Febrero",
+    monthMar:    "Marzo",
+    monthApr:    "Abril",
+    monthMay:    "Mayo",
+    monthJun:    "Junio",
+    monthJul:    "Julio",
+    monthAug:    "Agosto",
+    monthSep:    "Septiembre",
+    monthOct:    "Octubre",
+    monthNov:    "Noviembre",
+    monthDec:    "Diciembre",
 
     birthday:        "Cumpleaños",
     birthdayCurrent: "Actual:",
@@ -374,12 +437,14 @@ const translations = {
     birthdaySave:    "Guardar cumpleaños",
 
     eventsTitle:     "Eventos personalizados",
-    eventsEmpty:     "Sin eventos personalizados",
+    eventsEmpty:     "Sin eventos aún",
+    eventsEmptySub:  "Agrega tu primer hito de celebración",
     eventsRecurring: "Recurrente",
     eventsOneTime:   "Único",
 
     wishlistTitle:   "Lista de deseos",
-    wishlistEmpty:   "Lista de deseos vacía",
+    wishlistEmpty:   "Tu lista está vacía",
+    wishlistEmptySub: "Guarda regalos que te encantaría recibir",
     wishlistAdd:     "Agregar primer elemento",
 
     dropsTitle:      "Mis drops",
@@ -451,7 +516,8 @@ const translations = {
     typeCustom:      "Evento personalizado",
 
     // ── Drops discover / detail ───────────────────────────────────────────────
-    dropsDiscoverTitle:  "Badge Drops",
+    dropsDiscoverTitle:  "Explorar drops",
+    dropsDiscoverSubtitle: "Reclama drops activos de la comunidad",
     dropsDiscoverActive: "Drops activos",
     dropsDiscoverAll:    "Todos los drops",
     dropDetailClaim:     "Reclamar badge",
@@ -476,15 +542,16 @@ const translations = {
     settingsSave:        "Guardar ajustes",
 
     // ── Toasts / errores ──────────────────────────────────────────────────────
-    toastBirthdaySaved:  "¡Cumpleaños guardado!",
-    toastEventAdded:     "¡Evento agregado!",
-    toastWishlistAdded:  "¡Elemento agregado a la wishlist!",
-    toastDropCreated:    "¡Drop creado!",
-    toastNoWallet:       "Sin wallet conectada — abre esta app dentro del LUKSO Grid",
-    toastFailedBirthday: "Error al guardar cumpleaños",
-    toastFailedEvent:    "Error al agregar evento",
-    toastFailedWishlist: "Error al agregar elemento",
-    toastFailedDrop:     "Error al crear drop",
+    toastBirthdaySaved:   "¡Cumpleaños guardado! 🎂",
+    toastEventAdded:      "¡Evento agregado! 📅",
+    toastWishlistAdded:   "¡Guardado! 💝",
+    toastDropCreated:     "¡Drop creado! Que comiencen las celebraciones 🎉",
+    toastNoWallet:        "Sin wallet conectada — abre esta app dentro del LUKSO Grid",
+    toastFailedBirthday:  "Hmm, no pudimos guardar tu cumpleaños. ¿Intentas de nuevo?",
+    toastFailedEvent:     "No pudimos agregar ese evento. ¿Revisa tu conexión?",
+    toastFailedWishlist:  "Algo salió mal agregando ese elemento. ¿Intentas de nuevo?",
+    toastFailedDrop:      "No pudimos crear el drop. ¿Tendrás suficientes fondos?",
+    toastFailedClaim:     "No pudimos reclamarlo. ¿Cumples con los requisitos?",
 
     // ── Encabezados sub-vistas (Editor) ───────────────────────────────────────
     subAddEvent:    "Agregar evento",
@@ -510,8 +577,17 @@ const translations = {
     eventRepeats:       "Se repite anualmente",
     eventRepeatsSub:    "Celebrar cada año en esta fecha",
     eventSave:          "Guardar evento",
-    eventUploading:     "Subiendo…",
+    eventUploading:     "Subiendo…",    eventImageRemove:   "Eliminar",
 
+    // ── Nombres de festividades ───────────────────────────────────────────────
+    holidayNewYear:     "Feliz Año Nuevo",
+    holidayValentines:  "Día de San Valentín",
+    holidayEaster:      "Feliz Pascua",
+    holidayHalloween:   "Feliz Día de Muertos",
+    holidayChristmas:   "Feliz Navidad",
+    holidayNewYearEve:  "Nochevieja",
+    holidayDiwali:      "Feliz Diwali",
+    holidayHanukkah:    "Feliz Hanukkah",
     // ── Formulario de wishlist ────────────────────────────────────────────────
     wishlistType:            "Tipo",
     wishlistTypeNFT:         "NFT (LSP8)",
@@ -565,6 +641,21 @@ const translations = {
     dropClaimedBy:           "Reclamado por",
     dropFirstClaim:          "Sin reclamaciones aún. ¡Sé el primero!",
     dropMore:                "más",
+
+    // ── UX de gestión de drops ──────────────────────────────────────────────
+    dropsManageSubtitle:     "Crea y gestiona tus propias campañas",
+    dropsManageCta:          "Gestionar mis drops",
+    dropsExploreCta:         "Explorar drops",
+    dropsManageTitle:        "Mis Drops",
+    dropsManageTabExplore:   "Explorar",
+    dropsManageTabManage:    "Gestionar",
+    dropsManageCancelDrop:   "Cancelar drop",
+    dropsManageCancelConfirm:"¿Seguro? Esto cerrará el drop de inmediato.",
+    dropsManageCancelYes:    "Sí, cerrarlo",
+    dropsManageCancelNo:     "Mantenerlo",
+    dropsManageNotOwner:     "Conecta tu UP para gestionar drops",
+    uiShowDetails:           "Ver detalles",
+    uiHideDetails:           "Ocultar detalles",
 
     // ── Grid card extra ───────────────────────────────────────────────────────
     gridBadge:            "badge",
@@ -637,6 +728,12 @@ const translations = {
     anniversaryDropDescUnit:     "año",
     anniversaryDropDescUnitPlural: "años",
     birthdayDropName:            "Cumpleaños de {name}",
+
+    // ── Mensajes de validación y contexto ──────────────────────────────────
+    validateSelectCelebration: "Elige un tipo de celebración",
+    validateSelectDate:       "Elige una fecha",
+    validateDropName:        "Dale un nombre al drop",
+    validateDropImage:       "Sube una imagen o elige una plantilla",
   },
 } as const;
 

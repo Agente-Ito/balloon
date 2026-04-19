@@ -22,6 +22,9 @@ describe("CelebrationsDrop + DropBadge", function () {
   let claimer2: SignerWithAddress;
 
   const META = ethers.toUtf8Bytes("ipfs://QmDropTest");
+  const META_V2 = ethers.toUtf8Bytes("ipfs://QmDropTestV2");
+  const LSP4_METADATA_KEY =
+    "0x9afb95cacc9f95858ec44aa8c3b685511002e30ae54415823f406128b85b238e";
   // force=true so plain EOA signers work in tests (production uses UPs with force=false)
   const FORCE = true;
 
@@ -85,13 +88,58 @@ describe("CelebrationsDrop + DropBadge", function () {
     it("reverts mint from unauthorized caller", async () => {
       const dropId = ethers.id("fake");
       await expect(
-        dropBadge.connect(claimer1).mintForDrop(claimer1.address, dropId, META, FORCE)
+        dropBadge.connect(claimer1).mintForDrop(claimer1.address, dropId, host.address, META, FORCE)
       ).to.be.revertedWith("DropBadge: unauthorized minter");
     });
 
     it("owner can update dropMinter", async () => {
       await dropBadge.setDropMinter(claimer1.address);
       expect(await dropBadge.dropMinter()).to.equal(claimer1.address);
+    });
+
+    it("records host as token creator for claimed badges", async () => {
+      const cfg = await baseConfig();
+      await drop.connect(host).createDrop(cfg);
+      const dropId = ethers.keccak256(
+        ethers.solidityPacked(["address", "uint256"], [host.address, 0])
+      );
+
+      await drop.connect(claimer1).claim(dropId, FORCE);
+      const tokenId = await dropBadge.computeDropTokenId(claimer1.address, dropId);
+
+      expect(await dropBadge.dropHostOf(tokenId)).to.equal(host.address);
+    });
+
+    it("allows drop host to update claimed token metadata", async () => {
+      const cfg = await baseConfig();
+      await drop.connect(host).createDrop(cfg);
+      const dropId = ethers.keccak256(
+        ethers.solidityPacked(["address", "uint256"], [host.address, 0])
+      );
+
+      await drop.connect(claimer1).claim(dropId, FORCE);
+      const tokenId = await dropBadge.computeDropTokenId(claimer1.address, dropId);
+
+      await dropBadge.connect(host).setTokenMetadataAsHost(tokenId, META_V2);
+
+      expect(await dropBadge.getDataForTokenId(tokenId, LSP4_METADATA_KEY)).to.equal(
+        ethers.hexlify(META_V2)
+      );
+    });
+
+    it("reverts metadata update when caller is not the drop host", async () => {
+      const cfg = await baseConfig();
+      await drop.connect(host).createDrop(cfg);
+      const dropId = ethers.keccak256(
+        ethers.solidityPacked(["address", "uint256"], [host.address, 0])
+      );
+
+      await drop.connect(claimer1).claim(dropId, FORCE);
+      const tokenId = await dropBadge.computeDropTokenId(claimer1.address, dropId);
+
+      await expect(
+        dropBadge.connect(claimer1).setTokenMetadataAsHost(tokenId, META_V2)
+      ).to.be.revertedWith("DropBadge: not drop host");
     });
   });
 

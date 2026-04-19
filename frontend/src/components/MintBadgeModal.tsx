@@ -5,10 +5,10 @@ import { uploadFileToIPFS } from "@/lib/ipfs";
 import { generateTemplateSVG, templateToFile } from "@/lib/celebrationTemplates";
 import { TemplatePicker } from "./TemplatePicker";
 import { Avatar } from "./Avatar";
-import { CELEBRATION_LABELS } from "@/constants/celebrationTypes";
+import { getCelebrationTypeKey } from "@/constants/celebrationTypes";
+import { useT } from "@/hooks/useT";
 import { LoadingSpinner } from "./LoadingSpinner";
 import { useLSP3Name } from "@/hooks/useLSP3Name";
-import { useT } from "@/hooks/useT";
 import type { Address, CelebrationType } from "@/types";
 import type { CelebrationTemplate } from "@/lib/celebrationTemplates";
 import type { WalletClient } from "viem";
@@ -40,7 +40,7 @@ export function MintBadgeModal({
   const { mutateAsync: mintBadge, isPending } = useMintBadge(walletClient ?? null, chainId);
   const { data: recipientName } = useLSP3Name(recipientAddress, chainId);
 
-  const label = CELEBRATION_LABELS[celebrationType];
+  const label = t[getCelebrationTypeKey(celebrationType) as keyof typeof t];
   const recipientDisplay = recipientName
     ?? `${recipientAddress.slice(0, 10)}…${recipientAddress.slice(-6)}`;
   const isBusy = isPending || isUploading;

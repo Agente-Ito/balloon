@@ -2,11 +2,12 @@
  * DropForm — form for creating a new badge drop campaign.
  * Supports pre-filling from events, anniversary, and holiday templates.
  */
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import type { CreateDropParams } from "@/hooks/useCreateDrop";
 import type { Address, CelebrationType } from "@/types";
 import { HOLIDAY_DROP_TEMPLATES, holidayTemplateToFile } from "@/constants/dropTemplates";
 import { useT } from "@/hooks/useT";
+import { getMonthNames } from "@/lib/monthNames";
 
 export interface DropFormPrefill {
   name?: string;
@@ -18,8 +19,6 @@ export interface DropFormPrefill {
   /** Pre-generated image file (anniversary SVG, holiday badge, etc.) */
   imageFile?: File;
 }
-
-const MONTH_NAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
 interface DropFormProps {
   host: Address;
@@ -70,6 +69,7 @@ function AddressListField({
 export function DropForm({ host, onSave, onCancel, isSaving, prefill }: DropFormProps) {
   const t = useT();
   const currentYear = new Date().getFullYear();
+  const monthNames = useMemo(() => getMonthNames(t), [t]);
 
   const CT_OPTIONS = [
     { value: 0, label: t.typeBirthday },
@@ -212,7 +212,7 @@ export function DropForm({ host, onSave, onCancel, isSaving, prefill }: DropForm
           </button>
           <div className="flex-1 text-xs text-white/40">
             {imageFile
-              ? <><span className="text-white/60">{imageFile.name}</span><button type="button" onClick={() => { setImageFile(undefined); setSelectedTplId(null); }} className="block text-white/30 hover:text-white/60 mt-1">Remove</button></>
+              ? <><span className="text-white/60">{imageFile.name}</span><button type="button" onClick={() => { setImageFile(undefined); setSelectedTplId(null); }} className="block text-white/30 hover:text-white/60 mt-1">{t.dropImageRemove}</button></>
               : selectedTplId
                 ? <span className="text-white/60">{t.dropFormTemplateApplied}</span>
                 : t.dropFormBadgeHint ?? "Upload your own or pick a template above"}
@@ -252,7 +252,7 @@ export function DropForm({ host, onSave, onCancel, isSaving, prefill }: DropForm
         <div className="grid grid-cols-3 gap-2">
           <select value={month} onChange={(e) => setMonth(Number(e.target.value))}
             className="input text-sm py-1.5">
-            {MONTH_NAMES.map((m, i) => (
+            {monthNames.map((m, i) => (
               <option key={m} value={i + 1}>{m}</option>
             ))}
           </select>

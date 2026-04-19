@@ -10,7 +10,22 @@ interface AppStore {
 
   // Navigation
   currentView: AppView;
+  previousView: AppView | null;
   setView: (view: AppView) => void;
+  goBack: (fallback?: AppView) => void;
+
+  // Active drop detail context
+  activeDropId: string | null;
+  setActiveDropId: (dropId: string | null) => void;
+
+  // Optional editor entry intent (used to land in a specific tab/subview)
+  editorEntryTab: "dates" | "drops" | "wishlist" | "settings" | null;
+  editorEntrySubView: "main" | "addEvent" | "addWishlist" | "addDrop" | null;
+  setEditorEntry: (
+    tab: "dates" | "drops" | "wishlist" | "settings" | null,
+    subView: "main" | "addEvent" | "addWishlist" | "addDrop" | null
+  ) => void;
+  clearEditorEntry: () => void;
 
   // Active series (for SeriesView)
   activeSeriesId: string | null;
@@ -24,6 +39,10 @@ interface AppStore {
   // Set before navigating to "editor"; Editor reads it once then clears it.
   pendingDropDate: string | null;          // "YYYY-MM-DD"
   setPendingDropDate: (date: string | null) => void;
+
+  // Explicit flag: only prefill anniversary drop when user asks for it
+  pendingAnniversaryDrop: boolean;
+  setPendingAnniversaryDrop: (enabled: boolean) => void;
 
   // Profile being viewed (context profile from UP Provider)
   contextProfile: Address | null;
@@ -51,7 +70,23 @@ export const useAppStore = create<AppStore>((set, get) => ({
   clearBurst: () => set({ burstActive: false }),
 
   currentView: "grid",
-  setView: (view) => set({ currentView: view }),
+  previousView: null,
+  setView: (view) => set((state) => ({
+    previousView: state.currentView === view ? state.previousView : state.currentView,
+    currentView: view,
+  })),
+  goBack: (fallback = "grid") => set((state) => ({
+    currentView: state.previousView ?? fallback,
+    previousView: null,
+  })),
+
+  activeDropId: null,
+  setActiveDropId: (dropId) => set({ activeDropId: dropId }),
+
+  editorEntryTab: null,
+  editorEntrySubView: null,
+  setEditorEntry: (tab, subView) => set({ editorEntryTab: tab, editorEntrySubView: subView }),
+  clearEditorEntry: () => set({ editorEntryTab: null, editorEntrySubView: null }),
 
   activeSeriesId: null,
   setActiveSeriesId: (id) => set({ activeSeriesId: id }),
@@ -61,6 +96,9 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   pendingDropDate: null,
   setPendingDropDate: (date) => set({ pendingDropDate: date }),
+
+  pendingAnniversaryDrop: false,
+  setPendingAnniversaryDrop: (enabled) => set({ pendingAnniversaryDrop: enabled }),
 
   contextProfile: null,
   setContextProfile: (address) => {

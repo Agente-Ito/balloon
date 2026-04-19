@@ -114,6 +114,8 @@ CelebrationsDrop.claim(bytes32 dropId, bool force)
 - `cancelDrop(bytes32 dropId)` — immediately closes the drop (sets `endAt = now`).
 - `getDropsByHost(address host)` — list all drops created by an address.
 - `hasClaimed(dropId, claimer)` — check if an address already claimed.
+- Drop host can update metadata of any claimed `DropBadge` token that came from their drop (on-chain, even outside the dApp).
+- Each claimed drop token stores the original drop creator (host), so indexers/UIs can display who created it.
 
 ---
 

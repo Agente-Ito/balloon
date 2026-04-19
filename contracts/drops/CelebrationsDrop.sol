@@ -116,7 +116,7 @@ contract CelebrationsDrop is ICelebrationsDrop, Ownable {
         _claimed[dropId] += 1;
 
         // Mint — force=false so it works with Universal Profiles (LSP1 receiver check)
-        bytes32 tokenId = dropBadge.mintForDrop(msg.sender, dropId, cfg.metadataBytes, force);
+        bytes32 tokenId = dropBadge.mintForDrop(msg.sender, dropId, cfg.host, cfg.metadataBytes, force);
 
         emit DropClaimed(dropId, msg.sender, tokenId);
     }

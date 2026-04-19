@@ -1,5 +1,6 @@
 import { resolveIPFSUrl } from "@/lib/ipfs";
-import { CELEBRATION_LABELS, CELEBRATION_EMOJIS, CELEBRATION_COLORS } from "@/constants/celebrationTypes";
+import { CELEBRATION_EMOJIS, CELEBRATION_COLORS, getCelebrationTypeKey } from "@/constants/celebrationTypes";
+import { useT } from "@/hooks/useT";
 import type { Badge } from "@/types";
 
 interface BadgeCardProps {
@@ -8,9 +9,10 @@ interface BadgeCardProps {
 }
 
 export function BadgeCard({ badge, className = "" }: BadgeCardProps) {
+  const t = useT();
   const { metadata, soulbound } = badge;
   const emoji = CELEBRATION_EMOJIS[metadata.celebrationType];
-  const label = CELEBRATION_LABELS[metadata.celebrationType];
+  const label = t[getCelebrationTypeKey(metadata.celebrationType) as keyof typeof t];
   const colorClass = CELEBRATION_COLORS[metadata.celebrationType];
 
   return (

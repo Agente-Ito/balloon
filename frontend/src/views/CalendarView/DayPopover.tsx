@@ -1,18 +1,26 @@
 import { format, parseISO } from "date-fns";
-import { CELEBRATION_EMOJIS, CELEBRATION_LABELS } from "@/constants/celebrationTypes";
+import { CELEBRATION_EMOJIS, getCelebrationTypeKey } from "@/constants/celebrationTypes";
 import { Avatar } from "@/components/Avatar";
 import { useAppStore } from "@/store/useAppStore";
+import { useLSP3Name } from "@/hooks/useLSP3Name";
 import { useT } from "@/hooks/useT";
 import type { CelebrationDay } from "@/types";
+import type { Address } from "@/types";
 
 interface DayPopoverProps {
   day: CelebrationDay;
   onClose: () => void;
+  chainId: number;
   /** Whether the viewer owns this profile (can create drops). */
   isOwner?: boolean;
 }
 
-export function DayPopover({ day, onClose, isOwner }: DayPopoverProps) {
+function ProfileNameInline({ address, chainId }: { address: Address; chainId: number }) {
+  const { data: name } = useLSP3Name(address, chainId);
+  return <>{name ?? `${address.slice(0, 8)}…`}</>;
+}
+
+export function DayPopover({ day, onClose, isOwner, chainId }: DayPopoverProps) {
   const { setView, setActiveCelebrationDate, setPendingDropDate, connectedAccount } = useAppStore();
   const t = useT();
 
@@ -55,12 +63,15 @@ export function DayPopover({ day, onClose, isOwner }: DayPopoverProps) {
                 <span className="text-2xl">{CELEBRATION_EMOJIS[celebration.type]}</span>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium">{celebration.title}</p>
-                  <p className="text-xs text-white/40">{CELEBRATION_LABELS[celebration.type]}</p>
+                  <p className="text-xs text-white/40">{t[getCelebrationTypeKey(celebration.type) as keyof typeof t]}</p>
                   {celebration.profileAddress && (
                     <div className="flex items-center gap-1 mt-1">
                       <Avatar address={celebration.profileAddress} size={14} />
-                      <span className="text-xs text-white/30 font-mono">
-                        {celebration.profileAddress.slice(0, 8)}…
+                      <span className="text-xs text-white/30">
+                        <ProfileNameInline
+                          address={celebration.profileAddress as Address}
+                          chainId={chainId}
+                        />
                       </span>
                     </div>
                   )}
@@ -94,7 +105,7 @@ export function DayPopover({ day, onClose, isOwner }: DayPopoverProps) {
               <span>🎈</span>
               <span>{t.calendarCreateDrop}</span>
             </button>
-            <p className="text-[11px] text-white/30 text-center mt-2">
+            <p className="text-[11px] text-white/30 text-center mt-2 hidden [@media(min-height:560px)]:block">
               {t.calendarDropHint} {format(parseISO(day.date), "MMMM d")}
             </p>
           </div>

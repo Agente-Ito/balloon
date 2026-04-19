@@ -1,6 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import toast from "react-hot-toast";
 import { useT } from "@/hooks/useT";
+import { getMonthNames } from "@/lib/monthNames";
+import { useGridSize } from "@/lib/useGridSize";
 import { useAppStore } from "@/store/useAppStore";
 import { useProfileData, useSetBirthday, useAddEvent, useAddWishlistItem } from "@/hooks/useUniversalProfile";
 import { useLSP3Name } from "@/hooks/useLSP3Name";
@@ -12,16 +14,13 @@ import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { CELEBRATION_COLORS } from "@/constants/celebrationTypes";
 import { useCreateDrop, type CreateDropParams } from "@/hooks/useCreateDrop";
-import { useDrops } from "@/hooks/useDrops";
 import { useUPCreationDate } from "@/hooks/useUPCreationDate";
 import { computeAnniversary } from "@/lib/upCreationDate";
 import { anniversarySVGToFile } from "@/lib/anniversaryBadge";
 import type { Celebration, WishlistItem, Address } from "@/types";
 import { CelebrationType } from "@/types";
 import type { WalletClient, PublicClient } from "viem";
-import { format, fromUnixTime } from "date-fns";
-
-const MONTH_NAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+import { format } from "date-fns";
 
 interface EditorProps {
   walletClient?: WalletClient;
@@ -33,15 +32,36 @@ type EditorTab = "dates" | "wishlist" | "settings" | "drops";
 type SubView = "main" | "addEvent" | "addWishlist" | "addDrop";
 
 export function Editor({ walletClient, chainId }: EditorProps) {
-  const { contextProfile, setView, pendingDropDate, setPendingDropDate } = useAppStore();
+  const {
+    contextProfile,
+    setView,
+    goBack,
+    pendingDropDate,
+    setPendingDropDate,
+    pendingAnniversaryDrop,
+    setPendingAnniversaryDrop,
+    editorEntryTab,
+    editorEntrySubView,
+    clearEditorEntry,
+  } = useAppStore();
   const t = useT();
-  const [activeTab, setActiveTab] = useState<EditorTab>("dates");
+  const monthNames = useMemo(() => getMonthNames(t), [t]);
+  const [activeTab, setActiveTab] = useState<EditorTab>(editorEntryTab ?? "dates");
 
   // If coming from the calendar "Create drop for this day" action,
   // open the drop form immediately and consume the pending date.
   const [subView, setSubView] = useState<SubView>(() =>
-    pendingDropDate ? "addDrop" : "main"
+    pendingDropDate
+      ? "addDrop"
+      : (editorEntrySubView ?? "main")
   );
+
+  // Entry intent should only affect the first render of Editor.
+  useEffect(() => {
+    if (editorEntryTab || editorEntrySubView) {
+      clearEditorEntry();
+    }
+  }, [editorEntryTab, editorEntrySubView, clearEditorEntry]);
 
   const { data: profileData, isLoading } = useProfileData(contextProfile, chainId);
 
@@ -64,7 +84,6 @@ export function Editor({ walletClient, chainId }: EditorProps) {
   });
 
   const createDropMutation = useCreateDrop(walletClient ?? null, chainId);
-  const { data: myDrops } = useDrops({ host: contextProfile as Address | null, enabled: activeTab === "drops" });
 
   // UP creation date → anniversary hint
   const { data: upCreationDate } = useUPCreationDate(contextProfile as Address | null, chainId);
@@ -98,17 +117,17 @@ export function Editor({ walletClient, chainId }: EditorProps) {
       setBirthdayDay(String(parseInt(dd)));
       setBirthdayYear(yyyy ?? "");
     }
-  }, [currentBirthday]);
+  }, [currentBirthday, monthNames]);
 
   const birthdayDisplay = (() => {
     if (!currentBirthday) return null;
     if (currentBirthday.startsWith("--")) {
       const mm = currentBirthday.slice(2, 4);
       const dd = currentBirthday.slice(5, 7);
-      return `${MONTH_NAMES[parseInt(mm) - 1]} ${dd}`;
+      return `${monthNames[parseInt(mm) - 1]} ${dd}`;
     }
     const [yyyy, mm, dd] = currentBirthday.split("-");
-    return `${MONTH_NAMES[parseInt(mm) - 1]} ${dd}, ${yyyy}`;
+    return `${monthNames[parseInt(mm) - 1]} ${dd}, ${yyyy}`;
   })();
 
   // Anniversary dismiss — persisted per year so it re-shows next anniversary
@@ -116,6 +135,9 @@ export function Editor({ walletClient, chainId }: EditorProps) {
     ? `celebrations:anniversary-dismissed:${anniversaryInfo.nextDate.getFullYear()}`
     : null;
   const [anniversaryDismissed, setAnniversaryDismissed] = useState(false);
+  const isLargeGrid = useGridSize();
+  // Anniversary card starts expanded on large tiles, collapsed on small
+  const [anniversaryExpanded, setAnniversaryExpanded] = useState(() => isLargeGrid);
 
   useEffect(() => {
     if (!anniversaryDismissKey) return;
@@ -260,7 +282,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
           year: Number(yy) || new Date().getFullYear(),
         };
       }
-      if (anniversaryInfo) {
+      if (anniversaryInfo && pendingAnniversaryDrop) {
         const d = anniversaryInfo.nextDate;
         const n = String(anniversaryInfo.upcomingYears);
         const namePrefix = profileName ?? contextProfile?.slice(0, 8) ?? "";
@@ -295,6 +317,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
               setSubView("main");
               setPendingDropFromEvent(null);
               setPendingDropDate(null);
+              setPendingAnniversaryDrop(false);
             }}
             className="text-white/40 hover:text-white text-sm"
           >
@@ -317,6 +340,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
               setSubView("main");
               setPendingDropFromEvent(null);
               setPendingDropDate(null);
+                setPendingAnniversaryDrop(false);
             }}
             onSave={async (params: CreateDropParams) => {
               try {
@@ -325,6 +349,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
                 setSubView("main");
                 setPendingDropFromEvent(null);
                 setPendingDropDate(null);
+                  setPendingAnniversaryDrop(false);
               } catch (err) {
                 const msg = err instanceof Error ? err.message : String(err);
                 toast.error(msg.slice(0, 120) || "Failed to create drop");
@@ -340,10 +365,15 @@ export function Editor({ walletClient, chainId }: EditorProps) {
     <div className="h-full flex flex-col overflow-hidden">
       {/* Toolbar */}
       <div className="flex items-center justify-between px-4 pt-4 pb-2">
-        <button onClick={() => setView("grid")} className="text-white/40 hover:text-white text-sm">
-          {t.back}
+        <button onClick={() => goBack("grid")} className="text-white/40 hover:text-white text-sm shrink-0" title="Back to Calendar">
+          {t.dropsBackToCalendar}
         </button>
-        <span className="font-semibold">{t.editorTitle}</span>
+        <div className="text-center">
+          <span className="font-semibold">{t.editorHeaderTitle}</span>
+          {activeTab === "drops" && (
+            <p className="text-[11px] text-white/35">{t.dropsManageSubtitle}</p>
+          )}
+        </div>
         <LanguageToggle />
       </div>
 
@@ -383,7 +413,10 @@ export function Editor({ walletClient, chainId }: EditorProps) {
                     {t.skip}
                   </button>
                   <button
-                    onClick={() => setSubView("addDrop")}
+                    onClick={() => {
+                      setPendingAnniversaryDrop(false);
+                      setSubView("addDrop");
+                    }}
                     className="btn-primary flex-1 text-xs py-1.5"
                   >
                     {t.dropPromptCreate}
@@ -427,7 +460,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
                         className="input text-sm py-1.5"
                       >
                         <option value="">—</option>
-                        {MONTH_NAMES.map((m, i) => (
+                        {monthNames.map((m, i) => (
                           <option key={m} value={String(i + 1)}>{m}</option>
                         ))}
                       </select>
@@ -479,49 +512,61 @@ export function Editor({ walletClient, chainId }: EditorProps) {
               )}
             </div>
 
-            {/* UP Anniversary hint — below birthday, dismissible per year */}
+            {/* UP Anniversary hint — compact pill by default, expands on tap */}
             {anniversaryInfo && !pendingDropFromEvent && !anniversaryDismissed && (
-              <div className={`card border animate-bounce-in ${
+              <div className={`card border ${
                 anniversaryInfo.isToday
                   ? "bg-lukso-purple/20 border-lukso-purple/50"
                   : "bg-white/5 border-lukso-border"
               }`}>
-                <div className="flex items-start justify-between gap-2 mb-1">
-                  {anniversaryInfo.isToday ? (
-                    <p className="text-sm font-semibold text-lukso-purple">
-                      {t.anniversaryToday}
+                <div className="flex items-center justify-between gap-2">
+                  <button
+                    onClick={() => setAnniversaryExpanded((v) => !v)}
+                    className="flex items-center gap-2 flex-1 text-left"
+                  >
+                    <span className="w-2 h-2 rounded-full bg-lukso-purple flex-shrink-0" />
+                    <p className={`text-sm font-semibold ${anniversaryInfo.isToday ? "text-lukso-purple" : ""}`}>
+                      {anniversaryInfo.isToday ? t.anniversaryToday : t.anniversaryUpcoming}
                     </p>
-                  ) : (
-                    <p className="text-sm font-semibold">
-                      {t.anniversaryUpcoming}
-                    </p>
-                  )}
+                    <span className="text-white/25 text-xs ml-auto">
+                      {anniversaryExpanded ? "▲" : "▼"}
+                    </span>
+                  </button>
                   <button
                     onClick={dismissAnniversary}
-                    className="text-white/20 hover:text-white/50 text-xs leading-none mt-0.5 flex-shrink-0"
+                    className="text-white/20 hover:text-white/50 text-xs leading-none flex-shrink-0"
                     aria-label="Dismiss"
                   >
                     ✕
                   </button>
                 </div>
-                {anniversaryInfo.isToday ? (
-                  <p className="text-xs text-white/50 mb-3">
-                    {t.anniversaryTodaySub} <strong className="text-white">{anniversaryInfo.upcomingYears} {anniversaryInfo.upcomingYears !== 1 ? t.anniversaryTodayUnit2 : t.anniversaryTodayUnit}</strong>
-                  </p>
-                ) : (
-                  <p className="text-xs text-white/50 mb-3">
-                    {t.anniversaryUpcomingSub} <strong className="text-white">{anniversaryInfo.upcomingYears}</strong> {t.anniversaryUpcomingOn}{" "}
-                    <strong className="text-white">
-                      {format(anniversaryInfo.nextDate, "MMMM d, yyyy")}
-                    </strong>
-                  </p>
+
+                {anniversaryExpanded && (
+                  <div className="mt-3">
+                    {anniversaryInfo.isToday ? (
+                      <p className="text-xs text-white/50 mb-3">
+                        {t.anniversaryTodaySub} <strong className="text-white">{anniversaryInfo.upcomingYears} {anniversaryInfo.upcomingYears !== 1 ? t.anniversaryTodayUnit2 : t.anniversaryTodayUnit}</strong>
+                      </p>
+                    ) : (
+                      <p className="text-xs text-white/50 mb-3">
+                        {t.anniversaryUpcomingSub} <strong className="text-white">{anniversaryInfo.upcomingYears}</strong> {t.anniversaryUpcomingOn}{" "}
+                        <strong className="text-white">
+                          {format(anniversaryInfo.nextDate, "MMMM d, yyyy")}
+                        </strong>
+                      </p>
+                    )}
+                    <button
+                      onClick={() => {
+                        setPendingDropFromEvent(null);
+                        setPendingAnniversaryDrop(true);
+                        setSubView("addDrop");
+                      }}
+                      className="btn-primary w-full text-xs py-1.5"
+                    >
+                      {anniversaryInfo.isToday ? t.anniversaryTodayCta : t.anniversaryUpcomingCta}
+                    </button>
+                  </div>
                 )}
-                <button
-                  onClick={() => { setPendingDropFromEvent(null); setSubView("addDrop"); }}
-                  className="btn-primary w-full text-xs py-1.5"
-                >
-                  {anniversaryInfo.isToday ? t.anniversaryTodayCta : t.anniversaryUpcomingCta}
-                </button>
               </div>
             )}
 
@@ -567,7 +612,11 @@ export function Editor({ walletClient, chainId }: EditorProps) {
                         </p>
                       </div>
                       <button
-                        onClick={() => { setPendingDropFromEvent(null); setSubView("addDrop"); }}
+                        onClick={() => {
+                          setPendingDropFromEvent(null);
+                          setPendingAnniversaryDrop(true);
+                          setSubView("addDrop");
+                        }}
                         className="text-xs text-lukso-purple hover:text-lukso-purple/80 flex-shrink-0"
                       >
                         {t.anniversaryCreateDropShort}
@@ -623,60 +672,22 @@ export function Editor({ walletClient, chainId }: EditorProps) {
         )}
 
         {activeTab === "drops" && (
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-xs text-white/40 uppercase tracking-wide font-medium">
-                {t.dropsTitle}
-              </p>
+          <div className="card flex flex-col items-center gap-4 py-8 text-center">
+            <p className="text-sm text-white/50">{t.dropsManageSubtitle}</p>
+            <div className="flex gap-3">
               <button
-                onClick={() => setSubView("addDrop")}
-                className="text-xs text-lukso-purple hover:text-lukso-purple/80"
+                onClick={() => setView("drops")}
+                className="btn-ghost text-xs px-4 py-1.5"
               >
-                {t.create}
+                {t.dropsExploreCta}
+              </button>
+              <button
+                onClick={() => setView("drops-manage")}
+                className="btn-primary text-xs px-4 py-1.5"
+              >
+                {t.dropsManageCta}
               </button>
             </div>
-
-            {!myDrops || myDrops.length === 0 ? (
-              <div className="card text-center py-6">
-                <p className="text-sm text-white/30 mb-1">{t.dropsEmpty}</p>
-                <p className="text-xs text-white/20 mb-3">{t.dropsEmptySub}</p>
-                <button
-                  onClick={() => setSubView("addDrop")}
-                  className="btn-primary text-xs px-3 py-1.5"
-                >
-                  {t.dropsFirstDrop}
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {myDrops.map((drop) => (
-                  <div key={drop.dropId} className="card flex flex-col gap-1">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium truncate">{drop.name}</p>
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${
-                        drop.isActive
-                          ? "bg-green-500/20 text-green-400"
-                          : "bg-white/10 text-white/40"
-                      }`}>
-                        {drop.isActive ? t.dropsActive : t.dropsClosed}
-                      </span>
-                    </div>
-                    <p className="text-xs text-white/40">
-                      {drop.claimed} {t.dropsClaimed}
-                      {drop.maxSupply != null ? ` / ${drop.maxSupply}` : ""}
-                      {" · "}
-                      {String(drop.month).padStart(2, "0")}-{String(drop.day).padStart(2, "0")}
-                      {drop.year > 0 ? `-${drop.year}` : ""}
-                    </p>
-                    {drop.endAt != null && (
-                      <p className="text-xs text-white/30">
-                        {t.dropsCloses} {format(fromUnixTime(drop.endAt), "MMM d, yyyy")}
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         )}
 

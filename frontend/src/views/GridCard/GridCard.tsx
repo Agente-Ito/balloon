@@ -75,8 +75,9 @@ export function GridCard({ chainId }: GridCardProps) {
           <Avatar address={contextProfile} size={32} />
           <div className="flex flex-col gap-0.5">
             <BalloonLogo className="h-7 w-auto" />
+            {/* Only show address if no LSP3 name available — very subtle */}
             {contextProfile && (
-              <p className="text-[10px] text-white/30 font-mono leading-tight">
+              <p className="text-[10px] text-white/20 font-mono leading-tight hidden sm:block [@media(max-height:620px)]:hidden">
                 {contextProfile.slice(0, 6)}…{contextProfile.slice(-4)}
               </p>
             )}
@@ -181,8 +182,8 @@ export function GridCard({ chainId }: GridCardProps) {
         </div>
       )}
 
-      {/* Debug overlay — remove after fixing isOwner */}
-      {import.meta.env.DEV && (
+      {/* Debug overlay — dev only, never renders in prod */}
+      {import.meta.env.DEV && import.meta.env.VITE_DEBUG_GRID === "1" && (
         <div className="text-[10px] text-white/20 font-mono break-all border border-white/10 rounded p-2 space-y-0.5">
           <div>context: {contextProfile ?? "null"}</div>
           <div>isOwner: {String(isOwner)}</div>

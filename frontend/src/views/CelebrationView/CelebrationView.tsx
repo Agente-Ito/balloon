@@ -14,9 +14,10 @@ import { SendGreetingModal } from "@/components/SendGreetingModal";
 import { GiftAssetModal } from "@/components/GiftAssetModal";
 import { BadgeList } from "./BadgeList";
 import { GreetingCardList } from "./GreetingCardList";
-import { CELEBRATION_COLORS, CELEBRATION_LABELS } from "@/constants/celebrationTypes";
+import { CELEBRATION_COLORS, getCelebrationTypeKey } from "@/constants/celebrationTypes";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { LanguageToggle } from "@/components/LanguageToggle";
+import { useLSP3Name } from "@/hooks/useLSP3Name";
 import { useT } from "@/hooks/useT";
 import type { WalletClient, PublicClient } from "viem";
 import type { CelebrationType } from "@/types";
@@ -53,6 +54,7 @@ export function CelebrationView({ walletClient, chainId }: CelebrationViewProps)
   const primaryCelebration = dayData?.celebrations[0];
 
   const { data: canSendData } = useCanSendGreeting(connectedAccount, contextProfile, chainId);
+  const { data: profileName } = useLSP3Name(contextProfile, chainId);
 
   if (isLoading || !primaryCelebration) {
     return (
@@ -83,31 +85,32 @@ export function CelebrationView({ walletClient, chainId }: CelebrationViewProps)
         <LanguageToggle />
       </div>
 
-      {/* Hero */}
-      <div className="flex flex-col items-center gap-3 px-4 py-6">
+      {/* Hero — compact-first: smaller on tight spaces */}
+      <div className="flex flex-col items-center gap-2 px-4 py-3 [@media(min-height:640px)]:py-5">
         <div className="relative">
-          <Avatar address={contextProfile} size={72} />
-          <span className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-lukso-bg ${CELEBRATION_COLORS[celebrationType]}`} />
+          <Avatar address={contextProfile} size={52} className="[@media(min-height:640px)]:hidden" />
+          <Avatar address={contextProfile} size={68} className="hidden [@media(min-height:640px)]:block" />
+          <span className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-lukso-bg ${CELEBRATION_COLORS[celebrationType]}`} />
         </div>
 
         <div className="text-center">
-          <h1 className="text-xl font-bold">{primaryCelebration.title}</h1>
-          <p className="text-sm text-white/50 mt-0.5">
-            {CELEBRATION_LABELS[celebrationType]} · {year}
+          <h1 className="text-lg font-bold leading-tight">{primaryCelebration.title}</h1>
+          <p className="text-xs text-white/50 mt-0.5">
+            {t[getCelebrationTypeKey(celebrationType) as keyof typeof t]} · {year}
           </p>
           {contextProfile && (
-            <p className="text-xs text-lukso-purple font-mono mt-1">
-              {contextProfile.slice(0, 10)}…{contextProfile.slice(-6)}
+            <p className="text-xs text-lukso-purple mt-0.5">
+              {profileName ?? `${contextProfile.slice(0, 10)}…${contextProfile.slice(-6)}`}
             </p>
           )}
         </div>
 
-        {/* Multiple celebrations today */}
+        {/* Multiple celebrations today — hidden by default in compact, tappable */}
         {dayData && dayData.celebrations.length > 1 && (
-          <div className="flex gap-2">
+          <div className="flex flex-wrap justify-center gap-1.5">
             {dayData.celebrations.slice(1).map((c) => (
-              <span key={c.id} className="badge bg-white/5 text-white/60 flex items-center gap-1">
-                <span className={`w-2 h-2 rounded-full ${CELEBRATION_COLORS[c.type]}`} />
+              <span key={c.id} className="badge bg-white/5 text-white/60 flex items-center gap-1 text-[10px]">
+                <span className={`w-1.5 h-1.5 rounded-full ${CELEBRATION_COLORS[c.type]}`} />
                 {c.title}
               </span>
             ))}
@@ -116,7 +119,7 @@ export function CelebrationView({ walletClient, chainId }: CelebrationViewProps)
       </div>
 
       {/* CTAs */}
-      <div className="px-4 grid grid-cols-3 gap-2 mb-4">
+      <div className="px-4 grid grid-cols-3 gap-2 mb-3">
         {/* Mint badge — only for own profile */}
         {isOwner && (
           <button

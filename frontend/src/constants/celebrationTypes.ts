@@ -33,3 +33,19 @@ export const GLOBAL_HOLIDAYS: GlobalHoliday[] = [
   { id: "diwali", title: "Diwali", date: "10-20", emoji: "🪔", description: "Happy Diwali!" },
   { id: "hanukkah", title: "Hanukkah", date: "12-25", emoji: "🕎", description: "Happy Hanukkah!" },
 ];
+
+/**
+ * Maps CelebrationType to its i18n translation key.
+ * Use this to get the type label from translations:
+ *   const typeKey = getCelebrationTypeKey(celebration.type);
+ *   const label = t[typeKey as keyof typeof t];
+ */
+export function getCelebrationTypeKey(type: CelebrationType): "typeBirthday" | "typeAnniversary" | "typeHoliday" | "typeCustom" {
+  const keys = {
+    [CelebrationType.Birthday]: "typeBirthday",
+    [CelebrationType.UPAnniversary]: "typeAnniversary",
+    [CelebrationType.GlobalHoliday]: "typeHoliday",
+    [CelebrationType.CustomEvent]: "typeCustom",
+  } as const;
+  return keys[type];
+}

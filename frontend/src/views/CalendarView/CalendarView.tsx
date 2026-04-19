@@ -4,11 +4,13 @@ import { useAppStore } from "@/store/useAppStore";
 import { useProfileData } from "@/hooks/useUniversalProfile";
 import { useCalendar } from "@/hooks/useCalendar";
 import { useSocialCalendar } from "@/hooks/useSocialCalendar";
+import { useGridSize } from "@/lib/useGridSize";
 import { CalendarGrid } from "./CalendarGrid";
 import { DayPopover } from "./DayPopover";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Avatar } from "@/components/Avatar";
 import { LanguageToggle } from "@/components/LanguageToggle";
+import { useLSP3Name } from "@/hooks/useLSP3Name";
 import { useT } from "@/hooks/useT";
 import { CELEBRATION_COLORS } from "@/constants/celebrationTypes";
 import type { CelebrationDay, Address } from "@/types";
@@ -20,11 +22,21 @@ interface CalendarViewProps {
   chainId: number;
 }
 
+function ProfileNameLine({ address, chainId }: { address: Address; chainId: number }) {
+  const { data: profileName } = useLSP3Name(address, chainId);
+  return <>{profileName ?? `${address.slice(0, 8)}…${address.slice(-6)}`}</>;
+}
+
 export function CalendarView({ chainId }: CalendarViewProps) {
-  const { contextProfile, connectedAccount, setView } = useAppStore();
+  const { contextProfile, connectedAccount, setView, setActiveDropId } = useAppStore();
   const t = useT();
   const [month, setMonth] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<CelebrationDay | null>(null);
+  const isLargeGrid = useGridSize();
+  // Progressive disclosure: start expanded on large tiles, collapsed on small
+  const [showMonthList, setShowMonthList] = useState(() => isLargeGrid);
+  const [showFriends, setShowFriends] = useState(() => isLargeGrid);
+  const [showSocialDrops, setShowSocialDrops] = useState(() => isLargeGrid);
 
   const { data: profileData, isLoading } = useProfileData(contextProfile, chainId);
   const { celebrationDays } = useCalendar({ profileData, month });
@@ -84,109 +96,140 @@ export function CalendarView({ chainId }: CalendarViewProps) {
           />
         )}
 
-        {/* This month's celebrations list */}
+        {/* This month's celebrations list — collapsed by default */}
         {celebrationDays.length > 0 && (
-          <div className="mt-6">
-            <p className="text-xs text-white/40 uppercase tracking-wide font-medium mb-2">
-              {t.calendarThisMonth}
-            </p>
-            <div className="space-y-2">
-              {celebrationDays
-                .sort((a, b) => a.date.localeCompare(b.date))
-                .map((day) => (
-                  <button
-                    key={day.date}
-                    onClick={() => setSelectedDay(day)}
-                    className="card w-full text-left hover:border-lukso-border/80 transition-colors flex items-center gap-3"
-                  >
-                    <div className="flex -space-x-1.5">
-                      {day.celebrations.slice(0, 2).map((c, i) => (
-                        <span
-                          key={i}
-                          className={`w-3 h-3 rounded-full border-2 border-lukso-bg ${CELEBRATION_COLORS[c.type]}`}
-                        />
-                      ))}
+          <div className="mt-4">
+            <button
+              onClick={() => setShowMonthList((v) => !v)}
+              className="flex items-center justify-between w-full py-1 mb-2 group"
+            >
+              <p className="text-xs text-white/40 uppercase tracking-wide font-medium">
+                {t.calendarThisMonth} ({celebrationDays.length})
+              </p>
+              <span className="text-white/25 text-xs group-hover:text-white/60 transition-colors">
+                {showMonthList ? "▲" : "▼"}
+              </span>
+            </button>
+            {showMonthList && (
+              <div className="space-y-2">
+                {celebrationDays
+                  .sort((a, b) => a.date.localeCompare(b.date))
+                  .map((day) => (
+                    <button
+                      key={day.date}
+                      onClick={() => setSelectedDay(day)}
+                      className="card w-full text-left hover:border-lukso-border/80 transition-colors flex items-center gap-3"
+                    >
+                      <div className="flex -space-x-1.5">
+                        {day.celebrations.slice(0, 2).map((c, i) => (
+                          <span
+                            key={i}
+                            className={`w-3 h-3 rounded-full border-2 border-lukso-bg ${CELEBRATION_COLORS[c.type]}`}
+                          />
+                        ))}
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">
+                          {day.celebrations.length === 1
+                            ? day.celebrations[0].title
+                            : `${day.celebrations.length} ${t.calendarCelebrations}`}
+                        </p>
+                        <p className="text-xs text-white/40">{format(new Date(day.date), "MMMM d")}</p>
+                      </div>
+                      <span className="text-white/20 text-sm">›</span>
+                    </button>
+                  ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Social section: friends' birthdays this month — collapsed by default */}
+        {(socialData?.profiles ?? []).filter((p) => p.birthdayMonth === month.getMonth() + 1).length > 0 && (
+          <div className="mt-4">
+            <button
+              onClick={() => setShowFriends((v) => !v)}
+              className="flex items-center justify-between w-full py-1 mb-2 group"
+            >
+              <p className="text-xs text-white/40 uppercase tracking-wide font-medium">
+                {t.calendarFriends}
+              </p>
+              <span className="text-white/25 text-xs group-hover:text-white/60 transition-colors">
+                {showFriends ? "▲" : "▼"}
+              </span>
+            </button>
+            {showFriends && (
+              <div className="space-y-2">
+                {socialData!.profiles
+                  .filter((p) => p.birthdayMonth === month.getMonth() + 1)
+                  .sort((a, b) => a.birthdayDay - b.birthdayDay)
+                  .map((p) => (
+                    <div key={p.address} className="card flex items-center gap-3">
+                      <Avatar address={p.address as Address} size={28} />
+                      <div className="flex-1">
+                        <p className="text-xs text-white/60">
+                          <ProfileNameLine address={p.address as Address} chainId={chainId} />
+                        </p>
+                        <p className="text-xs text-white/40">
+                          {t.calendarBirthday} — {format(new Date(2000, p.birthdayMonth - 1, p.birthdayDay), "MMMM d")}
+                        </p>
+                      </div>
+                      <span className="w-3 h-3 rounded-full bg-pink-500 flex-shrink-0" />
                     </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">
-                        {day.celebrations.length === 1
-                          ? day.celebrations[0].title
-                          : `${day.celebrations.length} ${t.calendarCelebrations}`}
+                  ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Active drops from followed profiles this month — collapsed by default */}
+        {(socialData?.drops ?? []).length > 0 && (
+          <div className="mt-4 pb-4">
+            <button
+              onClick={() => setShowSocialDrops((v) => !v)}
+              className="flex items-center justify-between w-full py-1 mb-2 group"
+            >
+              <p className="text-xs text-white/40 uppercase tracking-wide font-medium">
+                {t.calendarActiveDrops} ({socialData!.drops.length})
+              </p>
+              <span className="text-white/25 text-xs group-hover:text-white/60 transition-colors">
+                {showSocialDrops ? "▲" : "▼"}
+              </span>
+            </button>
+            {showSocialDrops && (
+              <div className="space-y-2">
+                {socialData!.drops.map((drop) => (
+                  <button
+                    key={drop.dropId}
+                    onClick={() => {
+                      setActiveDropId(drop.dropId);
+                      setView("drop-detail");
+                    }}
+                    className="card w-full text-left flex items-center gap-3 hover:border-lukso-border/80 transition-colors"
+                  >
+                    <span className="w-3 h-3 rounded-full bg-lukso-purple flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{drop.name}</p>
+                      <p className="text-xs text-white/40">
+                        {drop.claimed} {t.calendarClaimed}
+                        {drop.maxSupply != null ? ` / ${drop.maxSupply}` : ""}
                       </p>
-                      <p className="text-xs text-white/40">{format(new Date(day.date), "MMMM d")}</p>
                     </div>
                     <span className="text-white/20 text-sm">›</span>
                   </button>
                 ))}
-            </div>
+              </div>
+            )}
           </div>
         )}
       </div>
-
-      {/* Social section: friends' birthdays this month */}
-      {(socialData?.profiles ?? []).length > 0 && (
-        <div className="mt-6 px-4">
-          <p className="text-xs text-white/40 uppercase tracking-wide font-medium mb-2">
-            {t.calendarFriends}
-          </p>
-          <div className="space-y-2">
-            {socialData!.profiles
-              .filter((p) => p.birthdayMonth === month.getMonth() + 1)
-              .sort((a, b) => a.birthdayDay - b.birthdayDay)
-              .map((p) => (
-                <div key={p.address} className="card flex items-center gap-3">
-                  <Avatar address={p.address as Address} size={28} />
-                  <div className="flex-1">
-                    <p className="text-xs font-mono text-white/60">
-                      {p.address.slice(0, 8)}…{p.address.slice(-6)}
-                    </p>
-                    <p className="text-xs text-white/40">
-                      {t.calendarBirthday} — {format(new Date(2000, p.birthdayMonth - 1, p.birthdayDay), "MMMM d")}
-                    </p>
-                  </div>
-                  <span className={`w-3 h-3 rounded-full bg-pink-500 flex-shrink-0`} />
-                </div>
-              ))}
-          </div>
-        </div>
-      )}
-
-      {/* Active drops from followed profiles this month */}
-      {(socialData?.drops ?? []).length > 0 && (
-        <div className="mt-4 px-4 pb-4">
-          <p className="text-xs text-white/40 uppercase tracking-wide font-medium mb-2">
-            {t.calendarActiveDrops}
-          </p>
-          <div className="space-y-2">
-            {socialData!.drops.map((drop) => (
-              <button
-                key={drop.dropId}
-                onClick={() => {
-                  localStorage.setItem("activeDropId", drop.dropId);
-                  setView("drop-detail");
-                }}
-                className="card w-full text-left flex items-center gap-3 hover:border-lukso-border/80 transition-colors"
-              >
-                <span className="w-3 h-3 rounded-full bg-lukso-purple flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{drop.name}</p>
-                  <p className="text-xs text-white/40">
-                    {drop.claimed} {t.calendarClaimed}
-                    {drop.maxSupply != null ? ` / ${drop.maxSupply}` : ""}
-                  </p>
-                </div>
-                <span className="text-white/20 text-sm">›</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Day popover */}
       {selectedDay && (
         <DayPopover
           day={selectedDay}
           onClose={() => setSelectedDay(null)}
+          chainId={chainId}
           isOwner={contextProfile?.toLowerCase() === connectedAccount?.toLowerCase()}
         />
       )}

@@ -160,6 +160,7 @@ export type AppView =
   | "editor"
   | "wishlist"
   | "drops"
+  | "drops-manage"
   | "drop-detail"
   | "series";
 

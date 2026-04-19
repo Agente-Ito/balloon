@@ -1,17 +1,15 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { v4 as uuidv4 } from "uuid";
 import toast from "react-hot-toast";
-import { CELEBRATION_LABELS } from "@/constants/celebrationTypes";
+import { useT } from "@/hooks/useT";
+import { getMonthNames } from "@/lib/monthNames";
 import { uploadFileToIPFS } from "@/lib/ipfs";
 import { generateTemplateSVG, templateToFile } from "@/lib/celebrationTemplates";
 import { TemplatePicker } from "@/components/TemplatePicker";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
-import { useT } from "@/hooks/useT";
 import { CelebrationType } from "@/types";
 import type { Celebration } from "@/types";
 import type { CelebrationTemplate } from "@/lib/celebrationTemplates";
-
-const MONTH_NAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
 interface EventFormProps {
   onSave: (event: Celebration) => void;
@@ -20,6 +18,7 @@ interface EventFormProps {
 
 export function EventForm({ onSave, onCancel }: EventFormProps) {
   const t = useT();
+  const monthNames = useMemo(() => getMonthNames(t), [t]);
   const [title, setTitle] = useState("");
   const [month, setMonth] = useState("");
   const [day, setDay] = useState("");
@@ -124,7 +123,7 @@ export function EventForm({ onSave, onCancel }: EventFormProps) {
             <label className="block text-[10px] text-white/40 mb-1">{t.eventMonth}</label>
             <select value={month} onChange={(e) => setMonth(e.target.value)} className="input text-sm py-1.5">
               <option value="">—</option>
-              {MONTH_NAMES.map((m, i) => (
+              {monthNames.map((m, i) => (
                 <option key={m} value={String(i + 1)}>{m}</option>
               ))}
             </select>
@@ -164,8 +163,13 @@ export function EventForm({ onSave, onCancel }: EventFormProps) {
           onChange={(e) => setType(Number(e.target.value) as CelebrationType)}
           className="input"
         >
-          {Object.entries(CELEBRATION_LABELS).map(([k, v]) => (
-            <option key={k} value={k}>{v}</option>
+          {[
+            { value: CelebrationType.Birthday, label: t.typeBirthday },
+            { value: CelebrationType.UPAnniversary, label: t.typeAnniversary },
+            { value: CelebrationType.GlobalHoliday, label: t.typeHoliday },
+            { value: CelebrationType.CustomEvent, label: t.typeCustom },
+          ].map(({ value, label }) => (
+            <option key={value} value={value}>{label}</option>
           ))}
         </select>
       </div>

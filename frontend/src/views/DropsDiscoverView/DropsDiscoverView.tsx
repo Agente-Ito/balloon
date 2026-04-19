@@ -36,8 +36,8 @@ function DropCard({
   };
 
   const handleDetails = () => {
+    useAppStore.getState().setActiveDropId(drop.dropId);
     useAppStore.getState().setView("drop-detail");
-    localStorage.setItem("activeDropId", drop.dropId);
   };
 
   const supplyLabel = drop.maxSupply != null
@@ -72,7 +72,7 @@ function DropCard({
         <span className="text-xs text-white/30 shrink-0">{dateLabel}</span>
       </div>
 
-      <div className="flex items-center gap-3 text-xs text-white/40">
+      <div className="hidden sm:flex [@media(max-height:620px)]:hidden items-center gap-3 text-xs text-white/40">
         <span>{supplyLabel}</span>
         {drop.requireFollow && <span>· {t.dropFollowRequired}</span>}
         {drop.minFollowers > 0 && <span>· {drop.minFollowers}+ {t.dropFollowerReq}</span>}
@@ -119,7 +119,7 @@ function DropCard({
 const MONTH_NAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
 export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewProps) {
-  const { connectedAccount, setView, setActiveSeriesId } = useAppStore();
+  const { connectedAccount, setView, setActiveSeriesId, goBack } = useAppStore();
   const t = useT();
 
   const { data: socialData, isLoading: socialLoading } = useSocialCalendar(connectedAccount);
@@ -141,23 +141,31 @@ export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewPr
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
+      {/* Header: Breadcrumb + Explore / Manage tab switcher */}
       <div className="flex items-center gap-3 px-4 pt-4 pb-3 border-b border-white/10">
-        <button onClick={() => setView("grid")} className="text-white/40 hover:text-white transition-colors">
-          ←
+        <button onClick={() => goBack("grid")} className="text-white/40 hover:text-white transition-colors shrink-0" title="Back to Calendar">
+          {t.dropsBackToCalendar}
         </button>
-        <h1 className="text-sm font-semibold flex-1">{t.dropsDiscoverTitle}</h1>
-        {connectedAccount && (
-          <button
-            onClick={() => setView("editor")}
-            className="text-xs text-lukso-pink hover:text-lukso-pink/80 transition-colors"
-          >
-            {t.create}
-          </button>
-        )}
+        <div className="flex-1 flex items-center justify-center min-w-0">
+          <div className="flex gap-1 bg-white/5 rounded-lg p-0.5">
+            <button className="text-xs px-3 py-1 rounded-md bg-white/10 text-white font-medium whitespace-nowrap">
+              {t.dropsManageTabExplore}
+            </button>
+            {connectedAccount && (
+              <button
+                onClick={() => setView("drops-manage")}
+                className="text-xs px-3 py-1 rounded-md text-white/40 hover:text-white/70 transition-colors whitespace-nowrap"
+              >
+                {t.dropsManageTabManage}
+              </button>
+            )}
+          </div>
+        </div>
         <LanguageToggle />
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-6">
+
         {connectedAccount && (
           <section>
             <h2 className="text-xs font-medium text-white/40 uppercase tracking-wide mb-3">

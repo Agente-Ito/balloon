@@ -1,11 +1,11 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { useSendGreeting } from "@/hooks/useSendGreeting";
-import { CELEBRATION_LABELS } from "@/constants/celebrationTypes";
+import { getCelebrationTypeKey } from "@/constants/celebrationTypes";
+import { useT } from "@/hooks/useT";
 import { LoadingSpinner } from "./LoadingSpinner";
 import { Avatar } from "./Avatar";
 import { useLSP3Name } from "@/hooks/useLSP3Name";
-import { useT } from "@/hooks/useT";
 import type { Address, CelebrationType } from "@/types";
 import type { WalletClient } from "viem";
 
@@ -55,7 +55,7 @@ export function SendGreetingModal({
     }
   };
 
-  const label = CELEBRATION_LABELS[celebrationType];
+  const label = t[getCelebrationTypeKey(celebrationType) as keyof typeof t];
   const charsLeft = 280 - message.length;
 
   const recipientDisplay = recipientName
