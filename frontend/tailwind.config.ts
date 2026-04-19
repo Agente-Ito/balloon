@@ -67,7 +67,7 @@ export default {
           "50%":      { transform: "translateY(-7px) rotate(2deg)" },
         },
         floatLogo: {
-          "0%, 100%": { transform: "translateY(0px)" },
+          "0%, 100%": { transform: "translateY(3px)" },
           "50%":      { transform: "translateY(-3px)" },
         },
         balloonRise: {
