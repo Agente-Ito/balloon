@@ -79,8 +79,13 @@ function GradientAvatar({
       }}
     >
       {hasBalloonLetter ? (
-        // Center the balloon letter; overflow-hidden clips to circle
-        <div style={{ position: "absolute", top: -(letterHeight * 0.2) }}>
+        // absolute + left 50% + translateX(-50%) = true horizontal center inside the circle
+        <div style={{
+          position: "absolute",
+          top: -(letterHeight * 0.15),
+          left: "50%",
+          transform: "translateX(-50%)",
+        }}>
           <BalloonLetter letter={firstLetter} height={letterHeight} />
         </div>
       ) : (

@@ -1,19 +1,13 @@
 /**
- * BalloonLogo — "BALLOON" wordmark rendered as foil balloon letter sprites.
- * Uses BalloonName so there is no background image to fight — letters float
- * transparently over whatever surface they sit on.
+ * BalloonLogo — "BALLOON" wordmark as individual sprite letters.
+ * Each letter floats independently with a staggered delay → wave effect.
+ * No background image, no wrapping issues.
  */
-import { BalloonName } from "@/components/BalloonName";
+import { BalloonLetter } from "@/components/BalloonName";
 
 interface BalloonLogoProps {
   className?: string;
-  /**
-   * Letter height in px. Controls overall size.
-   * The full wordmark will be roughly 3× this value wide.
-   * Default: 36 (matches avatar height in the grid header).
-   */
   letterHeight?: number;
-  /** Compact: show only the single "B" letter. */
   compact?: boolean;
 }
 
@@ -22,10 +16,19 @@ export function BalloonLogo({ className = "", letterHeight = 36, compact = false
 
   return (
     <span
+      role="img"
       aria-label="balloon"
-      className={`inline-flex items-end animate-float-logo ${className}`}
+      className={`inline-flex items-end flex-nowrap gap-px ${className}`}
     >
-      <BalloonName name={text} letterHeight={letterHeight} />
+      {text.split("").map((char, i) => (
+        <span
+          key={i}
+          className="animate-float-logo"
+          style={{ animationDelay: `${i * 0.2}s` }}
+        >
+          <BalloonLetter letter={char} height={letterHeight} />
+        </span>
+      ))}
     </span>
   );
 }
