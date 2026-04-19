@@ -10,7 +10,7 @@ interface AppStore {
 
   // Navigation
   currentView: AppView;
-  previousView: AppView | null;
+  viewHistory: AppView[];
   setView: (view: AppView) => void;
   goBack: (fallback?: AppView) => void;
 
@@ -70,14 +70,23 @@ export const useAppStore = create<AppStore>((set, get) => ({
   clearBurst: () => set({ burstActive: false }),
 
   currentView: "grid",
-  previousView: null,
+  viewHistory: [],
   setView: (view) => set((state) => ({
-    previousView: state.currentView === view ? state.previousView : state.currentView,
     currentView: view,
+    viewHistory:
+      state.currentView === view
+        ? state.viewHistory
+        : [...state.viewHistory, state.currentView],
   })),
   goBack: (fallback = "grid") => set((state) => ({
-    currentView: state.previousView ?? fallback,
-    previousView: null,
+    currentView:
+      state.viewHistory.length > 0
+        ? state.viewHistory[state.viewHistory.length - 1]
+        : fallback,
+    viewHistory:
+      state.viewHistory.length > 0
+        ? state.viewHistory.slice(0, -1)
+        : state.viewHistory,
   })),
 
   activeDropId: null,

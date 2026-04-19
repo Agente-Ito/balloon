@@ -9,7 +9,9 @@ import { useState } from "react";
 import { format, fromUnixTime } from "date-fns";
 import { useAppStore } from "@/store/useAppStore";
 import { useDrops } from "@/hooks/useDrops";
+import { useLSP3Name } from "@/hooks/useLSP3Name";
 import { useT } from "@/hooks/useT";
+import { Avatar } from "@/components/Avatar";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { DropForm } from "@/views/Editor/DropForm";
@@ -26,9 +28,14 @@ interface DropsManageViewProps {
 
 function DropRow({
   drop,
+  host,
+  hostName,
+  chainId,
   onViewDetail,
 }: {
   drop: IndexedDrop;
+  host: Address;
+  hostName?: string;
   chainId: number;
   onViewDetail: (dropId: string) => void;
 }) {
@@ -53,7 +60,15 @@ function DropRow({
           ) : (
             <div className="w-9 h-9 rounded-lg bg-lukso-pink/20 flex-shrink-0" />
           )}
-          <p className="text-sm font-medium truncate">{drop.name}</p>
+          <div className="min-w-0">
+            <p className="text-sm font-medium truncate">{drop.name}</p>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <Avatar address={host} size={16} chainId={chainId} className="ring-1 ring-white/20" />
+              <span className="text-[11px] text-lukso-purple/90 truncate">
+                {hostName ?? `${host.slice(0, 6)}…${host.slice(-4)}`}
+              </span>
+            </div>
+          </div>
         </div>
         <span
           className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${
@@ -99,6 +114,7 @@ export function DropsManageView({ walletClient, chainId }: DropsManageViewProps)
     host: connectedAccount as Address | null,
     enabled: !!connectedAccount,
   });
+  const { data: hostName } = useLSP3Name(connectedAccount, chainId);
 
   const createDropMutation = useCreateDrop(walletClient ?? null, chainId);
 
@@ -216,6 +232,8 @@ export function DropsManageView({ walletClient, chainId }: DropsManageViewProps)
                       <DropRow
                         key={drop.dropId}
                         drop={drop}
+                        host={connectedAccount}
+                        hostName={hostName}
                         chainId={chainId}
                         onViewDetail={handleViewDetail}
                       />
@@ -237,6 +255,8 @@ export function DropsManageView({ walletClient, chainId }: DropsManageViewProps)
                       <DropRow
                         key={drop.dropId}
                         drop={drop}
+                        host={connectedAccount}
+                        hostName={hostName}
                         chainId={chainId}
                         onViewDetail={handleViewDetail}
                       />

@@ -9,8 +9,11 @@ import { Avatar } from "@/components/Avatar";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { useT } from "@/hooks/useT";
 import { useLSP3Name } from "@/hooks/useLSP3Name";
+import { getLocalizedDropEligibilityReason } from "@/lib/dropEligibilityReason";
+import { getMonthNames } from "@/lib/monthNames";
 import type { IndexedDrop, Address } from "@/types";
 import type { WalletClient } from "viem";
+import { useMemo } from "react";
 
 interface DropsDiscoverViewProps {
   walletClient?: WalletClient;
@@ -29,6 +32,7 @@ function DropCard({
   const { data: hostName } = useLSP3Name(drop.host as Address, chainId);
   const { data: eligibility, isLoading: eligLoading } = useDropEligibility(drop.dropId, viewer, chainId);
   const claimMutation = useClaimDrop(walletClient ?? null, chainId);
+  const isMyDrop = !!viewer && viewer.toLowerCase() === drop.host.toLowerCase();
 
   const handleClaim = async () => {
     if (!viewer) return;
@@ -62,14 +66,19 @@ function DropCard({
         )}
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-sm truncate">{drop.name}</p>
-          <div className="flex items-center gap-1.5 mt-0.5">
-            <Avatar address={drop.host} size={16} chainId={chainId} />
-            <span className="text-xs text-lukso-purple truncate">
+          <div className="flex items-center gap-2 mt-1">
+            <Avatar address={drop.host} size={20} chainId={chainId} className="ring-1 ring-white/20" />
+            <span className="text-xs text-lukso-purple/90 truncate font-medium">
               {hostName ?? `${drop.host.slice(0, 6)}…${drop.host.slice(-4)}`}
             </span>
           </div>
         </div>
         <span className="text-xs text-white/30 shrink-0">{dateLabel}</span>
+        {isMyDrop && (
+          <span className="text-[10px] px-2 py-0.5 rounded-full bg-lukso-pink/20 text-lukso-pink shrink-0">
+            {t.dropMineBadge}
+          </span>
+        )}
       </div>
 
       <div className="hidden sm:flex [@media(max-height:620px)]:hidden items-center gap-3 text-xs text-white/40">
@@ -98,7 +107,7 @@ function DropCard({
             </button>
           ) : (
             <span className="text-xs text-white/30 flex-1 text-center truncate px-2">
-              {eligibility?.reason ?? t.dropNotEligible}
+              {getLocalizedDropEligibilityReason(eligibility?.reason, t)}
             </span>
           )
         )}
@@ -116,11 +125,10 @@ function DropCard({
   );
 }
 
-const MONTH_NAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-
 export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewProps) {
   const { connectedAccount, setView, setActiveSeriesId, goBack } = useAppStore();
   const t = useT();
+  const monthNames = useMemo(() => getMonthNames(t), [t]);
 
   const { data: socialData, isLoading: socialLoading } = useSocialCalendar(connectedAccount);
   const { data: allSeries } = useAllSeries();
@@ -136,7 +144,12 @@ export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewPr
   const { data: allDrops, isLoading: allDropsLoading } = useDrops({ activeOnly: true });
 
   const socialDropIds = new Set((socialDrops ?? []).map((d) => d.dropId));
-  const discoverDrops = (allDrops ?? []).filter((d) => !socialDropIds.has(d.dropId));
+  const ownDrops = (allDrops ?? []).filter(
+    (d) => !!connectedAccount && d.host.toLowerCase() === connectedAccount.toLowerCase()
+  );
+  const discoverDrops = (allDrops ?? []).filter(
+    (d) => !socialDropIds.has(d.dropId) && d.host.toLowerCase() !== connectedAccount?.toLowerCase()
+  );
   const isLoading = socialLoading || socialDropsLoading;
 
   return (
@@ -185,6 +198,19 @@ export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewPr
           </section>
         )}
 
+        {connectedAccount && ownDrops.length > 0 && (
+          <section>
+            <h2 className="text-xs font-medium text-white/40 uppercase tracking-wide mb-3">
+              {t.dropsMyCampaigns}
+            </h2>
+            <div className="flex flex-col gap-3">
+              {ownDrops.map((drop) => (
+                <DropCard key={drop.dropId} drop={drop} viewer={connectedAccount} walletClient={walletClient} chainId={chainId} />
+              ))}
+            </div>
+          </section>
+        )}
+
         <section>
           <h2 className="text-xs font-medium text-white/40 uppercase tracking-wide mb-3">
             {t.dropsDiscover}
@@ -224,7 +250,7 @@ export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewPr
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium">{s.name}</p>
                     <p className="text-xs text-white/40">
-                      {MONTH_NAMES[(s.month ?? 1) - 1]} {s.day} · Vote for the official badge
+                      {monthNames[(s.month ?? 1) - 1]} {s.day} · Vote for the official badge
                     </p>
                   </div>
                   <span className="text-white/20 text-sm flex-shrink-0">›</span>

@@ -20,21 +20,23 @@ interface ToggleRowProps {
 
 function ToggleRow({ label, description, checked, onChange }: ToggleRowProps) {
   return (
-    <label className="flex items-center justify-between cursor-pointer py-3 border-b border-lukso-border last:border-0">
-      <div>
+    <label className="flex items-start justify-between cursor-pointer py-3 border-b border-lukso-border last:border-0 gap-3">
+      <div className="min-w-0">
         <p className="text-sm font-medium">{label}</p>
         <p className="text-xs text-white/40 mt-0.5">{description}</p>
       </div>
       <button
         type="button"
         onClick={onChange}
-        className={`w-12 h-6 rounded-full transition-colors relative flex-shrink-0 ml-4 ${
-          checked ? "bg-lukso-purple" : "bg-white/10"
+        role="switch"
+        aria-checked={checked}
+        className={`w-14 h-8 sm:w-12 sm:h-7 rounded-full transition-all border inline-flex items-center px-1 sm:px-0.5 flex-shrink-0 mt-0.5 touch-manipulation ${
+          checked
+            ? "bg-lukso-purple border-lukso-purple/70 justify-end"
+            : "bg-white/10 border-white/15 justify-start"
         }`}
       >
-        <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
-          checked ? "translate-x-6" : "translate-x-0.5"
-        }`} />
+        <span className="w-6 h-6 sm:w-5 sm:h-5 rounded-full bg-white shadow-md" />
       </button>
     </label>
   );

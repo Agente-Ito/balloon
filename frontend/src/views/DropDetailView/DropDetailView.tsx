@@ -13,6 +13,7 @@ import { Avatar } from "@/components/Avatar";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { useT } from "@/hooks/useT";
 import { useLSP3Name } from "@/hooks/useLSP3Name";
+import { getLocalizedDropEligibilityReason } from "@/lib/dropEligibilityReason";
 import type { Address } from "@/types";
 import type { WalletClient } from "viem";
 import { format, fromUnixTime } from "date-fns";
@@ -39,7 +40,7 @@ export function DropDetailView({ walletClient, chainId }: DropDetailViewProps) {
     chainId
   );
   const claimMutation = useClaimDrop(walletClient ?? null, chainId);
-  const { data: hostName } = useLSP3Name(drop?.host as Address | undefined ?? null, chainId);
+  const { data: hostName, isLoading: hostNameLoading } = useLSP3Name(drop?.host as Address | undefined ?? null, chainId);
 
   const handleClaim = async () => {
     if (!connectedAccount || !dropId) return;
@@ -69,6 +70,7 @@ export function DropDetailView({ walletClient, chainId }: DropDetailViewProps) {
     drop.maxSupply != null && drop.maxSupply > 0
       ? Math.min((drop.claimed / drop.maxSupply) * 100, 100)
       : null;
+  const isMyDrop = !!connectedAccount && connectedAccount.toLowerCase() === drop.host.toLowerCase();
 
   const windowLabel = (() => {
     if (drop.startAt > 0 && !drop.isActive) {
@@ -88,6 +90,11 @@ export function DropDetailView({ walletClient, chainId }: DropDetailViewProps) {
           {t.dropDetailBack}
         </button>
         <h1 className="text-sm font-semibold flex-1 truncate">{drop.name}</h1>
+        {isMyDrop && (
+          <span className="text-[10px] px-2 py-0.5 rounded-full bg-lukso-pink/20 text-lukso-pink shrink-0">
+            {t.dropMineBadge}
+          </span>
+        )}
         <LanguageToggle />
       </div>
 
@@ -133,7 +140,9 @@ export function DropDetailView({ walletClient, chainId }: DropDetailViewProps) {
           <div>
             <p className="text-xs text-white/40">{t.dropCreatedBy}</p>
             <p className="text-xs font-medium text-lukso-purple">
-              {hostName ?? `${drop.host.slice(0, 8)}…${drop.host.slice(-6)}`}
+              {hostNameLoading
+                ? t.dropHostLoadingName
+                : (hostName ?? `${drop.host.slice(0, 8)}…${drop.host.slice(-6)}`)}
             </p>
           </div>
         </div>
@@ -216,7 +225,7 @@ export function DropDetailView({ walletClient, chainId }: DropDetailViewProps) {
             ) : (
               <div className="text-center">
                 <p className="text-xs text-white/40 mb-2">
-                  {eligibility?.reason ?? t.dropNotEligible}
+                  {getLocalizedDropEligibilityReason(eligibility?.reason, t)}
                 </p>
                 <button
                   disabled
