@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 80" fill="none">
+  <defs>
+    <radialGradient id="g" cx="35%" cy="28%" r="65%">
+      <stop offset="0%"   stop-color="#C9A8F0"/>
+      <stop offset="40%"  stop-color="#9C4EDB"/>
+      <stop offset="100%" stop-color="#6A1B9A"/>
+    </radialGradient>
+    <radialGradient id="bg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"   stop-color="#F5F0E1"/>
+      <stop offset="100%" stop-color="#E8D9C8"/>
+    </radialGradient>
+  </defs>
+  <!-- Background circle -->
+  <circle cx="32" cy="32" r="32" fill="url(#bg)"/>
+  <!-- Balloon body -->
+  <ellipse cx="32" cy="27" rx="16" ry="18" fill="url(#g)"/>
+  <!-- Foil highlight -->
+  <ellipse cx="24" cy="19" rx="5.5" ry="6.5" fill="white" opacity="0.32"/>
+  <ellipse cx="21" cy="17" rx="2.5" ry="3" fill="white" opacity="0.18"/>
+  <!-- Knot -->
+  <path d="M29 45.5 Q32 50 35 45.5" stroke="#9C4EDB" stroke-width="2" stroke-linecap="round" fill="none"/>
+  <!-- String -->
+  <path d="M32 49 Q35 57 27 68" stroke="#9C4EDB" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.65"/>
+</svg>

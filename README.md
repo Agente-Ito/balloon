@@ -228,6 +228,69 @@ The indexer (`indexer/`) listens for on-chain events and exposes a REST API for 
 
 ---
 
+## Design system
+
+The frontend uses a light-mode balloon-foil aesthetic — warm cream backgrounds, metallic violet buttons, and subtle shimmer effects.
+
+### Color palette
+
+| Token | Hex | Use |
+|---|---|---|
+| `cel-violet` | `#6A1B9A` | Primary — buttons, links, active states |
+| `cel-accent` | `#9C4EDB` | Highlight, gradients, hover glow |
+| `cel-cream` | `#F5F0E1` | Main background |
+| `cel-beige` | `#E8D9C8` | Borders, dividers, secondary surfaces |
+| `cel-text` | `#2C2C2C` | Body text |
+| `cel-muted` | `#8B7D7D` | Secondary text, placeholders |
+| `cel-card` | `#FFFFFF` | Card surface |
+
+### Button classes
+
+| Class | Description |
+|---|---|
+| `.btn-primary` | Metallic foil gradient violet, white text, shimmer sweep on hover |
+| `.btn-secondary` | Outlined violet border, transparent fill |
+| `.btn-celebrate` | Animated foil gradient — use for the main celebration CTA |
+| `.btn-ghost` | Muted text, subtle violet hover |
+
+### Utility classes
+
+- `.card` — white card with beige border and soft violet drop shadow
+- `.input` — cream background, beige border, violet focus ring
+- `.foil-shimmer` — adds a light sweep animation to any element (metallic foil effect)
+- `.violet-header` — foil-gradient header for card/panel tops, white text
+
+### Components
+
+| Component | Description |
+|---|---|
+| `BalloonLogo` | Shows `balloon-wordmark.jpeg` asset; SVG fallback with violet palette |
+| `BalloonIcon` | SVG balloon mark. `foil` prop enables radial gradient metallic look |
+| `BalloonName` | Renders a name as metallic balloon letters using the `balloon-alphabet.jpeg` sprite sheet |
+| `BalloonBurst` | Full-screen celebration overlay — rising balloons + confetti |
+
+#### BalloonName usage
+
+```tsx
+import { BalloonName } from "@/components/BalloonName";
+
+// Displays "MARIA" as purple foil balloon letters
+<BalloonName name="MARIA" letterHeight={56} />
+```
+
+Supports A–Z (uppercase/lowercase). Spaces render as gaps. Useful as a decorative detail on celebration cards or badge headers.
+
+### Assets (`frontend/public/`)
+
+| File | Use |
+|---|---|
+| `balloon-wordmark.jpeg` | "BALLOON" foil word logo — used by `BalloonLogo` |
+| `balloon-b.jpeg` | Single "B" balloon — OG image for social previews |
+| `balloon-alphabet.jpeg` | A–Z foil letter sprite sheet — used by `BalloonName` |
+| `favicon.svg` | SVG balloon favicon (shown in browser tabs and block explorer tx pages) |
+
+---
+
 ## Tech stack
 
 | Layer | Technologies |

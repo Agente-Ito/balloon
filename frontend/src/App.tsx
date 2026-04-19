@@ -35,7 +35,7 @@ export default function App() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center h-screen" style={{ background: "#F5F0E1" }}>
         <LoadingSpinner />
       </div>
     );
@@ -43,10 +43,17 @@ export default function App() {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen gap-3 px-6 text-center">
+      <div
+        className="flex flex-col items-center justify-center h-screen gap-3 px-6 text-center"
+        style={{ background: "#F5F0E1" }}
+      >
         <div className="text-2xl">⚠️</div>
-        <p className="text-white/60 text-sm">Could not connect to Universal Profile</p>
-        <p className="text-white/30 text-xs font-mono">{error}</p>
+        <p className="text-sm" style={{ color: "rgba(44,44,44,0.6)" }}>
+          Could not connect to Universal Profile
+        </p>
+        <p className="text-xs font-mono" style={{ color: "rgba(44,44,44,0.4)" }}>
+          {error}
+        </p>
       </div>
     );
   }

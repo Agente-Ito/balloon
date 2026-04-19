@@ -19,7 +19,7 @@ export function BadgeCard({ badge, className = "" }: BadgeCardProps) {
     <div className={`card flex flex-col gap-3 ${className}`}>
       {/* Badge art */}
       <div
-        className={`w-full aspect-square rounded-xl flex items-center justify-center text-4xl ${colorClass} bg-opacity-20`}
+        className={`w-full aspect-square rounded-xl flex items-center justify-center text-4xl ${colorClass} bg-opacity-10`}
       >
         {metadata.image ? (
           <img
@@ -35,12 +35,22 @@ export function BadgeCard({ badge, className = "" }: BadgeCardProps) {
       {/* Info */}
       <div className="flex flex-col gap-1">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-semibold text-white">{metadata.title}</span>
+          <span className="text-sm font-semibold" style={{ color: "#2C2C2C" }}>
+            {metadata.title}
+          </span>
           {soulbound && (
-            <span className="badge bg-lukso-pink/20 text-lukso-pink text-[10px]">Soulbound</span>
+            <span
+              className="badge text-[10px] font-semibold"
+              style={{
+                background: "rgba(106,27,154,0.12)",
+                color: "#6A1B9A",
+              }}
+            >
+              Soulbound
+            </span>
           )}
         </div>
-        <span className="text-xs text-white/50">
+        <span className="text-xs" style={{ color: "#8B7D7D" }}>
           {label} · {metadata.year}
         </span>
       </div>

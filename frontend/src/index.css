@@ -2,62 +2,217 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  body {
-    @apply bg-lukso-dark text-white font-sans antialiased;
-    /* Grid apps are embedded in iframes — no scrollbar on the outer body */
-    overflow: hidden;
-    /* Subtle purple noise texture to match brand depth */
-    background-image: radial-gradient(ellipse at 20% 0%, #3D2890 0%, transparent 60%),
-                      radial-gradient(ellipse at 80% 100%, #2A1060 0%, transparent 60%);
-  }
+/* ─── Design tokens as CSS custom properties ─────────────────────────── */
+:root {
+  --cel-violet:  #6A1B9A;
+  --cel-accent:  #9C4EDB;
+  --cel-cream:   #F5F0E1;
+  --cel-beige:   #E8D9C8;
+  --cel-text:    #2C2C2C;
+  --cel-muted:   #8B7D7D;
+  --cel-card:    #FFFFFF;
+  --cel-shadow:  rgba(106, 27, 154, 0.12);
 
-  * {
-    box-sizing: border-box;
-  }
-
-  ::-webkit-scrollbar {
-    width: 4px;
-  }
-
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    @apply bg-lukso-border rounded-full;
-  }
+  /* Foil gradient for buttons */
+  --foil-btn: linear-gradient(135deg, #7B1FA2 0%, #6A1B9A 38%, #8E24AA 62%, #6A1B9A 100%);
+  --foil-success: linear-gradient(135deg, #6A1B9A 0%, #9C4EDB 50%, #6A1B9A 100%);
+  --foil-shine: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.18) 50%, transparent 60%);
 }
 
+/* ─── Base ───────────────────────────────────────────────────────────── */
+@layer base {
+  body {
+    background-color: var(--cel-cream);
+    color: var(--cel-text);
+    font-family: "Inter", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    /* Grid apps embedded in iframes */
+    overflow: hidden;
+    /* Subtle warm radial vignette */
+    background-image:
+      radial-gradient(ellipse at 15% 0%, rgba(156, 78, 219, 0.06) 0%, transparent 55%),
+      radial-gradient(ellipse at 85% 100%, rgba(106, 27, 154, 0.05) 0%, transparent 55%);
+  }
+
+  * { box-sizing: border-box; }
+
+  /* Light-mode scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: var(--cel-beige);
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--cel-accent);
+  }
+
+  /* Headings inherit dark text */
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--cel-text);
+  }
+
+  /* Override legacy text-white for body content — only buttons/surfaces keep white */
+  .text-white-on-violet { color: #ffffff; }
+}
+
+/* ─── Component classes ──────────────────────────────────────────────── */
 @layer components {
+
+  /* Primary button — metallic foil violet */
   .btn-primary {
-    @apply px-4 py-2 rounded-xl bg-lukso-pink text-white font-medium text-sm
-           hover:opacity-90 active:opacity-75 transition-opacity
-           disabled:opacity-40 disabled:cursor-not-allowed;
+    @apply relative px-4 py-2 rounded-xl font-semibold text-sm text-white
+           disabled:opacity-40 disabled:cursor-not-allowed
+           transition-all duration-200 overflow-hidden;
+    background: var(--foil-btn);
+    box-shadow: 0 2px 10px 0 rgba(106,27,154,0.28), inset 0 1px 0 rgba(255,255,255,0.22);
   }
+  .btn-primary::after {
+    content: "";
+    @apply absolute inset-0 rounded-xl opacity-0 transition-opacity duration-200;
+    background: var(--foil-shine);
+    background-size: 200% 100%;
+  }
+  .btn-primary:hover:not(:disabled) {
+    box-shadow: 0 4px 18px 0 rgba(106,27,154,0.38), inset 0 1px 0 rgba(255,255,255,0.32);
+    transform: translateY(-1px);
+  }
+  .btn-primary:hover:not(:disabled)::after { opacity: 1; }
+  .btn-primary:active:not(:disabled) { transform: translateY(0); }
 
+  /* Secondary button — outlined violet */
   .btn-secondary {
-    @apply px-4 py-2 rounded-xl bg-lukso-card border border-lukso-border text-white font-medium text-sm
-           hover:bg-white/10 active:opacity-75 transition-colors
+    @apply px-4 py-2 rounded-xl font-medium text-sm
+           border transition-all duration-200
            disabled:opacity-40 disabled:cursor-not-allowed;
+    color: var(--cel-violet);
+    border-color: var(--cel-violet);
+    background: transparent;
+  }
+  .btn-secondary:hover:not(:disabled) {
+    background: rgba(106, 27, 154, 0.06);
+    box-shadow: 0 0 0 3px rgba(106,27,154,0.12);
   }
 
+  /* Celebration/success button — full gradient foil */
+  .btn-celebrate {
+    @apply relative px-5 py-2.5 rounded-xl font-semibold text-sm text-white
+           disabled:opacity-40 disabled:cursor-not-allowed
+           transition-all duration-200 overflow-hidden;
+    background: var(--foil-success);
+    background-size: 200% 100%;
+    box-shadow: 0 2px 14px 0 rgba(106,27,154,0.35), inset 0 1px 0 rgba(255,255,255,0.25);
+    animation: foilSweep 3s ease-in-out infinite;
+  }
+  .btn-celebrate:hover:not(:disabled) {
+    box-shadow: 0 4px 22px 0 rgba(106,27,154,0.5), inset 0 1px 0 rgba(255,255,255,0.35);
+    transform: translateY(-1px);
+  }
+
+  /* Ghost button */
+  .btn-ghost {
+    @apply px-3 py-1.5 rounded-lg font-medium text-sm transition-colors duration-150
+           disabled:opacity-40 disabled:cursor-not-allowed;
+    color: var(--cel-muted);
+  }
+  .btn-ghost:hover:not(:disabled) {
+    background: rgba(106, 27, 154, 0.07);
+    color: var(--cel-violet);
+  }
+
+  /* Card surface */
   .card {
-    @apply bg-lukso-card border border-lukso-border rounded-2xl p-4;
+    @apply rounded-2xl p-4;
+    background: var(--cel-card);
+    border: 1px solid var(--cel-beige);
+    box-shadow: 0 1px 4px 0 rgba(44,44,44,0.05), 0 4px 16px 0 rgba(106,27,154,0.07);
+  }
+  .card:hover {
+    box-shadow: 0 2px 8px 0 rgba(44,44,44,0.07), 0 8px 24px 0 rgba(106,27,154,0.12);
   }
 
+  /* Input */
   .input {
-    @apply w-full bg-white/5 border border-lukso-border rounded-xl px-3 py-2 text-sm text-white
-           placeholder-white/30 focus:outline-none focus:border-lukso-purple transition-colors;
+    @apply w-full rounded-xl px-3 py-2 text-sm transition-all duration-150
+           focus:outline-none;
+    background: var(--cel-cream);
+    border: 1.5px solid var(--cel-beige);
+    color: var(--cel-text);
+  }
+  .input::placeholder { color: var(--cel-muted); }
+  .input:focus {
+    border-color: var(--cel-accent);
+    box-shadow: 0 0 0 3px rgba(156,78,219,0.14);
   }
 
+  /* Badge pill */
   .badge {
     @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium;
   }
 
-  .btn-ghost {
-    @apply px-3 py-1.5 rounded-lg text-white/50 font-medium text-sm
-           hover:bg-white/10 hover:text-white active:opacity-75 transition-colors
-           disabled:opacity-40 disabled:cursor-not-allowed;
+  /* Foil shimmer — add to any element for metallic shine */
+  .foil-shimmer {
+    @apply relative overflow-hidden;
   }
+  .foil-shimmer::after {
+    content: "";
+    @apply absolute inset-0 pointer-events-none;
+    background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.22) 50%, transparent 65%);
+    background-size: 200% 100%;
+    animation: foilSweep 2.8s ease-in-out infinite;
+  }
+
+  /* Section / panel header on violet bg */
+  .violet-header {
+    @apply px-4 py-3 rounded-t-2xl text-white font-semibold text-sm;
+    background: var(--foil-btn);
+  }
+
+  /* Divider */
+  .divider {
+    @apply h-px w-full;
+    background: var(--cel-beige);
+  }
+}
+
+/* ─── Keyframes (referenced by Tailwind animation tokens) ───────────── */
+@keyframes foilSweep {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+/* ─── Utility overrides for legacy dark-mode classes ────────────────── */
+@layer utilities {
+  /* Legacy card classes from old dark theme */
+  .bg-lukso-dark   { background-color: #F5F0E1 !important; }
+  .bg-lukso-card   { background-color: #FFFFFF !important; }
+  .border-lukso-border { border-color: #E8D9C8 !important; }
+
+  /* On cream/white surfaces, dark text replaces old white text */
+  .text-white\/60 { color: rgba(44, 44, 44, 0.6) !important; }
+  .text-white\/50 { color: rgba(44, 44, 44, 0.5) !important; }
+  .text-white\/40 { color: rgba(44, 44, 44, 0.4) !important; }
+  .text-white\/30 { color: rgba(44, 44, 44, 0.3) !important; }
+  .text-white\/20 { color: rgba(44, 44, 44, 0.2) !important; }
+
+  /* Surfaces that use old dark body bg */
+  .bg-white\/5  { background-color: rgba(106, 27, 154, 0.04) !important; }
+  .bg-white\/10 { background-color: rgba(106, 27, 154, 0.07) !important; }
+
+  /* Borders */
+  .border-white\/10 { border-color: rgba(106, 27, 154, 0.15) !important; }
+  .border-white\/20 { border-color: rgba(106, 27, 154, 0.2) !important; }
+
+  /* Spinner track */
+  .border-t-lukso-pink { border-top-color: #6A1B9A !important; }
+  .border-lukso-border { border-color: #E8D9C8 !important; }
+
+  /* Placeholder */
+  .placeholder-white\/30::placeholder { color: rgba(44, 44, 44, 0.35) !important; }
+
+  /* Keep text-white working on violet/dark surfaces */
+  .bg-lukso-pink .text-white,
+  .btn-primary,
+  .btn-celebrate,
+  .violet-header { color: #ffffff; }
 }

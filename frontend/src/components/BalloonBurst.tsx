@@ -1,47 +1,34 @@
 /**
  * BalloonBurst — full-screen celebration overlay.
- *
- * Triggered via useAppStore.triggerBurst(). Renders balloons that rise
- * from the bottom and confetti that falls from the top, then self-clears.
- * Pointer-events: none so it never blocks interaction.
+ * Triggered via useAppStore.triggerBurst(). Pointer-events: none so it never blocks interaction.
  */
 import { useEffect, useState } from "react";
 import { useAppStore } from "@/store/useAppStore";
 import { BalloonIcon } from "./BalloonIcon";
 
 const BALLOON_COLORS = [
-  "#FE005B", // lukso pink
-  "#8B5CF6", // lukso purple
-  "#FFD700", // gold
-  "#00C9FF", // sky blue
-  "#FF6B6B", // coral
-  "#A8E6CF", // mint
-  "#FFB347", // orange
+  "#6A1B9A",  // cel-violet
+  "#9C4EDB",  // cel-accent
+  "#FFD700",  // gold
+  "#E91E63",  // pink
+  "#00BCD4",  // cyan
+  "#FF7043",  // orange
+  "#A8E6CF",  // mint
 ];
 
 const CONFETTI_COLORS = [
-  "#FE005B", "#8B5CF6", "#FFD700",
-  "#FF6B6B", "#00C9FF", "#FFFFFF", "#A8E6CF",
+  "#6A1B9A", "#9C4EDB", "#FFD700",
+  "#E91E63", "#00BCD4", "#E8D9C8", "#FF7043",
 ];
 
 interface BalloonParticle {
-  id: number;
-  left: number;   // 0-100 %
-  color: string;
-  delay: number;  // seconds
-  duration: number;
-  size: number;
+  id: number; left: number; color: string;
+  delay: number; duration: number; size: number;
 }
 
 interface ConfettiParticle {
-  id: number;
-  left: number;
-  top: number;    // starting top offset px
-  color: string;
-  delay: number;
-  duration: number;
-  size: number;
-  isRect: boolean;
+  id: number; left: number; top: number; color: string;
+  delay: number; duration: number; size: number; isRect: boolean;
 }
 
 function generateParticles() {
@@ -74,7 +61,6 @@ export function BalloonBurst() {
 
   useEffect(() => {
     if (!burstActive) return;
-
     setParticles(generateParticles());
     const timer = setTimeout(clearBurst, 4200);
     return () => clearTimeout(timer);
@@ -88,7 +74,6 @@ export function BalloonBurst() {
       style={{ zIndex: 9999 }}
       aria-hidden="true"
     >
-      {/* Balloons rising from bottom */}
       {particles.balloons.map((b) => (
         <div
           key={b.id}
@@ -99,11 +84,10 @@ export function BalloonBurst() {
             "--rise-delay": `${b.delay}s`,
           } as React.CSSProperties}
         >
-          <BalloonIcon size={b.size} color={b.color} />
+          <BalloonIcon size={b.size} color={b.color} foil={b.color === "#6A1B9A" || b.color === "#9C4EDB"} />
         </div>
       ))}
 
-      {/* Confetti falling from top */}
       {particles.confetti.map((c) => (
         <div
           key={c.id}
@@ -117,7 +101,7 @@ export function BalloonBurst() {
             height: c.isRect ? c.size * 0.55 : c.size,
             backgroundColor: c.color,
             borderRadius: c.isRect ? "2px" : "50%",
-            opacity: 0.9,
+            opacity: 0.85,
           } as React.CSSProperties}
         />
       ))}
