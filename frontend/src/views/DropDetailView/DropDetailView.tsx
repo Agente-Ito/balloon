@@ -255,7 +255,7 @@ export function DropDetailView({ walletClient, chainId }: DropDetailViewProps) {
         {/* Claimers list */}
         <section>
           <div className="flex items-center justify-between gap-2 mb-2">
-            <h2 className="text-xs font-medium text-white/40 uppercase tracking-wide">
+            <h2 className="title-premium text-xs uppercase">
               {t.dropClaimedBy} ({claims?.length ?? 0})
             </h2>
             <button

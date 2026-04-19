@@ -167,13 +167,13 @@ export function DropsManageView({ walletClient, chainId }: DropsManageViewProps)
             <div className="flex gap-0.5 rounded-lg p-0.5" style={{ background: "rgba(106,27,154,0.07)" }}>
               <button
                 onClick={() => setView("drops")}
-                className="text-xs px-3 py-1 rounded-md whitespace-nowrap transition-colors"
+                className="title-premium text-xs px-3 py-1 rounded-md whitespace-nowrap transition-colors"
                 style={{ color: "#8B7D7D" }}
               >
                 {t.dropsManageTabExplore}
               </button>
               <button
-                className="text-xs px-3 py-1 rounded-md font-medium whitespace-nowrap"
+                className="title-premium text-xs px-3 py-1 rounded-md whitespace-nowrap"
                 style={{ background: "rgba(106,27,154,0.15)", color: "#6A1B9A" }}
               >
                 {t.dropsManageTabManage}
@@ -182,7 +182,7 @@ export function DropsManageView({ walletClient, chainId }: DropsManageViewProps)
             {connectedAccount && (
               <button
                 onClick={() => setAddingDrop(true)}
-                className="text-xs font-medium transition-colors"
+                className="title-premium text-xs transition-colors"
                 style={{ color: "#6A1B9A" }}
               >
                 {t.subAddDrop}
@@ -218,7 +218,7 @@ export function DropsManageView({ walletClient, chainId }: DropsManageViewProps)
             {/* Active drops first */}
             {myDrops.filter((d) => d.isActive).length > 0 && (
               <section>
-                <h2 className="text-xs font-medium text-white/40 uppercase tracking-wide mb-3">
+                <h2 className="title-premium text-xs uppercase mb-3">
                   {t.dropsActive}
                 </h2>
                 <div className="flex flex-col gap-3">
@@ -241,7 +241,7 @@ export function DropsManageView({ walletClient, chainId }: DropsManageViewProps)
             {/* Closed drops */}
             {myDrops.filter((d) => !d.isActive).length > 0 && (
               <section>
-                <h2 className="text-xs font-medium text-white/40 uppercase tracking-wide mb-3">
+                <h2 className="title-premium text-xs uppercase mb-3">
                   {t.dropsClosed}
                 </h2>
                 <div className="flex flex-col gap-3">

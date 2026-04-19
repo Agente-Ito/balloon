@@ -52,7 +52,7 @@ export function ViewToolbar({
       {/* Title */}
       {title && (
         <span
-          className="font-semibold text-sm truncate mx-3 text-center flex-1"
+          className="title-premium text-sm truncate mx-3 text-center flex-1"
           style={{ color: "#2C2C2C" }}
         >
           {title}

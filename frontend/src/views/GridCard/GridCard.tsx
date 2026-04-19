@@ -1,23 +1,15 @@
 /**
- * GridCard — the compact view shown in the Universal Profile Grid.
- * Shows: next upcoming celebration, today's badge count, and CTAs.
+ * GridCard — compact home shown in the Universal Profile Grid.
+ * Keeps one visual focal point plus up to 3 clear actions.
  */
-import { format, parseISO, differenceInDays } from "date-fns";
 import { useAppStore } from "@/store/useAppStore";
 import { useProfileData } from "@/hooks/useUniversalProfile";
-import { useCalendar } from "@/hooks/useCalendar";
-import { useBadges } from "@/hooks/useBadges";
-import { useDrops } from "@/hooks/useDrops";
-import { Avatar } from "@/components/Avatar";
 import { NetworkBadge } from "@/components/NetworkBadge";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { BalloonIcon } from "@/components/BalloonIcon";
-import { BalloonLogo } from "@/components/BalloonLogo";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { useT } from "@/hooks/useT";
 import { useLSP3Profile } from "@/hooks/useLSP3Profile";
-import { CELEBRATION_COLORS } from "@/constants/celebrationTypes";
-import type { Address } from "@/types";
 import type { WalletClient, PublicClient } from "viem";
 
 interface GridCardProps {
@@ -27,55 +19,49 @@ interface GridCardProps {
 }
 
 export function GridCard({ chainId }: GridCardProps) {
-  const { contextProfile, isOwner, setView, setActiveCelebrationDate, setEditorEntry } =
-    useAppStore();
+  const { contextProfile, isOwner, setView, setEditorEntry } = useAppStore();
   const t = useT();
   const { data: profileData, isLoading } = useProfileData(contextProfile, chainId);
   const { data: lsp3 } = useLSP3Profile(contextProfile, chainId);
-  const { data: badges } = useBadges(contextProfile, chainId);
-  const { todayCelebrations, nextCelebration } = useCalendar({
-    profileData,
-    month: new Date(),
-  });
-
-  // Active drops from the context profile (visible to anyone visiting their grid)
-  const today = new Date();
-  const { data: activeDrops } = useDrops({
-    host: contextProfile as Address | null,
-    activeOnly: true,
-    month: today.getMonth() + 1,
-    day: today.getDate(),
-    enabled: !!contextProfile,
-  });
-
-  const todayStr = format(new Date(), "yyyy-MM-dd");
-  const hasTodayCelebrations = todayCelebrations.length > 0;
-  const hasActiveDrops = (activeDrops ?? []).length > 0;
   const hasBirthday = !!profileData?.birthday;
-  const hasEvents = (profileData?.events.length ?? 0) > 0;
-  const needsInitialSetup = isOwner && (!hasBirthday || !hasEvents);
-  const reminderFrequency = profileData?.settings?.reminderFrequency ?? "monthly";
-  const reminderWindowDays = reminderFrequency === "daily" ? 1 : reminderFrequency === "weekly" ? 7 : 30;
-  const daysToNextCelebration = nextCelebration
-    ? differenceInDays(parseISO(nextCelebration.date), new Date())
-    : null;
-  const showReminderCard =
-    isOwner &&
-    profileData?.settings?.notifyFollowers !== false &&
-    !!nextCelebration &&
-    nextCelebration.date !== todayStr &&
-    daysToNextCelebration !== null &&
-    daysToNextCelebration >= 0 &&
-    daysToNextCelebration <= reminderWindowDays;
+  const showBirthdayCta = isOwner && !hasBirthday;
 
-  const handleCelebrationClick = (date: string) => {
-    setActiveCelebrationDate(date);
-    setView("celebration");
-  };
+  const actions: Array<{ key: string; label: string; onClick: () => void; primary?: boolean }> = [];
 
-  const handleDropsClick = () => {
-    setView("drops");
-  };
+  if (showBirthdayCta) {
+    actions.push({
+      key: "birthday",
+      label: t.gridAddBirthdayCta,
+      primary: true,
+      onClick: () => {
+        setEditorEntry("dates", "main");
+        setView("editor");
+      },
+    });
+  }
+
+  if (isOwner) {
+    actions.push({
+      key: "create",
+      label: t.gridCreateDropReminderCta,
+      onClick: () => {
+        setEditorEntry("dates", "quickCreate");
+        setView("editor");
+      },
+    });
+  } else {
+    actions.push({
+      key: "drops",
+      label: t.gridDropsBtn,
+      onClick: () => setView("drops"),
+    });
+  }
+
+  actions.push({
+    key: "calendar",
+    label: t.gridViewActiveBalloonsCta,
+    onClick: () => setView("calendar"),
+  });
 
   if (isLoading) {
     return (
@@ -87,169 +73,32 @@ export function GridCard({ chainId }: GridCardProps) {
 
   return (
     <div className="h-full flex flex-col p-4 gap-4 overflow-y-auto">
-      {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <Avatar
-            address={contextProfile}
-            size={36}
-            chainId={chainId}
-            imageUrl={lsp3?.imageUrl}
-            name={lsp3?.name}
-          />
-          <div className="flex flex-col gap-0.5 min-w-0">
-            <BalloonLogo displayHeight={52} />
+        <div className="flex items-center gap-2 min-w-0">
+          <BalloonIcon size={28} className="animate-balloon-header" />
+          <div className="min-w-0">
+            <p className="title-home text-sm">Balloon</p>
             {lsp3?.name && (
-              <span
-                className="text-[11px] font-medium leading-tight truncate"
-                style={{ color: "#8B7D7D" }}
-              >
+              <p className="text-[11px] leading-tight truncate" style={{ color: "#8B7D7D" }}>
                 {lsp3.name}
-              </span>
+              </p>
             )}
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <LanguageToggle />
-          {badges && badges.length > 0 && (
-            <span className="badge bg-lukso-pink/20 text-lukso-pink">
-              {badges.length} {badges.length === 1 ? t.gridBadge : t.gridBadges}
-            </span>
-          )}
           <NetworkBadge chainId={chainId} />
+          <LanguageToggle />
         </div>
       </div>
 
-      {/* Active drops banner — shown to visitors when the host has a live drop today */}
-      {hasActiveDrops && (
-        <button
-          onClick={handleDropsClick}
-          className="card bg-lukso-purple/10 border-lukso-purple/30 text-left hover:bg-lukso-purple/20 transition-colors"
-        >
-          <div className="flex items-center gap-3">
-            <BalloonIcon size={34} foil className="animate-float flex-shrink-0" />
-            <div>
-              <p className="text-sm font-semibold text-lukso-purple">
-                {(activeDrops ?? []).length === 1
-                  ? (activeDrops ?? [])[0].name
-                  : `${(activeDrops ?? []).length} ${t.gridActiveDropsMulti}`}
-              </p>
-              <p className="text-xs text-lukso-purple/60">{t.gridViewDrops}</p>
-            </div>
-          </div>
-        </button>
-      )}
-
-      {/* Frequency-based reminder card for profile owner */}
-      {showReminderCard && nextCelebration && daysToNextCelebration !== null && (
-        <button
-          onClick={() => handleCelebrationClick(nextCelebration.date)}
-          className="card bg-white/5 border-white/15 text-left hover:bg-white/10 transition-colors"
-        >
-          <p className="text-xs text-white/40 uppercase tracking-wide font-medium mb-1">
-            {t.gridReminderTitle}
-          </p>
-          <p className="text-sm font-semibold text-white/85 truncate">
-            {nextCelebration.celebrations[0]?.title}
-          </p>
-          <p className="text-xs text-white/45 mt-1">
-            {t.gridReminderSub} {reminderFrequency === "monthly"
-              ? t.settingsReminderMonthly
-              : reminderFrequency === "weekly"
-                ? t.settingsReminderWeekly
-                : t.settingsReminderDaily}
-            {" · "}
-            {t.gridReminderDueIn} {daysToNextCelebration} {t.gridDaysAway}
-          </p>
-        </button>
-      )}
-
-      {/* Today's celebrations banner */}
-      {hasTodayCelebrations && (
-        <button
-          onClick={() => handleCelebrationClick(todayStr)}
-          className="card bg-lukso-pink/10 border-lukso-pink/30 text-left hover:bg-lukso-pink/20 transition-colors"
-        >
-          <div className="flex items-center gap-3">
-            <div className="flex -space-x-1.5">
-              {todayCelebrations.slice(0, 3).map((c) => (
-                <span
-                  key={c.id}
-                  className={`w-3 h-3 rounded-full border-2 border-lukso-bg ${CELEBRATION_COLORS[c.type]}`}
-                />
-              ))}
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-lukso-pink">
-                {todayCelebrations.length === 1
-                  ? todayCelebrations[0].title
-                  : `${todayCelebrations.length} ${t.gridCelebrationsToday}`}
-              </p>
-              <p className="text-xs text-lukso-pink/60">{t.calendarCelebrate}</p>
-            </div>
-          </div>
-        </button>
-      )}
-
-      {/* Next celebration */}
-      {nextCelebration && nextCelebration.date !== todayStr && (
-        <button
-          onClick={() => handleCelebrationClick(nextCelebration.date)}
-          className="card text-left hover:border-lukso-border/80 transition-colors"
-        >
-          <p className="text-xs text-white/40 mb-1 uppercase tracking-wide font-medium">
-            {t.gridUpcoming}
-          </p>
-          <div className="flex items-center gap-3">
-            <span className={`w-4 h-4 rounded-full flex-shrink-0 ${CELEBRATION_COLORS[nextCelebration.celebrations[0].type]}`} />
-            <div>
-              <p className="text-sm font-semibold">
-                {nextCelebration.celebrations[0].title}
-              </p>
-              <p className="text-xs text-white/40">
-                {format(parseISO(nextCelebration.date), "MMMM d")}
-                {" · "}
-                {differenceInDays(parseISO(nextCelebration.date), new Date())} {t.gridDaysAway}
-              </p>
-            </div>
-          </div>
-        </button>
-      )}
-
-      {/* Empty state */}
-      {!hasTodayCelebrations && !nextCelebration && (
-        <div className="card flex flex-col items-center gap-3 py-8 text-center">
-          <BalloonIcon size={48} foil className="animate-float-slow" />
-          <div>
-            <p className="text-sm font-semibold text-white/70">{t.gridNoCelebrations}</p>
-            <p className="text-xs text-white/30 mt-1">{t.gridNoCelebrationsSub}</p>
-          </div>
-          {isOwner && (
-            <div className="flex gap-2">
-              <button
-                onClick={() => {
-                  setEditorEntry("dates", "main");
-                  setView("editor");
-                }}
-                className="btn-primary text-xs px-4 py-1.5"
-              >
-                {needsInitialSetup ? t.gridStartSetup : t.gridEditProfile}
-              </button>
-              {needsInitialSetup && (
-                <button
-                  onClick={() => {
-                    setEditorEntry("dates", "addEvent");
-                    setView("editor");
-                  }}
-                  className="btn-ghost text-xs px-4 py-1.5 border border-lukso-border"
-                >
-                  {t.gridAddReminder}
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-      )}
+      <div className="flex-1 min-h-[220px] flex flex-col items-center justify-center text-center gap-4 card">
+        <BalloonIcon size={112} className="animate-float" />
+        <p className="title-home text-base">
+          {t.gridHeroLine1}
+          <br />
+          {t.gridHeroLine2}
+        </p>
+      </div>
 
       {/* Debug overlay — dev only, never renders in prod */}
       {import.meta.env.DEV && import.meta.env.VITE_DEBUG_GRID === "1" && (
@@ -259,24 +108,16 @@ export function GridCard({ chainId }: GridCardProps) {
         </div>
       )}
 
-      {/* Quick actions */}
-      <div className="grid grid-cols-3 gap-2 mt-auto">
-        <button onClick={() => setView("calendar")} className="btn-secondary text-xs py-2.5">
-          {t.gridCalendar}
-        </button>
-        <button onClick={handleDropsClick} className="btn-secondary text-xs py-2.5 flex items-center justify-center gap-1 hover:animate-pop">
-          <BalloonIcon size={14} foil />
-          {t.gridDropsBtn}
-        </button>
-        {isOwner ? (
-          <button onClick={() => setView("editor")} className="btn-secondary text-xs py-2.5">
-            {t.gridEdit}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-auto">
+        {actions.slice(0, 3).map((action, index) => (
+          <button
+            key={action.key}
+            onClick={action.onClick}
+            className={`text-sm py-3 ${action.primary ? "btn-primary" : "btn-secondary"} ${actions.length === 3 && index === 0 ? "sm:col-span-2" : ""}`}
+          >
+            {action.label}
           </button>
-        ) : (
-          <button onClick={() => setView("wishlist")} className="btn-secondary text-xs py-2.5">
-            {t.gridWishlistBtn}
-          </button>
-        )}
+        ))}
       </div>
     </div>
   );

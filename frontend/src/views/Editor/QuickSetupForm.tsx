@@ -82,7 +82,7 @@ export function QuickSetupForm({ isSaving, onSave, onCancel }: QuickSetupFormPro
   return (
     <form onSubmit={submit} className="space-y-4">
       <div className="card bg-lukso-purple/10 border-lukso-purple/30">
-        <p className="text-sm font-semibold text-lukso-purple mb-1">{t.quickSetupTitle}</p>
+        <p className="title-premium text-sm text-lukso-purple mb-1">{t.quickSetupTitle}</p>
         <p className="text-xs text-lukso-purple/70">{t.quickSetupSub}</p>
       </div>
 

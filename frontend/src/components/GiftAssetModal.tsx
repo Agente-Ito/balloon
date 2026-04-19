@@ -16,7 +16,7 @@ export function GiftAssetModal({ onClose, wishlist }: GiftAssetModalProps) {
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm">
       <div className="w-full max-w-md bg-lukso-card border-t border-lukso-border rounded-t-3xl p-6 animate-slide-up">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-semibold">Gift an Asset 🎁</h2>
+          <h2 className="title-premium text-lg">Gift an Asset 🎁</h2>
           <button onClick={onClose} className="text-white/40 hover:text-white text-xl leading-none">
             ×
           </button>

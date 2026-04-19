@@ -211,6 +211,53 @@ export function useAddEvent({ walletClient, upAddress, chainId = 4201 }: WriteCo
   });
 }
 
+export function useReplaceEvents({ walletClient, upAddress, chainId = 4201 }: WriteContext) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (events: Celebration[]) => {
+      const arrayKey = KEY_EVENTS_ARRAY.slice(0, 34);
+      const keys: `0x${string}`[] = [KEY_EVENTS_ARRAY as `0x${string}`];
+      const values: `0x${string}`[] = [
+        ("0x" + events.length.toString(16).padStart(64, "0")) as `0x${string}`,
+      ];
+
+      for (let i = 0; i < events.length; i += 1) {
+        const event = events[i];
+        const ipfsUrl = await uploadJSONToIPFS(event, `celebrations-event-${event.id}`);
+        if (!ipfsUrl.startsWith("ipfs://")) {
+          throw new Error("IPFS upload unavailable. Check your VITE_IPFS_PROXY_URL and try again.");
+        }
+
+        const indexHex = i.toString(16).padStart(8, "0");
+        const elementKey = (arrayKey + "000000000000000000000000" + indexHex) as `0x${string}`;
+        const contentHash = hashJSON(event);
+        const urlHex = Array.from(new TextEncoder().encode(ipfsUrl))
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join("");
+        const elementValue = ("0x6f357c6a" + contentHash + urlHex) as `0x${string}`;
+
+        keys.push(elementKey);
+        values.push(elementValue);
+      }
+
+      const account = await resolveAccount(walletClient, upAddress);
+      const txHash = await walletClient.writeContract({
+        address: upAddress,
+        abi: ERC725Y_ABI,
+        functionName: "setDataBatch",
+        args: [keys, values],
+        account,
+        chain: null,
+      });
+      await waitForTx(txHash, chainId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["profileData"] });
+    },
+  });
+}
+
 export function useQuickSetupBatch({ walletClient, upAddress, chainId = 4201 }: WriteContext) {
   const queryClient = useQueryClient();
 

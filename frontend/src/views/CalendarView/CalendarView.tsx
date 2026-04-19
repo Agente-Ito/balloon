@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
 import { addMonths, subMonths, format } from "date-fns";
+import { es as esLocale } from "date-fns/locale";
+import toast from "react-hot-toast";
 import { useAppStore } from "@/store/useAppStore";
 import { useProfileData } from "@/hooks/useUniversalProfile";
+import { useReplaceEvents } from "@/hooks/useUniversalProfile";
 import { useCalendar } from "@/hooks/useCalendar";
 import { useSocialCalendar } from "@/hooks/useSocialCalendar";
+import { useDrops } from "@/hooks/useDrops";
 import { useGridSize } from "@/lib/useGridSize";
 import { CalendarGrid } from "./CalendarGrid";
 import { DayPopover } from "./DayPopover";
@@ -15,7 +19,6 @@ import { SendGreetingModal } from "@/components/SendGreetingModal";
 import { QuickGreetingModal } from "@/components/QuickGreetingModal";
 import { useLSP3Name } from "@/hooks/useLSP3Name";
 import { useT } from "@/hooks/useT";
-import { CELEBRATION_COLORS } from "@/constants/celebrationTypes";
 import { CelebrationType } from "@/types";
 import type { CelebrationDay, Address } from "@/types";
 import type { WalletClient, PublicClient } from "viem";
@@ -26,21 +29,41 @@ interface CalendarViewProps {
   chainId: number;
 }
 
+interface OwnCalendarRow {
+  id: string;
+  rawDate: string;
+  title: string;
+  typeLabel: string;
+  statusLabel: string;
+  statusClassName: string;
+  actionLabel: string;
+  action: () => Promise<void> | void;
+  secondaryActionLabel?: string;
+  secondaryAction?: () => Promise<void> | void;
+}
+
 function ProfileNameLine({ address, chainId }: { address: Address; chainId: number }) {
   const { data: profileName } = useLSP3Name(address, chainId);
   return <>{profileName ?? `${address.slice(0, 8)}…${address.slice(-6)}`}</>;
 }
 
 export function CalendarView({ chainId, walletClient }: CalendarViewProps) {
-  const { contextProfile, connectedAccount, setView, setActiveDropId, goBack } = useAppStore();
+  const {
+    contextProfile,
+    connectedAccount,
+    setView,
+    setActiveDropId,
+    goBack,
+    setEditorEntry,
+    setPendingEventDraft,
+    lang,
+  } = useAppStore();
   const t = useT();
   const [month, setMonth] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<CelebrationDay | null>(null);
   const [quickGreetingRecipient, setQuickGreetingRecipient] = useState<Address | null>(null);
   const [onchainGreetingRecipient, setOnchainGreetingRecipient] = useState<Address | null>(null);
   const isLargeGrid = useGridSize();
-  // Progressive disclosure: start expanded on large tiles, collapsed on small
-  const [showMonthList, setShowMonthList] = useState(() => isLargeGrid);
   const [showFriends, setShowFriends] = useState(() => isLargeGrid);
   const [showSocialDrops, setShowSocialDrops] = useState(() => isLargeGrid);
   const [showOnlyActiveReminders, setShowOnlyActiveReminders] = useState(() => {
@@ -53,6 +76,16 @@ export function CalendarView({ chainId, walletClient }: CalendarViewProps) {
 
   const { data: profileData, isLoading } = useProfileData(contextProfile, chainId);
   const { celebrationDays } = useCalendar({ profileData, month });
+  const replaceEventsMutation = useReplaceEvents({
+    walletClient: walletClient as WalletClient,
+    upAddress: contextProfile as Address,
+    chainId,
+  });
+  const isOwner = contextProfile?.toLowerCase() === connectedAccount?.toLowerCase();
+  const { data: ownDrops } = useDrops({
+    host: contextProfile as Address | null,
+    enabled: !!contextProfile && isOwner,
+  });
 
   // Social calendar: birthdays and drops from followed profiles
   const { data: socialData } = useSocialCalendar(
@@ -112,6 +145,136 @@ export function CalendarView({ chainId, walletClient }: CalendarViewProps) {
     ? t.calendarFilterActiveReminders
     : t.calendarFilterActiveShort;
 
+  const formatRowDate = (rawDate: string) => {
+    const locale = lang === "es" ? esLocale : undefined;
+
+    if (/^\d{2}-\d{2}$/.test(rawDate)) {
+      const [mm, dd] = rawDate.split("-").map(Number);
+      const pseudo = new Date(Date.UTC(2000, mm - 1, dd));
+      return format(pseudo, "MMM d", { locale });
+    }
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(rawDate)) {
+      const [yyyy, mm, dd] = rawDate.split("-").map(Number);
+      const parsed = new Date(Date.UTC(yyyy, mm - 1, dd));
+      return format(parsed, "PPP", { locale });
+    }
+
+    return rawDate;
+  };
+
+  const parseRawDate = (rawDate: string): Date | null => {
+    if (/^\d{2}-\d{2}$/.test(rawDate)) {
+      const [mm, dd] = rawDate.split("-").map(Number);
+      const now = new Date();
+      const currentYear = now.getUTCFullYear();
+      const todayUTC = new Date(Date.UTC(currentYear, now.getUTCMonth(), now.getUTCDate()));
+      const thisYearOccurrence = new Date(Date.UTC(currentYear, mm - 1, dd));
+      const targetYear = thisYearOccurrence.getTime() < todayUTC.getTime() ? currentYear + 1 : currentYear;
+      return new Date(Date.UTC(targetYear, mm - 1, dd));
+    }
+    if (/^\d{4}-\d{2}-\d{2}$/.test(rawDate)) {
+      const [yyyy, mm, dd] = rawDate.split("-").map(Number);
+      return new Date(Date.UTC(yyyy, mm - 1, dd));
+    }
+    return null;
+  };
+
+  const getRowStatusMeta = (rawDate: string) => {
+    const parsed = parseRawDate(rawDate);
+    if (!parsed) {
+      return {
+        label: t.myCalendarStatusUpcoming,
+        className: "bg-white/10 text-white/70 border-white/15",
+      };
+    }
+
+    const today = new Date();
+    const todayUTC = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
+    const targetUTC = new Date(Date.UTC(parsed.getUTCFullYear(), parsed.getUTCMonth(), parsed.getUTCDate()));
+
+    if (targetUTC.getTime() === todayUTC.getTime()) {
+      return {
+        label: t.myCalendarStatusToday,
+        className: "bg-lukso-pink/15 text-lukso-pink border-lukso-pink/30",
+      };
+    }
+
+    if (targetUTC.getTime() > todayUTC.getTime()) {
+      return {
+        label: t.myCalendarStatusUpcoming,
+        className: "bg-lukso-purple/15 text-lukso-purple border-lukso-purple/30",
+      };
+    }
+
+    return {
+      label: t.myCalendarStatusPast,
+      className: "bg-white/10 text-white/55 border-white/15",
+    };
+  };
+
+  const ownCalendarRows: OwnCalendarRow[] = isOwner
+    ? [
+        ...(profileData?.events ?? []).map((event) => ({
+          ...(() => {
+            const status = getRowStatusMeta(event.date);
+            return {
+              statusLabel: status.label,
+              statusClassName: status.className,
+            };
+          })(),
+          id: `event:${event.id}`,
+          rawDate: event.date,
+          title: event.title,
+          typeLabel: t.myCalendarTypeReminder,
+          actionLabel: t.rowEdit,
+          action: async () => {
+            setPendingEventDraft(event);
+            setEditorEntry("dates", "quickCreate");
+            setView("editor");
+          },
+          secondaryActionLabel: t.rowDelete,
+          secondaryAction: async () => {
+            if (!window.confirm(t.myCalendarDeleteConfirm)) return;
+            if (!walletClient) {
+              toast.error(t.toastNoWallet);
+              return;
+            }
+            try {
+              const nextEvents = (profileData?.events ?? []).filter((e) => e.id !== event.id);
+              await replaceEventsMutation.mutateAsync(nextEvents);
+              toast.success(t.toastEventDeleted);
+            } catch (err) {
+              console.error("[calendar-delete-event]", err);
+              toast.error(t.toastFailedDeleteEvent);
+            }
+          },
+        })),
+        ...((ownDrops ?? []).map((drop) => {
+          const yyyy = drop.year > 0 ? drop.year : new Date().getFullYear();
+          const mm = String(drop.month).padStart(2, "0");
+          const dd = String(drop.day).padStart(2, "0");
+          return {
+            ...(() => {
+              const status = getRowStatusMeta(`${yyyy}-${mm}-${dd}`);
+              return {
+                statusLabel: status.label,
+                statusClassName: status.className,
+              };
+            })(),
+            id: `drop:${drop.dropId}`,
+            rawDate: `${yyyy}-${mm}-${dd}`,
+            title: drop.name,
+            typeLabel: t.myCalendarTypeDrop,
+            actionLabel: t.rowEdit,
+            action: async () => {
+              setView("drops-manage");
+            },
+          };
+        })),
+      ].sort((a, b) => a.rawDate.localeCompare(b.rawDate))
+    : [];
+
   return (
     <div className="h-full flex flex-col overflow-hidden">
       <ViewToolbar
@@ -152,10 +315,62 @@ export function CalendarView({ chainId, walletClient }: CalendarViewProps) {
           />
         )}
 
+        {isOwner && (
+          <div className="mt-4">
+            <p className="title-premium text-xs uppercase mb-2">
+              {t.myCalendarTitle}
+            </p>
+            {ownCalendarRows.length === 0 ? (
+              <div className="card text-center py-4 text-sm text-white/40">
+                {t.myCalendarEmpty}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {ownCalendarRows.map((row) => (
+                  <div key={row.id} className="card flex items-center gap-2.5">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs text-white/40">{formatRowDate(row.rawDate)}</p>
+                      <p className="text-sm font-medium truncate">{row.title}</p>
+                    </div>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 border border-white/10 text-white/70">
+                      {row.typeLabel}
+                    </span>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full border ${row.statusClassName}`}>
+                      {row.statusLabel}
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          void row.action();
+                        }}
+                        className="btn-ghost text-xs py-1.5 px-2.5 border border-lukso-border"
+                      >
+                        {row.actionLabel}
+                      </button>
+                      {row.secondaryAction && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            void row.secondaryAction?.();
+                          }}
+                          className="text-xs py-1.5 px-2 text-white/55 hover:text-white/80"
+                        >
+                          {row.secondaryActionLabel}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Community pulse: reinforces that this app is social, not single-player */}
         <div className="mt-4 card border-lukso-purple/25 bg-lukso-purple/10">
           <div className="flex items-center justify-between gap-2">
-            <p className="text-xs uppercase tracking-wide text-lukso-purple/70 font-medium">
+            <p className="title-premium text-xs uppercase text-lukso-purple/70">
               {t.calendarCommunityTitle}
             </p>
             <span className={`text-[10px] px-2 py-0.5 rounded-full border ${
@@ -254,54 +469,6 @@ export function CalendarView({ chainId, walletClient }: CalendarViewProps) {
           )}
         </div>
 
-        {/* This month's celebrations list — collapsed by default */}
-        {celebrationDays.length > 0 && (
-          <div className="mt-4">
-            <button
-              onClick={() => setShowMonthList((v) => !v)}
-              className="flex items-center justify-between w-full py-1 mb-2 group"
-            >
-              <p className="text-xs text-white/40 uppercase tracking-wide font-medium">
-                {t.calendarThisMonth} ({celebrationDays.length})
-              </p>
-              <span className="text-white/25 text-xs group-hover:text-white/60 transition-colors">
-                {showMonthList ? "▲" : "▼"}
-              </span>
-            </button>
-            {showMonthList && (
-              <div className="space-y-2">
-                {celebrationDays
-                  .sort((a, b) => a.date.localeCompare(b.date))
-                  .map((day) => (
-                    <button
-                      key={day.date}
-                      onClick={() => setSelectedDay(day)}
-                      className="card w-full text-left hover:border-lukso-border/80 transition-colors flex items-center gap-3"
-                    >
-                      <div className="flex -space-x-1.5">
-                        {day.celebrations.slice(0, 2).map((c, i) => (
-                          <span
-                            key={i}
-                            className={`w-3 h-3 rounded-full border-2 border-lukso-bg ${CELEBRATION_COLORS[c.type]}`}
-                          />
-                        ))}
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">
-                          {day.celebrations.length === 1
-                            ? day.celebrations[0].title
-                            : `${day.celebrations.length} ${t.calendarCelebrations}`}
-                        </p>
-                        <p className="text-xs text-white/40">{format(new Date(day.date), "MMMM d")}</p>
-                      </div>
-                      <span className="text-white/20 text-sm">›</span>
-                    </button>
-                  ))}
-              </div>
-            )}
-          </div>
-        )}
-
         {/* Social section: friends' birthdays this month — collapsed by default */}
         {socialProfilesForMonthRaw.length > 0 && (
           <div className="mt-4">
@@ -310,7 +477,7 @@ export function CalendarView({ chainId, walletClient }: CalendarViewProps) {
                 onClick={() => setShowFriends((v) => !v)}
                 className="flex items-center gap-2 min-w-0 group"
               >
-                <p className={`text-xs uppercase tracking-wide font-medium truncate ${
+                <p className={`title-premium text-xs uppercase truncate ${
                   isLargeGrid ? "text-white/40" : "text-white/60"
                 }`}>
                   {t.calendarFriends} ({socialProfilesForMonthRaw.length})
@@ -384,7 +551,7 @@ export function CalendarView({ chainId, walletClient }: CalendarViewProps) {
               onClick={() => setShowSocialDrops((v) => !v)}
               className="flex items-center justify-between w-full py-1 mb-2 group"
             >
-              <p className="text-xs text-white/40 uppercase tracking-wide font-medium">
+              <p className="title-premium text-xs uppercase">
                 {t.calendarActiveDrops} ({socialData!.drops.length})
               </p>
               <span className="text-white/25 text-xs group-hover:text-white/60 transition-colors">

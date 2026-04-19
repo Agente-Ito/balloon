@@ -162,7 +162,7 @@ export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewPr
           <div className="flex items-center gap-2">
             <div className="flex gap-0.5 rounded-lg p-0.5" style={{ background: "rgba(106,27,154,0.07)" }}>
               <button
-                className="text-xs px-3 py-1 rounded-md font-medium whitespace-nowrap"
+                className="title-premium text-xs px-3 py-1 rounded-md whitespace-nowrap"
                 style={{ background: "rgba(106,27,154,0.15)", color: "#6A1B9A" }}
               >
                 {t.dropsManageTabExplore}
@@ -170,7 +170,7 @@ export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewPr
               {connectedAccount && (
                 <button
                   onClick={() => setView("drops-manage")}
-                  className="text-xs px-3 py-1 rounded-md whitespace-nowrap transition-colors"
+                  className="title-premium text-xs px-3 py-1 rounded-md whitespace-nowrap transition-colors"
                   style={{ color: "#8B7D7D" }}
                 >
                   {t.dropsManageTabManage}
@@ -186,7 +186,7 @@ export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewPr
 
         {connectedAccount && (
           <section>
-            <h2 className="text-xs font-medium text-white/40 uppercase tracking-wide mb-3">
+            <h2 className="title-premium text-xs uppercase mb-3">
               {t.dropsFromFollows}
             </h2>
             {isLoading ? (
@@ -205,7 +205,7 @@ export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewPr
 
         {connectedAccount && ownDrops.length > 0 && (
           <section>
-            <h2 className="text-xs font-medium text-white/40 uppercase tracking-wide mb-3">
+            <h2 className="title-premium text-xs uppercase mb-3">
               {t.dropsMyCampaigns}
             </h2>
             <div className="flex flex-col gap-3">
@@ -217,7 +217,7 @@ export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewPr
         )}
 
         <section>
-          <h2 className="text-xs font-medium text-white/40 uppercase tracking-wide mb-3">
+          <h2 className="title-premium text-xs uppercase mb-3">
             {t.dropsDiscover}
           </h2>
           {allDropsLoading ? (
@@ -236,7 +236,7 @@ export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewPr
         {/* ── Community art series ───────────────────────────────────────── */}
         {openSeries.length > 0 && (
           <section>
-            <h2 className="text-xs font-medium text-white/40 uppercase tracking-wide mb-1">
+            <h2 className="title-premium text-xs uppercase mb-1">
               Community Badge Art
             </h2>
             <p className="text-xs text-white/25 mb-3">

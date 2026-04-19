@@ -107,7 +107,7 @@ export function MintBadgeModal({
       <div className="w-full max-w-md bg-lukso-card border-t border-lukso-border rounded-t-3xl p-6 animate-slide-up">
         {/* Header */}
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-semibold">{t.celebrationMintBadge}</h2>
+          <h2 className="title-premium text-lg">{t.celebrationMintBadge}</h2>
           <button onClick={onClose} className="text-white/40 hover:text-white text-xl leading-none">
             {t.close}
           </button>

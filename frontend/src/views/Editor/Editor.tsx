@@ -4,10 +4,11 @@ import { useT } from "@/hooks/useT";
 import { getMonthNames } from "@/lib/monthNames";
 import { useGridSize } from "@/lib/useGridSize";
 import { useAppStore } from "@/store/useAppStore";
-import { useProfileData, useSetBirthday, useAddEvent, useAddWishlistItem, useQuickSetupBatch } from "@/hooks/useUniversalProfile";
+import { useProfileData, useSetBirthday, useAddEvent, useAddWishlistItem, useQuickSetupBatch, useReplaceEvents } from "@/hooks/useUniversalProfile";
 import { useLSP3Name } from "@/hooks/useLSP3Name";
 import { EventForm } from "./EventForm";
 import { QuickSetupForm } from "./QuickSetupForm";
+import { QuickCreateFlow } from "./QuickCreateFlow";
 import { WishlistForm } from "./WishlistForm";
 import { SettingsForm } from "./SettingsForm";
 import { DropForm } from "./DropForm";
@@ -31,7 +32,7 @@ interface EditorProps {
 }
 
 type EditorTab = "dates" | "wishlist" | "settings" | "drops";
-type SubView = "main" | "addEvent" | "addWishlist" | "addDrop" | "quickSetup";
+type SubView = "main" | "addEvent" | "addWishlist" | "addDrop" | "quickSetup" | "quickCreate";
 type SetupMode = "quick" | "step";
 
 export function Editor({ walletClient, chainId }: EditorProps) {
@@ -44,6 +45,8 @@ export function Editor({ walletClient, chainId }: EditorProps) {
     setPendingDropDate,
     pendingAnniversaryDrop,
     setPendingAnniversaryDrop,
+    pendingEventDraft,
+    setPendingEventDraft,
     editorEntryTab,
     editorEntrySubView,
     clearEditorEntry,
@@ -75,7 +78,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
     chainId,
   });
 
-  const { mutateAsync: addEvent } = useAddEvent({
+  const addEventMutation = useAddEvent({
     walletClient: walletClient!,
     upAddress: contextProfile as Address,
     chainId,
@@ -94,6 +97,11 @@ export function Editor({ walletClient, chainId }: EditorProps) {
   });
 
   const createDropMutation = useCreateDrop(walletClient ?? null, chainId);
+  const replaceEventsMutation = useReplaceEvents({
+    walletClient: walletClient!,
+    upAddress: contextProfile as Address,
+    chainId,
+  });
 
   // UP creation date → anniversary hint
   const { data: upCreationDate } = useUPCreationDate(contextProfile as Address | null, chainId);
@@ -220,7 +228,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
       return;
     }
     try {
-      await addEvent(event);
+      await addEventMutation.mutateAsync(event);
       toast.success(t.toastEventAdded);
       // Offer to create a drop for this event
       setPendingDropFromEvent(event);
@@ -267,6 +275,83 @@ export function Editor({ walletClient, chainId }: EditorProps) {
         />
         <div className="flex-1 overflow-y-auto p-4">
           <EventForm onSave={handleAddEvent} onCancel={() => setSubView("main")} />
+        </div>
+      </div>
+    );
+  }
+
+  if (subView === "quickCreate") {
+    return (
+      <div className="h-full flex flex-col overflow-hidden">
+        <ViewToolbar
+          onBack={() => {
+            setPendingEventDraft(null);
+            setSubView("main");
+          }}
+          backLabel={t.back}
+          title={t.quickCreateTitle}
+          right={<LanguageToggle />}
+        />
+        <div className="flex-1 overflow-y-auto p-4">
+          <QuickCreateFlow
+            initialEvent={pendingEventDraft ?? undefined}
+            isSaving={addEventMutation.isPending || replaceEventsMutation.isPending}
+            onCancel={() => {
+              setPendingEventDraft(null);
+              setSubView("main");
+            }}
+            onSubmit={async ({ event, createDrop }) => {
+              if (!walletClient) {
+                toast.error(t.toastNoWallet);
+                return;
+              }
+              try {
+                if (pendingEventDraft) {
+                  const updatedEvent: Celebration = {
+                    ...pendingEventDraft,
+                    title: event.title,
+                    date: event.date,
+                    description: event.description,
+                  };
+
+                  const nextEvents = (profileData?.events ?? []).map((existing) =>
+                    existing.id === pendingEventDraft.id ? updatedEvent : existing
+                  );
+
+                  await replaceEventsMutation.mutateAsync(nextEvents);
+                  toast.success(t.toastEventUpdated);
+
+                  if (createDrop) {
+                    setPendingDropFromEvent(updatedEvent);
+                    setPendingAnniversaryDrop(false);
+                    setPendingEventDraft(null);
+                    setSubView("addDrop");
+                    return;
+                  }
+
+                  setPendingEventDraft(null);
+                  setSubView("main");
+                  return;
+                }
+
+                await addEventMutation.mutateAsync(event);
+                toast.success(t.toastEventAdded);
+                if (createDrop) {
+                  setPendingDropFromEvent(event);
+                  setPendingAnniversaryDrop(false);
+                  setPendingEventDraft(null);
+                  setSubView("addDrop");
+                  return;
+                }
+                setPendingEventDraft(null);
+                setSubView("main");
+              } catch (err) {
+                console.error("[quickCreate] failed:", err);
+                const msg = err instanceof Error ? err.message : String(err);
+                toast.error(msg.slice(0, 120) || (pendingEventDraft ? t.toastFailedUpdateEvent : t.toastFailedEvent));
+              }
+            }}
+          />
         </div>
       </div>
     );
@@ -450,7 +535,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className="flex-1 py-2 rounded-xl text-xs font-medium transition-colors"
+            className="title-premium flex-1 py-2 rounded-xl text-xs transition-colors"
             style={{
               background: activeTab === tab ? "rgba(106,27,154,0.10)" : "transparent",
               color: activeTab === tab ? "#6A1B9A" : "#8B7D7D",
@@ -468,7 +553,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
             {/* First-time onboarding: simple, non-modal guidance */}
             {showFirstSteps && (
               <div className="card border-lukso-purple/30 bg-lukso-purple/10">
-                <p className="text-sm font-semibold text-lukso-purple mb-1">{t.firstStepsTitle}</p>
+                <p className="title-premium text-sm text-lukso-purple mb-1">{t.firstStepsTitle}</p>
                 <p className="text-xs text-lukso-purple/70 mb-3">{t.firstStepsSub}</p>
                 <div className="space-y-2 mb-3">
                   <div className="flex items-center justify-between text-xs">
@@ -580,7 +665,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
             {/* Post-event drop prompt */}
             {pendingDropFromEvent && (
               <div className="card bg-lukso-purple/10 border-lukso-purple/30 animate-bounce-in">
-                <p className="text-sm font-semibold text-lukso-purple mb-1">
+                <p className="title-premium text-sm text-lukso-purple mb-1">
                   {t.dropPromptTitle}
                 </p>
                 <p className="text-xs text-lukso-purple/60 mb-3">
@@ -619,7 +704,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
             {/* Birthday — display mode when set, edit mode when not set or user clicks Change */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <p className="text-xs text-white/40 uppercase tracking-wide font-medium">
+                <p className="title-premium text-xs uppercase">
                   {t.birthday}
                 </p>
                 {birthdayDisplay && !isBirthdayEditing && (
@@ -764,11 +849,11 @@ export function Editor({ walletClient, chainId }: EditorProps) {
             {/* Custom events */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <p className="text-xs text-white/40 uppercase tracking-wide font-medium">
+                <p className="title-premium text-xs uppercase">
                   {t.eventsTitle}
                 </p>
                 <button
-                  onClick={() => setSubView("addEvent")}
+                  onClick={() => setSubView("quickCreate")}
                   className="text-xs text-lukso-purple hover:text-lukso-purple/80"
                 >
                   {t.add}
@@ -823,7 +908,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
         {activeTab === "wishlist" && (
           <div>
             <div className="flex items-center justify-between mb-2">
-              <p className="text-xs text-white/40 uppercase tracking-wide font-medium">
+              <p className="title-premium text-xs uppercase">
                 {t.wishlistTitle}
               </p>
               <button

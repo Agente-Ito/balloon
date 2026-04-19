@@ -28,7 +28,7 @@ export default {
         },
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
+        sans: ["Poppins", "system-ui", "sans-serif"],
       },
       boxShadow: {
         "foil":       "0 2px 12px 0 rgba(106,27,154,0.18), inset 0 1px 0 rgba(255,255,255,0.35)",

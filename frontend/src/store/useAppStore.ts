@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { Address, AppView } from "@/types";
+import type { Address, AppView, Celebration } from "@/types";
 import { type Lang, getStoredLang, setStoredLang } from "@/lib/i18n";
 
 interface AppStore {
@@ -20,10 +20,10 @@ interface AppStore {
 
   // Optional editor entry intent (used to land in a specific tab/subview)
   editorEntryTab: "dates" | "drops" | "wishlist" | "settings" | null;
-  editorEntrySubView: "main" | "addEvent" | "addWishlist" | "addDrop" | null;
+  editorEntrySubView: "main" | "addEvent" | "addWishlist" | "addDrop" | "quickCreate" | null;
   setEditorEntry: (
     tab: "dates" | "drops" | "wishlist" | "settings" | null,
-    subView: "main" | "addEvent" | "addWishlist" | "addDrop" | null
+    subView: "main" | "addEvent" | "addWishlist" | "addDrop" | "quickCreate" | null
   ) => void;
   clearEditorEntry: () => void;
 
@@ -43,6 +43,10 @@ interface AppStore {
   // Explicit flag: only prefill anniversary drop when user asks for it
   pendingAnniversaryDrop: boolean;
   setPendingAnniversaryDrop: (enabled: boolean) => void;
+
+  // Cross-view: calendar reminder row → editor quick-create (edit mode)
+  pendingEventDraft: Celebration | null;
+  setPendingEventDraft: (event: Celebration | null) => void;
 
   // Profile being viewed (context profile from UP Provider)
   contextProfile: Address | null;
@@ -108,6 +112,9 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   pendingAnniversaryDrop: false,
   setPendingAnniversaryDrop: (enabled) => set({ pendingAnniversaryDrop: enabled }),
+
+  pendingEventDraft: null,
+  setPendingEventDraft: (event) => set({ pendingEventDraft: event }),
 
   contextProfile: null,
   setContextProfile: (address) => {

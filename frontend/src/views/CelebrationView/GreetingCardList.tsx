@@ -50,7 +50,7 @@ export function GreetingCardList({ profileAddress, chainId }: GreetingCardListPr
     <div className="space-y-2">
       {!noQuick && (
         <div className="space-y-2">
-          <p className="text-xs text-white/40 uppercase tracking-wide font-medium">{t.quickGreetingInboxTitle}</p>
+          <p className="title-premium text-xs uppercase">{t.quickGreetingInboxTitle}</p>
           {quickGreetings!.map((item) => (
             <div key={`quick-${item.id}`} className="card flex items-start gap-3">
               <span className="text-xl leading-none">{reactionEmoji(item.reaction)}</span>
