@@ -89,8 +89,7 @@ export function GridCard({ chainId }: GridCardProps) {
     <div className="h-full flex flex-col p-4 gap-4 overflow-y-auto">
       {/* Header */}
       <div className="flex items-center justify-between">
-        {/* @container so BalloonLogo can switch wordmark ↔ B on narrow widths */}
-        <div className="flex items-center gap-2.5 [container-type:inline-size] min-w-0">
+        <div className="flex items-center gap-2.5 min-w-0">
           <Avatar
             address={contextProfile}
             size={36}
@@ -100,14 +99,14 @@ export function GridCard({ chainId }: GridCardProps) {
           />
           <div className="flex flex-col gap-0.5 min-w-0">
             <BalloonLogo height={22} />
-            {lsp3?.name ? (
+            {contextProfile && (
               <span
                 className="text-[11px] font-medium leading-tight truncate"
                 style={{ color: "#8B7D7D" }}
               >
-                {lsp3.name}
+                {lsp3?.name ?? `${contextProfile.slice(0, 6)}…${contextProfile.slice(-4)}`}
               </span>
-            ) : null}
+            )}
           </div>
         </div>
         <div className="flex items-center gap-2">

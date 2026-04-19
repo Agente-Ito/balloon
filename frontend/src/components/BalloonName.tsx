@@ -21,7 +21,7 @@ const CELL_H    = IMG_H / ROWS;      // ~341.33
 
 interface LetterPos { col: number; row: number }
 
-const LETTER_MAP: Record<string, LetterPos> = {
+export const LETTER_MAP: Record<string, LetterPos> = {
   A: { col: 0, row: 0 }, B: { col: 1, row: 0 }, C: { col: 2, row: 0 },
   D: { col: 3, row: 0 }, E: { col: 4, row: 0 }, F: { col: 5, row: 0 },
   G: { col: 6, row: 0 }, H: { col: 7, row: 0 }, I: { col: 8, row: 0 },
@@ -40,7 +40,7 @@ interface BalloonNameProps {
   className?: string;
 }
 
-function BalloonLetter({ letter, height }: { letter: string; height: number }) {
+export function BalloonLetter({ letter, height }: { letter: string; height: number }) {
   const pos = LETTER_MAP[letter.toUpperCase()];
 
   if (!pos) {

@@ -57,29 +57,17 @@ export function BalloonLogo({ className = "", height = 40, compact = false }: Ba
     );
   }
 
-  // Full wordmark — hide on very narrow containers, show B instead
+  // Full wordmark
   if (!imgFailed) {
     return (
-      <>
-        {/* Full wordmark — hidden below ~160px container width */}
-        <img
-          src="/balloon-wordmark.jpeg"
-          alt="balloon"
-          style={{ height, width: "auto", objectFit: "contain" }}
-          className={`hidden [@container(min-width:160px)]:block ${className}`}
-          onError={() => setImgFailed(true)}
-          draggable={false}
-        />
-        {/* B-only fallback for narrow containers */}
-        <img
-          src="/balloon-b.jpeg"
-          alt="balloon"
-          style={{ height, width: "auto", objectFit: "contain" }}
-          className={`block [@container(min-width:160px)]:hidden rounded-sm ${className}`}
-          draggable={false}
-          aria-hidden="true"
-        />
-      </>
+      <img
+        src="/balloon-wordmark.jpeg"
+        alt="balloon"
+        style={{ height, width: "auto", objectFit: "contain" }}
+        className={className}
+        onError={() => setImgFailed(true)}
+        draggable={false}
+      />
     );
   }
 
