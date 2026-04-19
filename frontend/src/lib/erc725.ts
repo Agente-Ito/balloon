@@ -166,7 +166,15 @@ export async function readAllCelebrationData(
     profileCreatedAt,
     events,
     wishlist,
-    settings: settings ?? defaultSettings(),
+    settings: normalizeSettings(settings),
+  };
+}
+
+function normalizeSettings(settings: ProfileSettings | undefined): ProfileSettings {
+  const defaults = defaultSettings();
+  return {
+    ...defaults,
+    ...(settings ?? {}),
   };
 }
 
@@ -177,6 +185,7 @@ export function defaultSettings(): ProfileSettings {
     eventsVisible: true,
     wishlistVisible: true,
     notifyFollowers: true,
+    reminderFrequency: "monthly",
   };
 }
 

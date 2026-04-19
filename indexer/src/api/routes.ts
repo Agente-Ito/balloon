@@ -11,6 +11,7 @@ import {
   getSubmissionsForSeries, addSubmission, selectSubmission, reopenSubmissions,
   getSubmissionsWithVotes, castVote, removeVote,
 } from "../resolvers/series";
+import { createQuickGreeting, getQuickGreetingsForRecipient } from "../resolvers/quickGreetings";
 import { getDb } from "../storage/db";
 
 const router = Router();
@@ -58,6 +59,41 @@ router.get("/cards/:tokenId", (req: Request, res: Response) => {
   const card = getCardById(req.params.tokenId);
   if (!card) return res.status(404).json({ error: "Card not found" });
   return res.json(card);
+});
+
+// ── Quick greetings (off-chain social) ──────────────────────────────────────
+
+/** GET /quick-greetings?recipient=0x...&limit=20 */
+router.get("/quick-greetings", (req: Request, res: Response) => {
+  const { recipient, limit } = req.query;
+  if (!recipient || typeof recipient !== "string") {
+    return res.status(400).json({ error: "recipient param required" });
+  }
+  return res.json(getQuickGreetingsForRecipient(recipient, Number(limit ?? 25)));
+});
+
+/** POST /quick-greetings { sender, recipient, reaction, message? } */
+router.post("/quick-greetings", (req: Request, res: Response) => {
+  const { sender, recipient, reaction, message } = req.body as Record<string, unknown>;
+  if (!sender || !recipient || !reaction) {
+    return res.status(400).json({ error: "sender, recipient and reaction are required" });
+  }
+  try {
+    const created = createQuickGreeting({
+      sender: String(sender),
+      recipient: String(recipient),
+      reaction: String(reaction),
+      message: message ? String(message) : undefined,
+    });
+    return res.status(201).json(created);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.startsWith("QuickGreetingRateLimited:")) {
+      const retryAfterSeconds = Number(msg.split(":")[1] ?? "0");
+      return res.status(429).json({ error: "QuickGreetingRateLimited", retryAfterSeconds });
+    }
+    return res.status(400).json({ error: msg });
+  }
 });
 
 // ── Social graph ──────────────────────────────────────────────────────────────
@@ -186,11 +222,26 @@ router.get("/social-calendar", (req: Request, res: Response) => {
     return res.json({ profiles: [], drops: [] });
   }
 
+  const reminderWindowDays = (frequency: string): number => {
+    if (frequency === "daily") return 1;
+    if (frequency === "weekly") return 7;
+    return 30;
+  };
+
+  const daysUntilBirthday = (month: number, day: number): number => {
+    const now = new Date();
+    const thisYear = now.getFullYear();
+    const target = new Date(thisYear, month - 1, day);
+    if (target < now) target.setFullYear(thisYear + 1);
+    const diffMs = target.getTime() - now.getTime();
+    return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  };
+
   // Get profile dates for followed addresses — respect visibility
   // public: always visible; followers: visible if viewer follows them (they're in `following`)
   const placeholders = following.map(() => "?").join(", ");
   const profileRows = db.prepare(`
-    SELECT address, birthday_month, birthday_day, up_created_at, birthday_vis
+    SELECT address, birthday_month, birthday_day, up_created_at, birthday_vis, notify_followers, reminder_frequency
     FROM profiles
     WHERE address IN (${placeholders})
       AND birthday_vis IN ('public', 'followers')
@@ -201,6 +252,8 @@ router.get("/social-calendar", (req: Request, res: Response) => {
     birthday_day: number;
     up_created_at: number | null;
     birthday_vis: string;
+    notify_followers: number;
+    reminder_frequency: string;
   }[];
 
   const profiles = profileRows
@@ -213,6 +266,13 @@ router.get("/social-calendar", (req: Request, res: Response) => {
       birthdayMonth: p.birthday_month,
       birthdayDay: p.birthday_day,
       upCreatedAt: p.up_created_at,
+      notifyFollowers: p.notify_followers === 1,
+      reminderFrequency: (p.reminder_frequency === "weekly" || p.reminder_frequency === "daily")
+        ? p.reminder_frequency
+        : "monthly",
+      reminderDueSoon:
+        p.notify_followers === 1 &&
+        daysUntilBirthday(p.birthday_month, p.birthday_day) <= reminderWindowDays(p.reminder_frequency),
     }));
 
   // Also include active drops from followed profiles

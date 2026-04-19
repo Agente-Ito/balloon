@@ -15,11 +15,11 @@ import { getDb } from "../storage/db";
 // These match the constants in contracts/libraries/ERC725Keys.sol
 
 const KEY_BIRTHDAY =
-  "0x5c1a7add391b788d16a2b04c10b2f01d328e75bcc5fa94f3d49a6c8b17f0d8e6" as `0x${string}`;
+  "0x4645724f89f252a2307e2e9f2d5a5210c75e2d316688912008dd40b1735ff981" as `0x${string}`;
 const KEY_PROFILE_CREATED_AT =
-  "0xdf30dba06db6a30e65354d9a64c609861f089545ca58c6b4dbe31a5f338cb0e3" as `0x${string}`;
+  "0x3ef1cb31cc2f82824c90cdb61b8cfc4897b52db62ea3583af3c484d1472e290c" as `0x${string}`;
 const KEY_SETTINGS =
-  "0x6a5d6d6f9a2b2e5e7f4a3c1b8e9d2f0a1c4b7e8d3f6a9c2b5e8d1f4a7c0b3e6" as `0x${string}`;
+  "0x900f36713dd8e8d81f42cdbc381011538edf5f9bcadb673979a9e54555b8121c" as `0x${string}`;
 
 const GET_DATA_ABI = [
   {
@@ -38,6 +38,8 @@ interface ProfileRow {
 interface SettingsJson {
   birthdayVisible?: "public" | "followers" | "private";
   eventsVisible?: "public" | "followers" | "private";
+  notifyFollowers?: boolean;
+  reminderFrequency?: "monthly" | "weekly" | "daily";
 }
 
 async function readBytes(
@@ -62,12 +64,12 @@ async function readBytes(
 /** Parse "YYYY-MM-DD" bytes10 into { month, day } */
 function parseBirthdayBytes(raw: `0x${string}`): { month: number; day: number } | null {
   try {
-    // raw is hex-encoded UTF-8 string: "YYYY-MM-DD" = 10 chars = 20 hex chars + "0x"
+    // raw is hex-encoded UTF-8 string: "YYYY-MM-DD" or "--MM-DD"
     const str = Buffer.from(raw.slice(2), "hex").toString("utf8");
-    const parts = str.split("-");
-    if (parts.length !== 3) return null;
-    const month = parseInt(parts[1], 10);
-    const day   = parseInt(parts[2], 10);
+    const parts = str.split("-").filter(Boolean);
+    if (parts.length < 2) return null;
+    const month = parseInt(parts[parts.length - 2], 10);
+    const day   = parseInt(parts[parts.length - 1], 10);
     if (month < 1 || month > 12 || day < 1 || day > 31) return null;
     return { month, day };
   } catch {
@@ -86,12 +88,33 @@ function parseTimestampBytes(raw: `0x${string}`): number | null {
   }
 }
 
-/** Parse JSONURL metadata bytes and try to extract birthday/events visibility */
-function parseSettingsBytes(raw: `0x${string}`): SettingsJson {
-  // JSONURL format: 0x6f357c6a + 32-byte hash + IPFS CID bytes
-  // We can't fetch IPFS here without extra infra, so return empty defaults.
-  // The indexer API will fall back to 'private' if this is empty.
-  return {};
+function decodeJsonUrl(raw: `0x${string}`): string | undefined {
+  if (!raw || raw === "0x") return undefined;
+  const body = raw.slice(2);
+  // JSONURL = 4-byte prefix + 32-byte hash + utf8 URL bytes
+  if (!body.startsWith("6f357c6a") || body.length <= 72) return undefined;
+  const urlHex = body.slice(72);
+  const bytes = urlHex.match(/../g)?.map((b) => parseInt(b, 16));
+  if (!bytes?.length) return undefined;
+  return new TextDecoder().decode(new Uint8Array(bytes));
+}
+
+function resolveIpfsUrl(url: string): string {
+  if (!url.startsWith("ipfs://")) return url;
+  const gateway = (process.env.PINATA_GATEWAY ?? "https://gateway.pinata.cloud").replace(/\/$/, "");
+  return `${gateway}/ipfs/${url.slice("ipfs://".length)}`;
+}
+
+async function parseSettingsBytes(raw: `0x${string}`): Promise<SettingsJson> {
+  const url = decodeJsonUrl(raw);
+  if (!url) return {};
+  try {
+    const res = await fetch(resolveIpfsUrl(url));
+    if (!res.ok) return {};
+    return (await res.json()) as SettingsJson;
+  } catch {
+    return {};
+  }
 }
 
 async function backfillProfiles(): Promise<void> {
@@ -121,14 +144,26 @@ async function backfillProfiles(): Promise<void> {
   console.log(`[backfill] Scanning ${addressRows.length} unique address(es)`);
 
   const upsert = db.prepare(`
-    INSERT INTO profiles (address, birthday_month, birthday_day, up_created_at, birthday_vis, events_vis, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, unixepoch())
+    INSERT INTO profiles (
+      address,
+      birthday_month,
+      birthday_day,
+      up_created_at,
+      birthday_vis,
+      events_vis,
+      notify_followers,
+      reminder_frequency,
+      updated_at
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, unixepoch())
     ON CONFLICT(address) DO UPDATE SET
       birthday_month = excluded.birthday_month,
       birthday_day   = excluded.birthday_day,
       up_created_at  = excluded.up_created_at,
       birthday_vis   = excluded.birthday_vis,
       events_vis     = excluded.events_vis,
+      notify_followers = excluded.notify_followers,
+      reminder_frequency = excluded.reminder_frequency,
       updated_at     = unixepoch()
   `);
 
@@ -137,14 +172,15 @@ async function backfillProfiles(): Promise<void> {
   for (const row of addressRows) {
     const addr = row.address as `0x${string}`;
 
-    const [birthdayRaw, createdAtRaw] = await Promise.all([
+    const [birthdayRaw, createdAtRaw, settingsRaw] = await Promise.all([
       readBytes(client, addr, KEY_BIRTHDAY),
       readBytes(client, addr, KEY_PROFILE_CREATED_AT),
+      readBytes(client, addr, KEY_SETTINGS),
     ]);
 
     const birthday   = birthdayRaw   ? parseBirthdayBytes(birthdayRaw)    : null;
     const createdAt  = createdAtRaw  ? parseTimestampBytes(createdAtRaw)  : null;
-    const settings   = parseSettingsBytes("0x"); // visibility requires IPFS fetch; default private
+    const settings   = settingsRaw ? await parseSettingsBytes(settingsRaw) : {};
 
     upsert.run(
       addr,
@@ -152,7 +188,9 @@ async function backfillProfiles(): Promise<void> {
       birthday?.day   ?? null,
       createdAt,
       settings.birthdayVisible ?? "private",
-      settings.eventsVisible   ?? "private"
+      settings.eventsVisible   ?? "private",
+      settings.notifyFollowers === false ? 0 : 1,
+      settings.reminderFrequency ?? "monthly"
     );
 
     updated++;

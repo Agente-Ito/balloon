@@ -89,6 +89,7 @@ export interface ProfileSettings {
   eventsVisible: boolean;
   wishlistVisible: boolean;
   notifyFollowers: boolean;
+  reminderFrequency?: "monthly" | "weekly" | "daily";
 }
 
 // ── Global holidays ───────────────────────────────────────────────────────────
@@ -149,6 +150,9 @@ export interface SocialProfile {
   birthdayMonth: number;
   birthdayDay: number;
   upCreatedAt: number | null;
+  notifyFollowers?: boolean;
+  reminderFrequency?: "monthly" | "weekly" | "daily";
+  reminderDueSoon?: boolean;
 }
 
 // ── UI state ──────────────────────────────────────────────────────────────────

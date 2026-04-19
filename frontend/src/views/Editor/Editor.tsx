@@ -4,9 +4,10 @@ import { useT } from "@/hooks/useT";
 import { getMonthNames } from "@/lib/monthNames";
 import { useGridSize } from "@/lib/useGridSize";
 import { useAppStore } from "@/store/useAppStore";
-import { useProfileData, useSetBirthday, useAddEvent, useAddWishlistItem } from "@/hooks/useUniversalProfile";
+import { useProfileData, useSetBirthday, useAddEvent, useAddWishlistItem, useQuickSetupBatch } from "@/hooks/useUniversalProfile";
 import { useLSP3Name } from "@/hooks/useLSP3Name";
 import { EventForm } from "./EventForm";
+import { QuickSetupForm } from "./QuickSetupForm";
 import { WishlistForm } from "./WishlistForm";
 import { SettingsForm } from "./SettingsForm";
 import { DropForm } from "./DropForm";
@@ -29,13 +30,15 @@ interface EditorProps {
 }
 
 type EditorTab = "dates" | "wishlist" | "settings" | "drops";
-type SubView = "main" | "addEvent" | "addWishlist" | "addDrop";
+type SubView = "main" | "addEvent" | "addWishlist" | "addDrop" | "quickSetup";
+type SetupMode = "quick" | "step";
 
 export function Editor({ walletClient, chainId }: EditorProps) {
   const {
     contextProfile,
     setView,
     goBack,
+    setActiveCelebrationDate,
     pendingDropDate,
     setPendingDropDate,
     pendingAnniversaryDrop,
@@ -83,6 +86,12 @@ export function Editor({ walletClient, chainId }: EditorProps) {
     chainId,
   });
 
+  const quickSetupMutation = useQuickSetupBatch({
+    walletClient: walletClient!,
+    upAddress: contextProfile as Address,
+    chainId,
+  });
+
   const createDropMutation = useCreateDrop(walletClient ?? null, chainId);
 
   // UP creation date → anniversary hint
@@ -99,8 +108,42 @@ export function Editor({ walletClient, chainId }: EditorProps) {
   const [birthdayDay, setBirthdayDay] = useState("");
   const [birthdayYear, setBirthdayYear] = useState("");
   const [isBirthdayEditing, setIsBirthdayEditing] = useState(false);
+  const [preferredSetupMode, setPreferredSetupMode] = useState<SetupMode | null>(null);
 
   const currentBirthday = profileData?.birthday ?? "";
+  const hasBirthdayConfigured = !!currentBirthday;
+  const hasCustomEvents = (profileData?.events.length ?? 0) > 0;
+  const showFirstSteps = !hasBirthdayConfigured || !hasCustomEvents;
+  const canUseQuickSetup = !hasBirthdayConfigured && !hasCustomEvents;
+
+  useEffect(() => {
+    try {
+      const value = localStorage.getItem("celebrations:first-steps-mode");
+      if (value === "quick" || value === "step") {
+        setPreferredSetupMode(value);
+      }
+    } catch {
+      // ignore storage errors
+    }
+  }, []);
+
+  const rememberSetupMode = (mode: SetupMode) => {
+    setPreferredSetupMode(mode);
+    try {
+      localStorage.setItem("celebrations:first-steps-mode", mode);
+    } catch {
+      // ignore storage errors
+    }
+  };
+
+  const resetSetupModePreference = () => {
+    setPreferredSetupMode(null);
+    try {
+      localStorage.removeItem("celebrations:first-steps-mode");
+    } catch {
+      // ignore storage errors
+    }
+  };
 
   // Pre-populate form fields when profile data loads
   useEffect(() => {
@@ -224,6 +267,41 @@ export function Editor({ walletClient, chainId }: EditorProps) {
         </div>
         <div className="flex-1 overflow-y-auto p-4">
           <EventForm onSave={handleAddEvent} onCancel={() => setSubView("main")} />
+        </div>
+      </div>
+    );
+  }
+
+  if (subView === "quickSetup") {
+    return (
+      <div className="h-full flex flex-col overflow-hidden">
+        <div className="flex items-center justify-between px-4 pt-4 pb-2">
+          <button onClick={() => setSubView("main")} className="text-white/40 hover:text-white text-sm">{t.back}</button>
+          <span className="font-semibold">{t.quickSetupTitle}</span>
+          <LanguageToggle />
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-4 pb-4">
+          <QuickSetupForm
+            isSaving={quickSetupMutation.isPending}
+            onCancel={() => setSubView("main")}
+            onSave={async ({ birthday, event, settings }) => {
+              if (!walletClient) {
+                toast.error(t.toastNoWallet);
+                return;
+              }
+              try {
+                await quickSetupMutation.mutateAsync({ birthday, event, settings });
+                toast.success(t.toastQuickSetupSaved);
+                setPendingDropFromEvent(event);
+                setSubView("main");
+              } catch (err) {
+                console.error("[quickSetup] failed:", err);
+                const msg = err instanceof Error ? err.message : String(err);
+                toast.error(msg.slice(0, 120) || t.toastQuickSetupFailed);
+              }
+            }}
+          />
         </div>
       </div>
     );
@@ -396,6 +474,118 @@ export function Editor({ walletClient, chainId }: EditorProps) {
       <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-4">
         {activeTab === "dates" && (
           <>
+            {/* First-time onboarding: simple, non-modal guidance */}
+            {showFirstSteps && (
+              <div className="card border-lukso-purple/30 bg-lukso-purple/10">
+                <p className="text-sm font-semibold text-lukso-purple mb-1">{t.firstStepsTitle}</p>
+                <p className="text-xs text-lukso-purple/70 mb-3">{t.firstStepsSub}</p>
+                <div className="space-y-2 mb-3">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-white/80">{t.firstStepsBirthday}</span>
+                    <span className={hasBirthdayConfigured ? "text-green-400" : "text-white/40"}>
+                      {hasBirthdayConfigured ? t.firstStepsDone : "•"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-white/80">{t.firstStepsReminder}</span>
+                    <span className={hasCustomEvents ? "text-green-400" : "text-white/40"}>
+                      {hasCustomEvents ? t.firstStepsDone : "•"}
+                    </span>
+                  </div>
+                </div>
+                {canUseQuickSetup ? (
+                  <div className="space-y-2">
+                    {preferredSetupMode && (
+                      <div className="flex items-center justify-center gap-2">
+                        <p className="text-[11px] text-white/50 text-center">
+                          {preferredSetupMode === "quick" ? t.firstStepsPersonalizedQuick : t.firstStepsPersonalizedStep}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={resetSetupModePreference}
+                          className="text-[11px] text-lukso-purple/80 hover:text-lukso-purple underline underline-offset-2"
+                        >
+                          {t.firstStepsResetPreference}
+                        </button>
+                      </div>
+                    )}
+                    <button
+                      onClick={() => {
+                        rememberSetupMode("quick");
+                        setSubView("quickSetup");
+                      }}
+                      className={`w-full text-xs py-1.5 inline-flex items-center justify-center gap-2 ${
+                        preferredSetupMode === "step"
+                          ? "btn-ghost border border-lukso-border"
+                          : "btn-primary"
+                      }`}
+                    >
+                      {t.firstStepsQuickSetup}
+                      {(preferredSetupMode === "quick" || preferredSetupMode === null) && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/15 text-white/80">
+                          {t.firstStepsRecommended}
+                        </span>
+                      )}
+                    </button>
+                    <p className="text-[11px] text-white/40 text-center">{t.firstStepsStepByStep}</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => {
+                          rememberSetupMode("step");
+                          setIsBirthdayEditing(true);
+                        }}
+                        className={`text-xs py-1.5 border border-lukso-border inline-flex items-center justify-center gap-1 ${
+                          preferredSetupMode === "step" ? "btn-secondary" : "btn-ghost"
+                        }`}
+                      >
+                        {t.firstStepsOnlyBirthday}
+                        {preferredSetupMode === "step" && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/15 text-white/80">
+                            {t.firstStepsRecommended}
+                          </span>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => {
+                          rememberSetupMode("step");
+                          setSubView("addEvent");
+                        }}
+                        className={`text-xs py-1.5 border border-lukso-border inline-flex items-center justify-center gap-1 ${
+                          preferredSetupMode === "step" ? "btn-secondary" : "btn-ghost"
+                        }`}
+                      >
+                        {t.firstStepsOnlyReminder}
+                        {preferredSetupMode === "step" && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/15 text-white/80">
+                            {t.firstStepsRecommended}
+                          </span>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    {!hasBirthdayConfigured && (
+                      <button
+                        onClick={() => setIsBirthdayEditing(true)}
+                        className="btn-primary flex-1 text-xs py-1.5"
+                      >
+                        {t.firstStepsBirthday}
+                      </button>
+                    )}
+                    {!hasCustomEvents && (
+                      <button
+                        onClick={() => setSubView("addEvent")}
+                        className="btn-ghost flex-1 text-xs py-1.5 border border-lukso-border"
+                      >
+                        {t.firstStepsReminder}
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Post-event drop prompt */}
             {pendingDropFromEvent && (
               <div className="card bg-lukso-purple/10 border-lukso-purple/30 animate-bounce-in">
@@ -403,14 +593,24 @@ export function Editor({ walletClient, chainId }: EditorProps) {
                   {t.dropPromptTitle}
                 </p>
                 <p className="text-xs text-lukso-purple/60 mb-3">
-                  {t.dropPromptSub} <span className="text-lukso-purple/80 font-medium">{pendingDropFromEvent.title}</span>
+                  {t.dropPromptPersonalSub}
                 </p>
-                <div className="flex gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   <button
                     onClick={() => setPendingDropFromEvent(null)}
                     className="btn-ghost flex-1 text-xs py-1.5 border border-lukso-border"
                   >
                     {t.skip}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setActiveCelebrationDate(pendingDropFromEvent.date);
+                      setPendingDropFromEvent(null);
+                      setView("celebration");
+                    }}
+                    className="btn-secondary flex-1 text-xs py-1.5"
+                  >
+                    {t.dropPromptPersonal}
                   </button>
                   <button
                     onClick={() => {
@@ -449,7 +649,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
               ) : (
                 <div className="card">
                   {!birthdayDisplay && (
-                    <p className="text-xs text-white/50 mb-3">{t.birthdayCurrent} <span className="text-white/40">Not set</span></p>
+                    <p className="text-xs text-white/50 mb-3">{t.birthdayCurrent} <span className="text-white/40">{t.birthdayNotSet}</span></p>
                   )}
                   <div className="grid grid-cols-3 gap-2 mb-2">
                     <div>

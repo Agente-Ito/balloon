@@ -42,6 +42,20 @@ export function createSchema(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_cards_recipient ON greeting_cards(recipient);
     CREATE INDEX IF NOT EXISTS idx_cards_sender    ON greeting_cards(sender);
 
+    -- ── Quick greetings (off-chain, low-friction social messages) ───────────
+    CREATE TABLE IF NOT EXISTS quick_greetings (
+      id                INTEGER PRIMARY KEY AUTOINCREMENT,
+      sender            TEXT NOT NULL,
+      recipient         TEXT NOT NULL,
+      reaction          TEXT NOT NULL,
+      message           TEXT,
+      created_at        INTEGER NOT NULL DEFAULT (unixepoch())
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_quick_greetings_recipient ON quick_greetings(recipient, created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_quick_greetings_sender    ON quick_greetings(sender, created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_quick_greetings_pair      ON quick_greetings(sender, recipient, created_at DESC);
+
     -- ── Celebrations (birthday/anniversary detections) ───────────────────────
     CREATE TABLE IF NOT EXISTS celebrations (
       id                INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -119,6 +133,8 @@ export function createSchema(db: Database.Database): void {
       up_created_at   INTEGER,            -- unix timestamp for anniversary calc
       birthday_vis    TEXT NOT NULL DEFAULT 'private',  -- 'public'|'followers'|'private'
       events_vis      TEXT NOT NULL DEFAULT 'private',
+      notify_followers INTEGER NOT NULL DEFAULT 1,
+      reminder_frequency TEXT NOT NULL DEFAULT 'monthly', -- 'monthly'|'weekly'|'daily'
       updated_at      INTEGER NOT NULL DEFAULT (unixepoch())
     );
 
@@ -186,6 +202,8 @@ export function createSchema(db: Database.Database): void {
 export function runMigrations(db: Database.Database): void {
   const migrations: [string, string][] = [
     ["drop_series", "ALTER TABLE drop_series ADD COLUMN voting_deadline INTEGER"],
+    ["profiles", "ALTER TABLE profiles ADD COLUMN notify_followers INTEGER NOT NULL DEFAULT 1"],
+    ["profiles", "ALTER TABLE profiles ADD COLUMN reminder_frequency TEXT NOT NULL DEFAULT 'monthly'"],
   ];
 
   for (const [table, sql] of migrations) {

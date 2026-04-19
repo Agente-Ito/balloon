@@ -2,6 +2,7 @@ import { useAppStore } from "@/store/useAppStore";
 import { useSetSettings } from "@/hooks/useUniversalProfile";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { useT } from "@/hooks/useT";
+import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import type { ProfileSettings, Address } from "@/types";
 import type { WalletClient } from "viem";
@@ -16,11 +17,14 @@ interface ToggleRowProps {
   description: string;
   checked: boolean;
   onChange: () => void;
+  disabled?: boolean;
 }
 
-function ToggleRow({ label, description, checked, onChange }: ToggleRowProps) {
+function ToggleRow({ label, description, checked, onChange, disabled = false }: ToggleRowProps) {
   return (
-    <label className="flex items-start justify-between cursor-pointer py-3 border-b border-lukso-border last:border-0 gap-3">
+    <label className={`flex items-start justify-between py-3 border-b border-lukso-border last:border-0 gap-3 ${
+      disabled ? "opacity-75" : "cursor-pointer"
+    }`}>
       <div className="min-w-0">
         <p className="text-sm font-medium">{label}</p>
         <p className="text-xs text-white/40 mt-0.5">{description}</p>
@@ -28,6 +32,7 @@ function ToggleRow({ label, description, checked, onChange }: ToggleRowProps) {
       <button
         type="button"
         onClick={onChange}
+        disabled={disabled}
         role="switch"
         aria-checked={checked}
         className={`w-14 h-8 sm:w-12 sm:h-7 rounded-full transition-all border inline-flex items-center px-1 sm:px-0.5 flex-shrink-0 mt-0.5 touch-manipulation ${
@@ -50,12 +55,28 @@ export function SettingsForm({ settings, walletClient }: SettingsFormProps) {
     upAddress: contextProfile as Address,
   });
 
-  const update = async (patch: Partial<ProfileSettings>) => {
+  const [draft, setDraft] = useState<ProfileSettings>(settings);
+
+  useEffect(() => {
+    setDraft(settings);
+  }, [settings]);
+
+  const hasChanges = useMemo(
+    () => JSON.stringify(draft) !== JSON.stringify(settings),
+    [draft, settings]
+  );
+
+  const updateDraft = (patch: Partial<ProfileSettings>) => {
+    setDraft((prev) => ({ ...prev, ...patch }));
+  };
+
+  const saveDraft = async () => {
+    if (!hasChanges) return;
     try {
-      await saveSettings({ ...settings, ...patch });
+      await saveSettings(draft);
       toast.success(t.settingsSave);
     } catch {
-      toast.error(t.toastFailedBirthday);
+      toast.error(t.toastSettingsFailed);
     }
   };
 
@@ -64,33 +85,89 @@ export function SettingsForm({ settings, walletClient }: SettingsFormProps) {
       <ToggleRow
         label={t.settingsAutoMint}
         description={t.settingsAutoMintSub}
-        checked={settings.autoMintBadge}
-        onChange={() => update({ autoMintBadge: !settings.autoMintBadge })}
+        checked={draft.autoMintBadge}
+        onChange={() => updateDraft({ autoMintBadge: !draft.autoMintBadge })}
+        disabled={isPending}
       />
       <ToggleRow
         label={t.settingsBirthdayVis}
         description={t.settingsBirthdayVisSub}
-        checked={settings.birthdayVisible}
-        onChange={() => update({ birthdayVisible: !settings.birthdayVisible })}
+        checked={draft.birthdayVisible}
+        onChange={() => updateDraft({ birthdayVisible: !draft.birthdayVisible })}
+        disabled={isPending}
       />
       <ToggleRow
         label={t.settingsEventsVis}
         description={t.settingsEventsVisSub}
-        checked={settings.eventsVisible}
-        onChange={() => update({ eventsVisible: !settings.eventsVisible })}
+        checked={draft.eventsVisible}
+        onChange={() => updateDraft({ eventsVisible: !draft.eventsVisible })}
+        disabled={isPending}
       />
       <ToggleRow
         label={t.settingsWishlistVis}
         description={t.settingsWishlistVisSub}
-        checked={settings.wishlistVisible}
-        onChange={() => update({ wishlistVisible: !settings.wishlistVisible })}
+        checked={draft.wishlistVisible}
+        onChange={() => updateDraft({ wishlistVisible: !draft.wishlistVisible })}
+        disabled={isPending}
       />
       <ToggleRow
         label={t.settingsNotify}
         description={t.settingsNotifySub}
-        checked={settings.notifyFollowers}
-        onChange={() => update({ notifyFollowers: !settings.notifyFollowers })}
+        checked={draft.notifyFollowers}
+        onChange={() => updateDraft({ notifyFollowers: !draft.notifyFollowers })}
+        disabled={isPending}
       />
+
+      <div className="py-3 border-b border-lukso-border last:border-0">
+        <p className="text-sm font-medium">{t.settingsReminderFreq}</p>
+        <div className="mt-2 grid grid-cols-3 gap-2">
+          {([
+            { key: "monthly", label: t.settingsReminderMonthly },
+            { key: "weekly", label: t.settingsReminderWeekly },
+            { key: "daily", label: t.settingsReminderDaily },
+          ] as const).map((option) => {
+            const selected = (draft.reminderFrequency ?? "monthly") === option.key;
+            return (
+              <button
+                key={option.key}
+                type="button"
+                onClick={() => updateDraft({ reminderFrequency: option.key })}
+                disabled={isPending}
+                className={`text-xs py-1.5 rounded-lg border transition-colors ${
+                  selected
+                    ? "bg-lukso-purple/20 border-lukso-purple/50 text-lukso-purple"
+                    : "bg-white/5 border-white/10 text-white/60 hover:text-white/80"
+                }`}
+              >
+                {option.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="pt-3 space-y-2">
+        <p className="text-[11px] text-white/45">{t.settingsBatchHint}</p>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setDraft(settings)}
+            disabled={!hasChanges || isPending}
+            className="btn-ghost flex-1 text-xs py-1.5 border border-lukso-border disabled:opacity-40"
+          >
+            {t.cancel}
+          </button>
+          <button
+            type="button"
+            onClick={saveDraft}
+            disabled={!hasChanges || isPending}
+            className="btn-primary flex-1 text-xs py-1.5 disabled:opacity-40"
+          >
+            {hasChanges ? t.save : t.settingsNoChanges}
+          </button>
+        </div>
+      </div>
+
       {isPending && (
         <div className="flex items-center justify-center py-2">
           <LoadingSpinner size="sm" />

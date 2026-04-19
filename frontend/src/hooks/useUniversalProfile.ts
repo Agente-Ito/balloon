@@ -211,6 +211,80 @@ export function useAddEvent({ walletClient, upAddress, chainId = 4201 }: WriteCo
   });
 }
 
+export function useQuickSetupBatch({ walletClient, upAddress, chainId = 4201 }: WriteContext) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      birthday,
+      event,
+      settings,
+    }: {
+      birthday: string;
+      event: Celebration;
+      settings?: ProfileSettings;
+    }) => {
+      const currentLength = await readArrayLength(upAddress, KEY_EVENTS_ARRAY, chainId);
+
+      const ipfsUrl = await uploadJSONToIPFS(event, `celebrations-event-${event.id}`);
+      if (!ipfsUrl.startsWith("ipfs://")) {
+        throw new Error("IPFS upload unavailable. Check your VITE_IPFS_PROXY_URL and try again.");
+      }
+
+      const birthdayBytes = new TextEncoder().encode(birthday);
+      const birthdayValue = (
+        "0x" + Array.from(birthdayBytes).map((b) => b.toString(16).padStart(2, "0")).join("")
+      ) as `0x${string}`;
+
+      const arrayKey = KEY_EVENTS_ARRAY.slice(0, 34);
+      const indexHex = currentLength.toString(16).padStart(8, "0");
+      const elementKey = (arrayKey + "000000000000000000000000" + indexHex) as `0x${string}`;
+
+      const newCount = currentLength + 1;
+      const lengthValue = ("0x" + newCount.toString(16).padStart(64, "0")) as `0x${string}`;
+
+      const contentHash = hashJSON(event);
+      const urlHex = Array.from(new TextEncoder().encode(ipfsUrl))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+      const elementValue = ("0x6f357c6a" + contentHash + urlHex) as `0x${string}`;
+
+      const keys: `0x${string}`[] = [
+        KEY_BIRTHDAY as `0x${string}`,
+        KEY_EVENTS_ARRAY as `0x${string}`,
+        elementKey,
+      ];
+      const values: `0x${string}`[] = [birthdayValue, lengthValue, elementValue];
+
+      if (settings) {
+        const settingsIpfsUrl = await uploadJSONToIPFS(settings, `celebrations-settings-${upAddress}`);
+        const settingsBytes = new TextEncoder().encode(JSON.stringify(settings));
+        const settingsHashHex = keccak256(settingsBytes).slice(2);
+        const settingsUrlHex = Array.from(new TextEncoder().encode(settingsIpfsUrl))
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join("");
+        const settingsValue = (`0x6f357c6a${settingsHashHex}${settingsUrlHex}`) as `0x${string}`;
+        keys.push(KEY_SETTINGS as `0x${string}`);
+        values.push(settingsValue);
+      }
+
+      const account = await resolveAccount(walletClient, upAddress);
+      const txHash = await walletClient.writeContract({
+        address: upAddress,
+        abi: ERC725Y_ABI,
+        functionName: "setDataBatch",
+        args: [keys, values],
+        account,
+        chain: null,
+      });
+      await waitForTx(txHash, chainId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["profileData"] });
+    },
+  });
+}
+
 export function useAddWishlistItem({ walletClient, upAddress, chainId = 4201 }: WriteContext) {
   const queryClient = useQueryClient();
 

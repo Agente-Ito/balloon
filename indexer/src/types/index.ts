@@ -160,6 +160,9 @@ export interface IndexedProfile {
   upCreatedAt: number | null;
   birthdayVis: "public" | "followers" | "private";
   eventsVis: "public" | "followers" | "private";
+  notifyFollowers: boolean;
+  reminderFrequency: "monthly" | "weekly" | "daily";
+  reminderDueSoon?: boolean;
 }
 
 // ── Canonical ID helpers ──────────────────────────────────────────────────────
