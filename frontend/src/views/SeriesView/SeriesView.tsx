@@ -12,6 +12,7 @@ import { useLSP3Name } from "@/hooks/useLSP3Name";
 import { Avatar } from "@/components/Avatar";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { ViewToolbar } from "@/components/ViewToolbar";
 import { uploadFileToIPFS } from "@/lib/ipfs";
 import { useT } from "@/hooks/useT";
 import toast from "react-hot-toast";
@@ -223,7 +224,7 @@ interface SeriesViewProps {
 }
 
 export function SeriesView({ walletClient, chainId }: SeriesViewProps) {
-  const { activeSeriesId, connectedAccount, setView } = useAppStore();
+  const { activeSeriesId, connectedAccount, goBack } = useAppStore();
   const t = useT();
   const [showSubmitForm, setShowSubmitForm] = useState(false);
 
@@ -249,14 +250,12 @@ export function SeriesView({ walletClient, chainId }: SeriesViewProps) {
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
-      {/* Toolbar */}
-      <div className="flex items-center justify-between px-4 pt-4 pb-2">
-        <button onClick={() => setView("drops")} className="text-white/40 hover:text-white text-sm">
-          {t.back}
-        </button>
-        <span className="text-sm font-semibold truncate max-w-[160px]">{series.name}</span>
-        <LanguageToggle />
-      </div>
+      <ViewToolbar
+        onBack={() => goBack("drops")}
+        backLabel={t.back}
+        title={series.name}
+        right={<LanguageToggle />}
+      />
 
       {/* Header card */}
       <div className="mx-4 mb-3 card bg-white/5">

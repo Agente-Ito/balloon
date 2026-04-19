@@ -55,7 +55,7 @@ export function GreetingInboxView({ profileAddress, chainId }: GreetingInboxView
               {celebrationTypeEmoji(card.celebrationType)}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-white">{card.message || "(no message)"}</p>
+              <p className="text-sm font-medium" style={{ color: "#2C2C2C" }}>{card.message || "(no message)"}</p>
               <div className="mt-1 flex items-center gap-1">
                 <span className="text-xs text-white/30">From</span>
                 <span className="text-xs text-lukso-purple font-mono">

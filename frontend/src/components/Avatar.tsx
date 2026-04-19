@@ -5,45 +5,71 @@ interface AvatarProps {
   address: Address | null;
   size?: number;
   className?: string;
-  /** When provided, loads the real LSP3 profile image from the UP. */
   chainId?: number;
+  /** Pre-resolved image URL — skips the internal fetch when provided */
+  imageUrl?: string;
+  /** Profile name — used as initials fallback when no image is available */
+  name?: string;
 }
 
-export function Avatar({ address, size = 40, className = "", chainId }: AvatarProps) {
-  const { data: imageUrl } = useLSP3Avatar(address, chainId);
+export function Avatar({ address, size = 40, className = "", chainId, imageUrl, name }: AvatarProps) {
+  // Only run the internal fetch when a pre-resolved imageUrl is NOT provided
+  const { data: fetchedUrl } = useLSP3Avatar(imageUrl ? null : address, chainId);
+  const resolvedUrl = imageUrl ?? fetchedUrl;
 
-  if (!address) return <GradientAvatar address="0x0000" size={size} className={className} />;
+  if (!address && !resolvedUrl) {
+    return <GradientAvatar address="0x0000" size={size} className={className} />;
+  }
 
-  if (imageUrl) {
+  if (resolvedUrl) {
     return (
       <img
-        src={imageUrl}
-        alt=""
+        src={resolvedUrl}
+        alt={name ?? ""}
         style={{ width: size, height: size }}
         className={`rounded-full object-cover flex-shrink-0 ${className}`}
-        onError={() => {/* silent — hook will return undefined on retry failure */}}
+        onError={() => {/* silent */}}
       />
     );
   }
 
-  return <GradientAvatar address={address} size={size} className={className} />;
+  return (
+    <GradientAvatar
+      address={address ?? "0x0000"}
+      size={size}
+      className={className}
+      name={name}
+    />
+  );
 }
 
 function GradientAvatar({
   address,
   size,
   className,
+  name,
 }: {
   address: string;
   size: number;
   className: string;
+  name?: string;
 }) {
   const hue = parseInt(address.slice(2, 6), 16) % 360;
   const hue2 = (hue + 60) % 360;
 
+  // Show up to 2 initials from the name, or first 2 hex chars of address as fallback
+  const initials = name
+    ? name
+        .trim()
+        .split(/\s+/)
+        .slice(0, 2)
+        .map((w) => w[0].toUpperCase())
+        .join("")
+    : address.slice(2, 4).toUpperCase();
+
   return (
     <div
-      className={`rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 ${className}`}
+      className={`rounded-full flex items-center justify-center avatar-initials font-bold flex-shrink-0 ${className}`}
       style={{
         width: size,
         height: size,
@@ -51,7 +77,7 @@ function GradientAvatar({
         fontSize: size * 0.35,
       }}
     >
-      {address.slice(2, 4).toUpperCase()}
+      {initials}
     </div>
   );
 }

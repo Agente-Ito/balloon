@@ -183,36 +183,76 @@
 
 /* ─── Utility overrides for legacy dark-mode classes ────────────────── */
 @layer utilities {
-  /* Legacy card classes from old dark theme */
-  .bg-lukso-dark   { background-color: #F5F0E1 !important; }
-  .bg-lukso-card   { background-color: #FFFFFF !important; }
-  .border-lukso-border { border-color: #E8D9C8 !important; }
+  /* ── Legacy dark-bg class remaps ──────────────────────────────────────── */
+  .bg-lukso-dark        { background-color: #F5F0E1 !important; }
+  .bg-lukso-card        { background-color: #FFFFFF !important; }
+  .border-lukso-border  { border-color: #E8D9C8 !important; }
+  .border-lukso-bg      { border-color: #F5F0E1 !important; }
 
-  /* On cream/white surfaces, dark text replaces old white text */
-  .text-white\/60 { color: rgba(44, 44, 44, 0.6) !important; }
-  .text-white\/50 { color: rgba(44, 44, 44, 0.5) !important; }
-  .text-white\/40 { color: rgba(44, 44, 44, 0.4) !important; }
-  .text-white\/30 { color: rgba(44, 44, 44, 0.3) !important; }
-  .text-white\/20 { color: rgba(44, 44, 44, 0.2) !important; }
+  /* ── text-white/* → dark text on cream surfaces ──────────────────────── */
+  /* NOTE: plain text-white is NOT overridden globally — some elements      */
+  /* legitimately need white text on violet backgrounds (SeriesView, etc.)  */
+  /* Those specific cases use avatar-initials or inline styles.             */
+  .text-white\/90       { color: rgba(44, 44, 44, 0.90) !important; }
+  .text-white\/85       { color: rgba(44, 44, 44, 0.85) !important; }
+  .text-white\/80       { color: rgba(44, 44, 44, 0.80) !important; }
+  .text-white\/75       { color: rgba(44, 44, 44, 0.75) !important; }
+  .text-white\/70       { color: rgba(44, 44, 44, 0.70) !important; }
+  .text-white\/60       { color: rgba(44, 44, 44, 0.60) !important; }
+  .text-white\/50       { color: rgba(44, 44, 44, 0.50) !important; }
+  .text-white\/45       { color: rgba(44, 44, 44, 0.45) !important; }
+  .text-white\/40       { color: rgba(44, 44, 44, 0.40) !important; }
+  .text-white\/35       { color: rgba(44, 44, 44, 0.35) !important; }
+  .text-white\/30       { color: rgba(44, 44, 44, 0.30) !important; }
+  .text-white\/20       { color: rgba(44, 44, 44, 0.20) !important; }
+  .text-white\/15       { color: rgba(44, 44, 44, 0.15) !important; }
+  .text-white\/10       { color: rgba(44, 44, 44, 0.10) !important; }
 
-  /* Surfaces that use old dark body bg */
-  .bg-white\/5  { background-color: rgba(106, 27, 154, 0.04) !important; }
-  .bg-white\/10 { background-color: rgba(106, 27, 154, 0.07) !important; }
+  /* hover: variants — violet on hover instead of white */
+  .hover\:text-white:hover         { color: #6A1B9A !important; }
+  .hover\:text-white\/80:hover     { color: rgba(44, 44, 44, 0.80) !important; }
+  .hover\:text-white\/70:hover     { color: rgba(44, 44, 44, 0.70) !important; }
+  .hover\:text-white\/60:hover     { color: rgba(44, 44, 44, 0.60) !important; }
+  .hover\:text-white\/50:hover     { color: rgba(44, 44, 44, 0.50) !important; }
 
-  /* Borders */
-  .border-white\/10 { border-color: rgba(106, 27, 154, 0.15) !important; }
-  .border-white\/20 { border-color: rgba(106, 27, 154, 0.2) !important; }
+  /* group-hover: variants */
+  .group:hover .group-hover\:text-white\/80 { color: rgba(44, 44, 44, 0.80) !important; }
+  .group:hover .group-hover\:text-white\/60 { color: rgba(44, 44, 44, 0.60) !important; }
+  .group:hover .group-hover\:text-white\/50 { color: rgba(44, 44, 44, 0.50) !important; }
 
-  /* Spinner track */
-  .border-t-lukso-pink { border-top-color: #6A1B9A !important; }
-  .border-lukso-border { border-color: #E8D9C8 !important; }
+  /* ── bg-white/* → subtle violet tints ───────────────────────────────── */
+  .bg-white\/5          { background-color: rgba(106, 27, 154, 0.04) !important; }
+  .bg-white\/8          { background-color: rgba(106, 27, 154, 0.05) !important; }
+  .bg-white\/10         { background-color: rgba(106, 27, 154, 0.07) !important; }
+  .bg-white\/15         { background-color: rgba(106, 27, 154, 0.09) !important; }
+  .bg-white\/20         { background-color: rgba(106, 27, 154, 0.11) !important; }
 
-  /* Placeholder */
+  /* hover: bg variants */
+  .hover\:bg-white\/10:hover  { background-color: rgba(106, 27, 154, 0.09) !important; }
+  .hover\:bg-white\/20:hover  { background-color: rgba(106, 27, 154, 0.12) !important; }
+
+  /* ── border-white/* → subtle violet borders ─────────────────────────── */
+  .border-white\/5      { border-color: rgba(106, 27, 154, 0.08) !important; }
+  .border-white\/10     { border-color: rgba(106, 27, 154, 0.15) !important; }
+  .border-white\/15     { border-color: rgba(106, 27, 154, 0.18) !important; }
+  .border-white\/20     { border-color: rgba(106, 27, 154, 0.22) !important; }
+  .border-white\/25     { border-color: rgba(106, 27, 154, 0.26) !important; }
+  .border-white\/30     { border-color: rgba(106, 27, 154, 0.30) !important; }
+
+  /* hover: border variants */
+  .hover\:border-white\/20:hover { border-color: rgba(106, 27, 154, 0.30) !important; }
+  .hover\:border-white\/30:hover { border-color: rgba(106, 27, 154, 0.38) !important; }
+
+  /* ── Miscellaneous ───────────────────────────────────────────────────── */
+  .border-t-lukso-pink  { border-top-color: #6A1B9A !important; }
   .placeholder-white\/30::placeholder { color: rgba(44, 44, 44, 0.35) !important; }
+  .placeholder-white\/40::placeholder { color: rgba(44, 44, 44, 0.40) !important; }
 
-  /* Keep text-white working on violet/dark surfaces */
-  .bg-lukso-pink .text-white,
-  .btn-primary,
-  .btn-celebrate,
-  .violet-header { color: #ffffff; }
+  /* ── Exceptions: real white text stays white on violet/dark surfaces ─── */
+  .btn-primary    { color: #ffffff !important; }
+  .btn-celebrate  { color: #ffffff !important; }
+  .violet-header  { color: #ffffff !important; }
+
+  /* Avatar gradient fallback — white initials on colored gradient */
+  .avatar-initials { color: #ffffff !important; }
 }

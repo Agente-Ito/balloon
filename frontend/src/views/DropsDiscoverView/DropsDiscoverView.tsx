@@ -5,6 +5,7 @@ import { useClaimDrop } from "@/hooks/useClaimDrop";
 import { useSocialCalendar } from "@/hooks/useSocialCalendar";
 import { useAllSeries } from "@/hooks/useSeries";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { ViewToolbar } from "@/components/ViewToolbar";
 import { Avatar } from "@/components/Avatar";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { useT } from "@/hooks/useT";
@@ -154,28 +155,32 @@ export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewPr
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
-      {/* Header: Breadcrumb + Explore / Manage tab switcher */}
-      <div className="flex items-center gap-3 px-4 pt-4 pb-3 border-b border-white/10">
-        <button onClick={() => goBack("grid")} className="text-white/40 hover:text-white transition-colors shrink-0" title="Back to Calendar">
-          {t.dropsBackToCalendar}
-        </button>
-        <div className="flex-1 flex items-center justify-center min-w-0">
-          <div className="flex gap-1 bg-white/5 rounded-lg p-0.5">
-            <button className="text-xs px-3 py-1 rounded-md bg-white/10 text-white font-medium whitespace-nowrap">
-              {t.dropsManageTabExplore}
-            </button>
-            {connectedAccount && (
+      <ViewToolbar
+        onBack={() => goBack("grid")}
+        backLabel={t.navHome}
+        right={
+          <div className="flex items-center gap-2">
+            <div className="flex gap-0.5 rounded-lg p-0.5" style={{ background: "rgba(106,27,154,0.07)" }}>
               <button
-                onClick={() => setView("drops-manage")}
-                className="text-xs px-3 py-1 rounded-md text-white/40 hover:text-white/70 transition-colors whitespace-nowrap"
+                className="text-xs px-3 py-1 rounded-md font-medium whitespace-nowrap"
+                style={{ background: "rgba(106,27,154,0.15)", color: "#6A1B9A" }}
               >
-                {t.dropsManageTabManage}
+                {t.dropsManageTabExplore}
               </button>
-            )}
+              {connectedAccount && (
+                <button
+                  onClick={() => setView("drops-manage")}
+                  className="text-xs px-3 py-1 rounded-md whitespace-nowrap transition-colors"
+                  style={{ color: "#8B7D7D" }}
+                >
+                  {t.dropsManageTabManage}
+                </button>
+              )}
+            </div>
+            <LanguageToggle />
           </div>
-        </div>
-        <LanguageToggle />
-      </div>
+        }
+      />
 
       <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-6">
 

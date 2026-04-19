@@ -70,11 +70,12 @@ export function ProfileCelebrationView({
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`flex-1 py-3 text-sm font-medium capitalize transition-colors
-              ${activeTab === tab
-                ? "text-white border-b-2 border-lukso-purple"
-                : "text-white/40 hover:text-white/60"
-              }`}
+            className="flex-1 py-3 text-sm font-medium capitalize transition-colors border-b-2"
+            style={
+              activeTab === tab
+                ? { color: "#6A1B9A", borderColor: "#6A1B9A" }
+                : { color: "rgba(44,44,44,0.4)", borderColor: "transparent" }
+            }
           >
             {tab}
           </button>

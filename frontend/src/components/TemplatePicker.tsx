@@ -15,16 +15,18 @@ export function TemplatePicker({ selected, onSelect }: TemplatePickerProps) {
           type="button"
           onClick={() => onSelect(tpl)}
           className={`aspect-square rounded-xl flex flex-col items-center justify-center gap-1 border-2 transition-all ${
-            selected === tpl.id
-              ? "border-white scale-105 shadow-lg"
-              : "border-transparent hover:border-white/30"
+            selected === tpl.id ? "scale-105 shadow-lg" : "border-transparent"
           }`}
           style={{
             background: `linear-gradient(135deg, ${tpl.gradient[0]}, ${tpl.gradient[1]})`,
+            borderColor: selected === tpl.id ? "rgba(255,255,255,0.8)" : "transparent",
           }}
         >
           <span className="text-2xl">{tpl.emoji}</span>
-          <span className="text-[10px] text-white font-semibold drop-shadow">{tpl.label}</span>
+          {/* Intentionally white — text sits on a colored gradient, not on cream */}
+          <span className="text-[10px] font-semibold drop-shadow" style={{ color: "#ffffff" }}>
+            {tpl.label}
+          </span>
         </button>
       ))}
     </div>

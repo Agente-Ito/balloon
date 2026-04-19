@@ -14,6 +14,7 @@ import { useT } from "@/hooks/useT";
 import { Avatar } from "@/components/Avatar";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { ViewToolbar } from "@/components/ViewToolbar";
 import { DropForm } from "@/views/Editor/DropForm";
 import { useCreateDrop } from "@/hooks/useCreateDrop";
 import toast from "react-hot-toast";
@@ -137,16 +138,12 @@ export function DropsManageView({ walletClient, chainId }: DropsManageViewProps)
   if (addingDrop && connectedAccount) {
     return (
       <div className="h-full flex flex-col overflow-hidden">
-        <div className="flex items-center gap-3 px-4 pt-4 pb-3 border-b border-white/10">
-          <button
-            onClick={() => setAddingDrop(false)}
-            className="text-white/40 hover:text-white transition-colors"
-          >
-            ←
-          </button>
-          <h1 className="text-sm font-semibold flex-1 truncate">{t.addDrop}</h1>
-          <LanguageToggle />
-        </div>
+        <ViewToolbar
+          onBack={() => setAddingDrop(false)}
+          backLabel={t.back}
+          title={t.addDrop}
+          right={<LanguageToggle />}
+        />
         <div className="flex-1 overflow-y-auto px-4 py-4">
           <DropForm
             host={connectedAccount}
@@ -162,40 +159,39 @@ export function DropsManageView({ walletClient, chainId }: DropsManageViewProps)
   // ── Main manage view ────────────────────────────────────────────────────────
   return (
     <div className="h-full flex flex-col overflow-hidden">
-      {/* Header: Breadcrumb + tab switcher */}
-      <div className="flex items-center gap-3 px-4 pt-4 pb-3 border-b border-white/10">
-        <button
-          onClick={() => goBack("grid")}
-          className="text-white/40 hover:text-white transition-colors shrink-0"
-          title="Back to Calendar"
-        >
-          {t.dropsBackToCalendar}
-        </button>
-        <div className="flex-1 flex items-center justify-center min-w-0">
-          <div className="flex gap-1 bg-white/5 rounded-lg p-0.5">
-            <button
-              onClick={() => setView("drops")}
-              className="text-xs px-3 py-1 rounded-md text-white/40 hover:text-white/70 transition-colors whitespace-nowrap"
-            >
-              {t.dropsManageTabExplore}
-            </button>
-            <button
-              className="text-xs px-3 py-1 rounded-md bg-white/10 text-white font-medium whitespace-nowrap"
-            >
-              {t.dropsManageTabManage}
-            </button>
+      <ViewToolbar
+        onBack={() => goBack("grid")}
+        backLabel={t.navHome}
+        right={
+          <div className="flex items-center gap-2">
+            <div className="flex gap-0.5 rounded-lg p-0.5" style={{ background: "rgba(106,27,154,0.07)" }}>
+              <button
+                onClick={() => setView("drops")}
+                className="text-xs px-3 py-1 rounded-md whitespace-nowrap transition-colors"
+                style={{ color: "#8B7D7D" }}
+              >
+                {t.dropsManageTabExplore}
+              </button>
+              <button
+                className="text-xs px-3 py-1 rounded-md font-medium whitespace-nowrap"
+                style={{ background: "rgba(106,27,154,0.15)", color: "#6A1B9A" }}
+              >
+                {t.dropsManageTabManage}
+              </button>
+            </div>
+            {connectedAccount && (
+              <button
+                onClick={() => setAddingDrop(true)}
+                className="text-xs font-medium transition-colors"
+                style={{ color: "#6A1B9A" }}
+              >
+                {t.subAddDrop}
+              </button>
+            )}
+            <LanguageToggle />
           </div>
-        </div>
-        {connectedAccount && (
-          <button
-            onClick={() => setAddingDrop(true)}
-            className="text-xs text-lukso-pink hover:text-lukso-pink/80 transition-colors shrink-0"
-          >
-            {t.subAddDrop}
-          </button>
-        )}
-        <LanguageToggle />
-      </div>
+        }
+      />
 
       <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-4">
         {!connectedAccount ? (

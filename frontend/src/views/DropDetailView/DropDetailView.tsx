@@ -11,6 +11,7 @@ import { useClaimDrop } from "@/hooks/useClaimDrop";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Avatar } from "@/components/Avatar";
 import { LanguageToggle } from "@/components/LanguageToggle";
+import { ViewToolbar } from "@/components/ViewToolbar";
 import { useT } from "@/hooks/useT";
 import { useLSP3Name } from "@/hooks/useLSP3Name";
 import { getLocalizedDropEligibilityReason } from "@/lib/dropEligibilityReason";
@@ -84,19 +85,24 @@ export function DropDetailView({ walletClient, chainId }: DropDetailViewProps) {
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
-      {/* Header with breadcrumb */}
-      <div className="flex items-center gap-3 px-4 pt-4 pb-3 border-b border-white/10">
-        <button onClick={() => goBack("drops")} className="text-white/40 hover:text-white transition-colors shrink-0" title="Back to Drops">
-          {t.dropDetailBack}
-        </button>
-        <h1 className="text-sm font-semibold flex-1 truncate">{drop.name}</h1>
-        {isMyDrop && (
-          <span className="text-[10px] px-2 py-0.5 rounded-full bg-lukso-pink/20 text-lukso-pink shrink-0">
-            {t.dropMineBadge}
-          </span>
-        )}
-        <LanguageToggle />
-      </div>
+      <ViewToolbar
+        onBack={() => goBack("drops")}
+        backLabel={t.dropDetailBack}
+        title={drop.name}
+        right={
+          <div className="flex items-center gap-2">
+            {isMyDrop && (
+              <span
+                className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
+                style={{ background: "rgba(106,27,154,0.12)", color: "#6A1B9A" }}
+              >
+                {t.dropMineBadge}
+              </span>
+            )}
+            <LanguageToggle />
+          </div>
+        }
+      />
 
       <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-4">
         {connectedAccount && (

@@ -15,7 +15,6 @@ export function GreetingCardTile({ card, chainId, className = "" }: GreetingCard
   const t = useT();
   const { metadata } = card;
   const { data: senderName } = useLSP3Name(metadata.from as Address, chainId);
-
   const displayName = senderName ?? `${metadata.from.slice(0, 6)}…${metadata.from.slice(-4)}`;
 
   return (
@@ -24,21 +23,27 @@ export function GreetingCardTile({ card, chainId, className = "" }: GreetingCard
         <Avatar address={metadata.from as Address} size={36} chainId={chainId} className="flex-shrink-0 mt-0.5" />
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-sm font-medium text-white truncate">{metadata.title}</span>
+            <span className="text-sm font-semibold truncate" style={{ color: "#2C2C2C" }}>
+              {metadata.title}
+            </span>
             {metadata.timestamp > 0 && (
-              <span className="text-xs text-white/30 flex-shrink-0">
+              <span className="text-xs flex-shrink-0" style={{ color: "#8B7D7D" }}>
                 {format(new Date(metadata.timestamp * 1000), "MMM d, yyyy")}
               </span>
             )}
           </div>
 
           {metadata.message && (
-            <p className="text-sm text-white/70 mt-1 line-clamp-2">{metadata.message}</p>
+            <p className="text-sm mt-1 line-clamp-2" style={{ color: "rgba(44,44,44,0.7)" }}>
+              {metadata.message}
+            </p>
           )}
 
           <div className="mt-1.5 flex items-center gap-1">
-            <span className="text-xs text-white/30">{t.cardFrom}</span>
-            <span className="text-xs text-lukso-purple font-medium truncate">{displayName}</span>
+            <span className="text-xs" style={{ color: "#8B7D7D" }}>{t.cardFrom}</span>
+            <span className="text-xs font-medium truncate" style={{ color: "#9C4EDB" }}>
+              {displayName}
+            </span>
           </div>
         </div>
       </div>

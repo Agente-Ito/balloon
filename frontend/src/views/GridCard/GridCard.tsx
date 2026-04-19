@@ -15,6 +15,7 @@ import { BalloonIcon } from "@/components/BalloonIcon";
 import { BalloonLogo } from "@/components/BalloonLogo";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { useT } from "@/hooks/useT";
+import { useLSP3Profile } from "@/hooks/useLSP3Profile";
 import { CELEBRATION_COLORS } from "@/constants/celebrationTypes";
 import type { Address } from "@/types";
 import type { WalletClient, PublicClient } from "viem";
@@ -30,6 +31,7 @@ export function GridCard({ chainId }: GridCardProps) {
     useAppStore();
   const t = useT();
   const { data: profileData, isLoading } = useProfileData(contextProfile, chainId);
+  const { data: lsp3 } = useLSP3Profile(contextProfile, chainId);
   const { data: badges } = useBadges(contextProfile, chainId);
   const { todayCelebrations, nextCelebration } = useCalendar({
     profileData,
@@ -87,16 +89,25 @@ export function GridCard({ chainId }: GridCardProps) {
     <div className="h-full flex flex-col p-4 gap-4 overflow-y-auto">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <Avatar address={contextProfile} size={32} />
-          <div className="flex flex-col gap-0.5">
-            <BalloonLogo className="h-7 w-auto" />
-            {/* Only show address if no LSP3 name available — very subtle */}
-            {contextProfile && (
-              <p className="text-[10px] text-white/20 font-mono leading-tight hidden sm:block [@media(max-height:620px)]:hidden">
-                {contextProfile.slice(0, 6)}…{contextProfile.slice(-4)}
-              </p>
-            )}
+        {/* @container so BalloonLogo can switch wordmark ↔ B on narrow widths */}
+        <div className="flex items-center gap-2.5 [container-type:inline-size] min-w-0">
+          <Avatar
+            address={contextProfile}
+            size={36}
+            chainId={chainId}
+            imageUrl={lsp3?.imageUrl}
+            name={lsp3?.name}
+          />
+          <div className="flex flex-col gap-0.5 min-w-0">
+            <BalloonLogo height={22} />
+            {lsp3?.name ? (
+              <span
+                className="text-[11px] font-medium leading-tight truncate"
+                style={{ color: "#8B7D7D" }}
+              >
+                {lsp3.name}
+              </span>
+            ) : null}
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -117,7 +128,7 @@ export function GridCard({ chainId }: GridCardProps) {
           className="card bg-lukso-purple/10 border-lukso-purple/30 text-left hover:bg-lukso-purple/20 transition-colors"
         >
           <div className="flex items-center gap-3">
-            <BalloonIcon size={34} color="#8B5CF6" className="animate-float flex-shrink-0" />
+            <BalloonIcon size={34} foil className="animate-float flex-shrink-0" />
             <div>
               <p className="text-sm font-semibold text-lukso-purple">
                 {(activeDrops ?? []).length === 1
@@ -209,7 +220,7 @@ export function GridCard({ chainId }: GridCardProps) {
       {/* Empty state */}
       {!hasTodayCelebrations && !nextCelebration && (
         <div className="card flex flex-col items-center gap-3 py-8 text-center">
-          <BalloonIcon size={48} color="#8B5CF6" className="animate-float-slow opacity-60" />
+          <BalloonIcon size={48} foil className="animate-float-slow" />
           <div>
             <p className="text-sm font-semibold text-white/70">{t.gridNoCelebrations}</p>
             <p className="text-xs text-white/30 mt-1">{t.gridNoCelebrationsSub}</p>
@@ -255,7 +266,7 @@ export function GridCard({ chainId }: GridCardProps) {
           {t.gridCalendar}
         </button>
         <button onClick={handleDropsClick} className="btn-secondary text-xs py-2.5 flex items-center justify-center gap-1 hover:animate-pop">
-          <BalloonIcon size={14} color="#8B5CF6" />
+          <BalloonIcon size={14} foil />
           {t.gridDropsBtn}
         </button>
         {isOwner ? (

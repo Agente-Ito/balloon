@@ -9,7 +9,8 @@ export type Lang = "en" | "es";
 const translations = {
   en: {
     // ── Navigation / common ───────────────────────────────────────────────────
-    back:        "← Back",
+    back:        "Back",
+    navHome:     "Home",
     save:        "Save",
     cancel:      "Cancel",
     change:      "Change",
@@ -462,7 +463,8 @@ const translations = {
 
   es: {
     // ── Navegación / común ────────────────────────────────────────────────────
-    back:        "← Volver",
+    back:        "Volver",
+    navHome:     "Inicio",
     save:        "Guardar",
     cancel:      "Cancelar",
     change:      "Cambiar",

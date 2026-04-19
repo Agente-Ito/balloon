@@ -13,6 +13,7 @@ import { SettingsForm } from "./SettingsForm";
 import { DropForm } from "./DropForm";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { LanguageToggle } from "@/components/LanguageToggle";
+import { ViewToolbar } from "@/components/ViewToolbar";
 import { CELEBRATION_COLORS } from "@/constants/celebrationTypes";
 import { useCreateDrop, type CreateDropParams } from "@/hooks/useCreateDrop";
 import { useUPCreationDate } from "@/hooks/useUPCreationDate";
@@ -259,12 +260,11 @@ export function Editor({ walletClient, chainId }: EditorProps) {
   if (subView === "addEvent") {
     return (
       <div className="h-full flex flex-col overflow-hidden">
-        <div className="flex items-center gap-3 px-4 pt-4 pb-3 border-b border-lukso-border">
-          <button onClick={() => setSubView("main")} className="text-white/40 hover:text-white text-sm">
-            {t.back}
-          </button>
-          <span className="font-semibold">{t.subAddEvent}</span>
-        </div>
+        <ViewToolbar
+          onBack={() => setSubView("main")}
+          backLabel={t.back}
+          title={t.subAddEvent}
+        />
         <div className="flex-1 overflow-y-auto p-4">
           <EventForm onSave={handleAddEvent} onCancel={() => setSubView("main")} />
         </div>
@@ -275,11 +275,12 @@ export function Editor({ walletClient, chainId }: EditorProps) {
   if (subView === "quickSetup") {
     return (
       <div className="h-full flex flex-col overflow-hidden">
-        <div className="flex items-center justify-between px-4 pt-4 pb-2">
-          <button onClick={() => setSubView("main")} className="text-white/40 hover:text-white text-sm">{t.back}</button>
-          <span className="font-semibold">{t.quickSetupTitle}</span>
-          <LanguageToggle />
-        </div>
+        <ViewToolbar
+          onBack={() => setSubView("main")}
+          backLabel={t.back}
+          title={t.quickSetupTitle}
+          right={<LanguageToggle />}
+        />
 
         <div className="flex-1 overflow-y-auto px-4 pb-4">
           <QuickSetupForm
@@ -310,12 +311,11 @@ export function Editor({ walletClient, chainId }: EditorProps) {
   if (subView === "addWishlist") {
     return (
       <div className="h-full flex flex-col overflow-hidden">
-        <div className="flex items-center gap-3 px-4 pt-4 pb-3 border-b border-lukso-border">
-          <button onClick={() => setSubView("main")} className="text-white/40 hover:text-white text-sm">
-            {t.back}
-          </button>
-          <span className="font-semibold">{t.subAddWishlist}</span>
-        </div>
+        <ViewToolbar
+          onBack={() => setSubView("main")}
+          backLabel={t.back}
+          title={t.subAddWishlist}
+        />
         <div className="flex-1 overflow-y-auto p-4">
           <WishlistForm onSave={handleAddWishlistItem} onCancel={() => setSubView("main")} />
         </div>
@@ -389,26 +389,22 @@ export function Editor({ walletClient, chainId }: EditorProps) {
 
     return (
       <div className="h-full flex flex-col overflow-hidden">
-        <div className="flex items-center gap-3 px-4 pt-4 pb-3 border-b border-lukso-border">
-          <button
-            onClick={() => {
-              setSubView("main");
-              setPendingDropFromEvent(null);
-              setPendingDropDate(null);
-              setPendingAnniversaryDrop(false);
-            }}
-            className="text-white/40 hover:text-white text-sm"
-          >
-            {pendingDropDate ? `← ${t.calendarTitle}` : t.back}
-          </button>
-          <span className="font-semibold">
-            {pendingDropDate
+        <ViewToolbar
+          onBack={() => {
+            setSubView("main");
+            setPendingDropFromEvent(null);
+            setPendingDropDate(null);
+            setPendingAnniversaryDrop(false);
+          }}
+          backLabel={pendingDropDate ? t.calendarTitle : t.back}
+          title={
+            pendingDropDate
               ? `${t.dropForEvent} ${format(new Date(pendingDropDate), "MMM d")}`
               : prefill?.name
                 ? `${t.dropForEvent} "${prefill.name}"`
-                : t.subAddDrop}
-          </span>
-        </div>
+                : t.subAddDrop
+          }
+        />
         <div className="flex-1 overflow-y-auto p-4">
           <DropForm
             host={contextProfile as Address}
@@ -441,29 +437,24 @@ export function Editor({ walletClient, chainId }: EditorProps) {
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
-      {/* Toolbar */}
-      <div className="flex items-center justify-between px-4 pt-4 pb-2">
-        <button onClick={() => goBack("grid")} className="text-white/40 hover:text-white text-sm shrink-0" title="Back to Calendar">
-          {t.dropsBackToCalendar}
-        </button>
-        <div className="text-center">
-          <span className="font-semibold">{t.editorHeaderTitle}</span>
-          {activeTab === "drops" && (
-            <p className="text-[11px] text-white/35">{t.dropsManageSubtitle}</p>
-          )}
-        </div>
-        <LanguageToggle />
-      </div>
+      <ViewToolbar
+        onBack={() => goBack("grid")}
+        backLabel={t.navHome}
+        title={t.editorHeaderTitle}
+        right={<LanguageToggle />}
+      />
 
       {/* Tabs */}
-      <div className="flex gap-1 px-4 mb-3">
+      <div className="flex gap-1 px-4 pt-2 mb-1">
         {(["dates", "drops", "wishlist", "settings"] as EditorTab[]).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`flex-1 py-2 rounded-xl text-xs font-medium transition-colors ${
-              activeTab === tab ? "bg-white/10 text-white" : "text-white/40 hover:text-white/70"
-            }`}
+            className="flex-1 py-2 rounded-xl text-xs font-medium transition-colors"
+            style={{
+              background: activeTab === tab ? "rgba(106,27,154,0.10)" : "transparent",
+              color: activeTab === tab ? "#6A1B9A" : "#8B7D7D",
+            }}
           >
             {tab === "dates" ? t.tabDates : tab === "drops" ? t.tabDrops : tab === "wishlist" ? t.tabWishlist : t.tabSettings}
           </button>
@@ -744,13 +735,13 @@ export function Editor({ walletClient, chainId }: EditorProps) {
                 {anniversaryExpanded && (
                   <div className="mt-3">
                     {anniversaryInfo.isToday ? (
-                      <p className="text-xs text-white/50 mb-3">
-                        {t.anniversaryTodaySub} <strong className="text-white">{anniversaryInfo.upcomingYears} {anniversaryInfo.upcomingYears !== 1 ? t.anniversaryTodayUnit2 : t.anniversaryTodayUnit}</strong>
+                      <p className="text-xs mb-3" style={{ color: "rgba(44,44,44,0.55)" }}>
+                        {t.anniversaryTodaySub} <strong style={{ color: "#2C2C2C" }}>{anniversaryInfo.upcomingYears} {anniversaryInfo.upcomingYears !== 1 ? t.anniversaryTodayUnit2 : t.anniversaryTodayUnit}</strong>
                       </p>
                     ) : (
-                      <p className="text-xs text-white/50 mb-3">
-                        {t.anniversaryUpcomingSub} <strong className="text-white">{anniversaryInfo.upcomingYears}</strong> {t.anniversaryUpcomingOn}{" "}
-                        <strong className="text-white">
+                      <p className="text-xs mb-3" style={{ color: "rgba(44,44,44,0.55)" }}>
+                        {t.anniversaryUpcomingSub} <strong style={{ color: "#2C2C2C" }}>{anniversaryInfo.upcomingYears}</strong> {t.anniversaryUpcomingOn}{" "}
+                        <strong style={{ color: "#2C2C2C" }}>
                           {format(anniversaryInfo.nextDate, "MMMM d, yyyy")}
                         </strong>
                       </p>

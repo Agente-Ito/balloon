@@ -7,12 +7,15 @@ import { useState, useRef, useEffect } from "react";
 
 interface BalloonLogoProps {
   className?: string;
-  /** Height in px. Width auto-scales to ~3.2:1 aspect ratio. Default: 40 */
+  /** Height in px. Width auto-scales. Default: 40 */
   height?: number;
+  /** Force compact mode (show only the B balloon). Auto-detects by default via CSS. */
+  compact?: boolean;
 }
 
-export function BalloonLogo({ className = "", height = 40 }: BalloonLogoProps) {
+export function BalloonLogo({ className = "", height = 40, compact = false }: BalloonLogoProps) {
   const [imgFailed, setImgFailed] = useState(false);
+  const [bFailed, setBFailed] = useState(false);
   const ballRef = useRef<SVGTextElement>(null);
   const [cx, setCx] = useState(110);
 
@@ -22,17 +25,61 @@ export function BalloonLogo({ className = "", height = 40 }: BalloonLogoProps) {
     setCx(Math.round(2 + w + 19 + 1));
   }, [imgFailed]);
 
+  // Compact mode: show only the "B" balloon image
+  if (compact) {
+    if (!bFailed) {
+      return (
+        <img
+          src="/balloon-b.jpeg"
+          alt="balloon"
+          style={{ height, width: "auto", objectFit: "contain" }}
+          className={`rounded-sm ${className}`}
+          onError={() => setBFailed(true)}
+          draggable={false}
+        />
+      );
+    }
+    // Fallback: foil SVG balloon icon
+    return (
+      <svg width={height} height={height} viewBox="0 0 40 56" fill="none" className={className}>
+        <defs>
+          <radialGradient id="bl-foil" cx="35%" cy="28%" r="65%">
+            <stop offset="0%" stopColor="#C9A8F0" />
+            <stop offset="40%" stopColor="#9C4EDB" />
+            <stop offset="100%" stopColor="#6A1B9A" />
+          </radialGradient>
+        </defs>
+        <ellipse cx="20" cy="18" rx="15" ry="17" fill="url(#bl-foil)" />
+        <ellipse cx="13" cy="11" rx="5" ry="6" fill="white" opacity="0.28" />
+        <path d="M17.5 35 Q20 39.5 22.5 35" stroke="#9C4EDB" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+        <path d="M20 38 Q23 45 17 54" stroke="#9C4EDB" strokeWidth="1.2" strokeLinecap="round" fill="none" opacity="0.6" />
+      </svg>
+    );
+  }
+
+  // Full wordmark — hide on very narrow containers, show B instead
   if (!imgFailed) {
     return (
-      <img
-        src="/balloon-wordmark.jpeg"
-        alt="balloon"
-        height={height}
-        style={{ height, width: "auto", objectFit: "contain" }}
-        className={className}
-        onError={() => setImgFailed(true)}
-        draggable={false}
-      />
+      <>
+        {/* Full wordmark — hidden below ~160px container width */}
+        <img
+          src="/balloon-wordmark.jpeg"
+          alt="balloon"
+          style={{ height, width: "auto", objectFit: "contain" }}
+          className={`hidden [@container(min-width:160px)]:block ${className}`}
+          onError={() => setImgFailed(true)}
+          draggable={false}
+        />
+        {/* B-only fallback for narrow containers */}
+        <img
+          src="/balloon-b.jpeg"
+          alt="balloon"
+          style={{ height, width: "auto", objectFit: "contain" }}
+          className={`block [@container(min-width:160px)]:hidden rounded-sm ${className}`}
+          draggable={false}
+          aria-hidden="true"
+        />
+      </>
     );
   }
 

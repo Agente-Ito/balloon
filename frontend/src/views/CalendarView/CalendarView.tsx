@@ -10,6 +10,7 @@ import { DayPopover } from "./DayPopover";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Avatar } from "@/components/Avatar";
 import { LanguageToggle } from "@/components/LanguageToggle";
+import { ViewToolbar } from "@/components/ViewToolbar";
 import { SendGreetingModal } from "@/components/SendGreetingModal";
 import { QuickGreetingModal } from "@/components/QuickGreetingModal";
 import { useLSP3Name } from "@/hooks/useLSP3Name";
@@ -31,7 +32,7 @@ function ProfileNameLine({ address, chainId }: { address: Address; chainId: numb
 }
 
 export function CalendarView({ chainId, walletClient }: CalendarViewProps) {
-  const { contextProfile, connectedAccount, setView, setActiveDropId } = useAppStore();
+  const { contextProfile, connectedAccount, setView, setActiveDropId, goBack } = useAppStore();
   const t = useT();
   const [month, setMonth] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<CelebrationDay | null>(null);
@@ -113,14 +114,12 @@ export function CalendarView({ chainId, walletClient }: CalendarViewProps) {
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
-      {/* Toolbar */}
-      <div className="flex items-center justify-between px-4 pt-4 pb-2">
-        <button onClick={() => setView("grid")} className="text-white/40 hover:text-white text-sm flex items-center gap-1">
-          {t.back}
-        </button>
-        <span className="text-sm font-semibold">{t.calendarTitle}</span>
-        <LanguageToggle />
-      </div>
+      <ViewToolbar
+        onBack={() => goBack("grid")}
+        backLabel={t.navHome}
+        title={t.calendarTitle}
+        right={<LanguageToggle />}
+      />
 
       {/* Month navigation */}
       <div className="flex items-center justify-between px-4 py-2">

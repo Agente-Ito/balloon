@@ -17,6 +17,7 @@ import { GreetingCardList } from "./GreetingCardList";
 import { CELEBRATION_COLORS, getCelebrationTypeKey } from "@/constants/celebrationTypes";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { LanguageToggle } from "@/components/LanguageToggle";
+import { ViewToolbar } from "@/components/ViewToolbar";
 import { useLSP3Name } from "@/hooks/useLSP3Name";
 import { useT } from "@/hooks/useT";
 import type { WalletClient, PublicClient } from "viem";
@@ -37,6 +38,7 @@ export function CelebrationView({ walletClient, chainId }: CelebrationViewProps)
     isOwner,
     activeCelebrationDate,
     setView,
+    goBack,
   } = useAppStore();
 
   const t = useT();
@@ -71,19 +73,12 @@ export function CelebrationView({ walletClient, chainId }: CelebrationViewProps)
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
-      {/* Toolbar */}
-      <div className="flex items-center justify-between px-4 pt-4 pb-2">
-        <button
-          onClick={() => setView("calendar")}
-          className="text-white/40 hover:text-white text-sm"
-        >
-          {t.celebrationBack}
-        </button>
-        <span className="text-xs text-white/30 font-mono">
-          {activeCelebrationDate && format(parseISO(activeCelebrationDate), "MMM d, yyyy")}
-        </span>
-        <LanguageToggle />
-      </div>
+      <ViewToolbar
+        onBack={() => goBack("grid")}
+        backLabel={t.navHome}
+        title={activeCelebrationDate ? format(parseISO(activeCelebrationDate), "MMM d, yyyy") : undefined}
+        right={<LanguageToggle />}
+      />
 
       {/* Hero — compact-first: smaller on tight spaces */}
       <div className="flex flex-col items-center gap-2 px-4 py-3 [@media(min-height:640px)]:py-5">
@@ -172,11 +167,12 @@ export function CelebrationView({ walletClient, chainId }: CelebrationViewProps)
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`flex-1 py-2 rounded-xl text-sm font-medium transition-colors ${
+            className="flex-1 py-2 rounded-xl text-sm font-medium transition-colors"
+            style={
               activeTab === tab
-                ? "bg-white/10 text-white"
-                : "text-white/40 hover:text-white/70"
-            }`}
+                ? { background: "rgba(106,27,154,0.10)", color: "#6A1B9A" }
+                : { color: "rgba(44,44,44,0.45)" }
+            }
           >
             {tab === "badges" ? t.celebrationTabBadges : t.celebrationTabCards}
           </button>
