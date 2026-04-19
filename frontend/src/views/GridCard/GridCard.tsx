@@ -99,12 +99,12 @@ export function GridCard({ chainId }: GridCardProps) {
           />
           <div className="flex flex-col gap-0.5 min-w-0">
             <BalloonLogo height={22} />
-            {contextProfile && (
+            {lsp3?.name && (
               <span
                 className="text-[11px] font-medium leading-tight truncate"
                 style={{ color: "#8B7D7D" }}
               >
-                {lsp3?.name ?? `${contextProfile.slice(0, 6)}…${contextProfile.slice(-4)}`}
+                {lsp3.name}
               </span>
             )}
           </div>

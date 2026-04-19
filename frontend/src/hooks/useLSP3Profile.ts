@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { createPublicClient, http } from "viem";
 import { LUKSO_TESTNET_RPC, LUKSO_MAINNET_RPC } from "@/constants/addresses";
 import { resolveIPFSUrl } from "@/lib/ipfs";
+import { decodeJsonUrl } from "@/lib/lsp2";
 import type { Address } from "@/types";
 
 const LSP3_PROFILE_KEY =
@@ -20,16 +21,6 @@ const GET_DATA_ABI = [
 function makeClient(chainId: number) {
   const rpc = chainId === 42 ? LUKSO_MAINNET_RPC : LUKSO_TESTNET_RPC;
   return createPublicClient({ transport: http(rpc) });
-}
-
-function decodeJsonUrl(hex: string): string | undefined {
-  if (!hex || hex === "0x") return undefined;
-  const body = hex.slice(2);
-  if (!body.startsWith("6f357c6a") || body.length <= 72) return undefined;
-  const urlHex = body.slice(72);
-  const bytes = urlHex.match(/../g)?.map((b) => parseInt(b, 16));
-  if (!bytes?.length) return undefined;
-  return new TextDecoder().decode(new Uint8Array(bytes));
 }
 
 interface LSP3ProfileImage {
