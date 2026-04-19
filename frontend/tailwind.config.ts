@@ -46,7 +46,7 @@ export default {
         "slide-up":     "slideUp 0.25s ease-out",
         "float":        "float 3s ease-in-out infinite",
         "float-slow":   "float 4.5s ease-in-out infinite",
-        "float-logo":   "floatLogo 4s ease-in-out infinite",
+        "float-logo":   "floatLogo 7s ease-in-out infinite",
         "balloon-rise": "balloonRise var(--rise-dur, 2.8s) ease-out var(--rise-delay, 0s) forwards",
         "confetti-fall":"confettiFall var(--fall-dur, 3s) ease-in var(--fall-delay, 0s) forwards",
         "pop":          "pop 0.35s cubic-bezier(0.36,0.07,0.19,0.97) both",
@@ -68,7 +68,7 @@ export default {
         },
         floatLogo: {
           "0%, 100%": { transform: "translateY(0px)" },
-          "50%":      { transform: "translateY(-5px)" },
+          "50%":      { transform: "translateY(-3px)" },
         },
         balloonRise: {
           "0%":   { transform: "translateY(0)",      opacity: "0" },
