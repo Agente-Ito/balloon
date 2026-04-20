@@ -159,10 +159,10 @@ export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewPr
         onBack={() => goBack("grid")}
         backLabel={t.navHome}
         right={
-          <div className="flex items-center gap-2">
-            <div className="flex gap-0.5 rounded-lg p-0.5" style={{ background: "rgba(106,27,154,0.07)" }}>
+          <div className="flex items-center gap-1 sm:gap-2 min-w-0">
+            <div className="flex gap-0.5 rounded-lg p-0.5 min-w-0" style={{ background: "rgba(106,27,154,0.07)" }}>
               <button
-                className="title-premium text-xs px-3 py-1 rounded-md whitespace-nowrap"
+                className="title-premium text-[11px] sm:text-xs px-2 sm:px-3 py-1 rounded-md"
                 style={{ background: "rgba(106,27,154,0.15)", color: "#6A1B9A" }}
               >
                 {t.dropsManageTabExplore}
@@ -170,7 +170,7 @@ export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewPr
               {connectedAccount && (
                 <button
                   onClick={() => setView("drops-manage")}
-                  className="title-premium text-xs px-3 py-1 rounded-md whitespace-nowrap transition-colors"
+                  className="title-premium text-[11px] sm:text-xs px-2 sm:px-3 py-1 rounded-md transition-colors"
                   style={{ color: "#8B7D7D" }}
                 >
                   {t.dropsManageTabManage}

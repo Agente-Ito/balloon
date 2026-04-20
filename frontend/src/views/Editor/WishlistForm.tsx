@@ -34,7 +34,7 @@ export function WishlistForm({ onSave, onCancel }: WishlistFormProps) {
       {/* Type */}
       <div>
         <label className="block text-xs text-white/50 mb-1">{t.wishlistType}</label>
-        <div className="grid grid-cols-3 gap-1">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-1">
           {(["lsp8", "lsp7", "note"] as WishlistItemType[]).map((tp) => (
             <button
               key={tp}
@@ -104,7 +104,7 @@ export function WishlistForm({ onSave, onCancel }: WishlistFormProps) {
         />
       </div>
 
-      <div className="flex gap-3 pt-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
         <button type="button" onClick={onCancel} className="btn-secondary flex-1">
           {t.cancel}
         </button>

@@ -5,12 +5,13 @@ import { useT } from "@/hooks/useT";
 interface QuickCreateFlowProps {
   initialEvent?: Celebration;
   profileName?: string;
+  onModeChange?: (createDrop: boolean) => void;
   isSaving: boolean;
   onCancel: () => void;
   onSubmit: (payload: { event: Celebration; createDrop: boolean }) => Promise<void>;
 }
 
-export function QuickCreateFlow({ initialEvent, profileName, isSaving, onCancel, onSubmit }: QuickCreateFlowProps) {
+export function QuickCreateFlow({ initialEvent, profileName, onModeChange, isSaving, onCancel, onSubmit }: QuickCreateFlowProps) {
   const t = useT();
   const today = new Date().toISOString().slice(0, 10);
   const [date, setDate] = useState(initialEvent?.date ?? today);
@@ -31,6 +32,10 @@ export function QuickCreateFlow({ initialEvent, profileName, isSaving, onCancel,
     setTitle(initialEvent.title);
     setDescription(initialEvent.description ?? "");
   }, [initialEvent]);
+
+  useEffect(() => {
+    onModeChange?.(createDrop);
+  }, [createDrop, onModeChange]);
 
   const canSubmit = title.trim().length > 1 && !!date;
 
@@ -53,7 +58,9 @@ export function QuickCreateFlow({ initialEvent, profileName, isSaving, onCancel,
 
   return (
     <div className="card space-y-3">
-      <p className="title-premium text-sm text-lukso-purple">{t.quickCreateTitle}</p>
+      <p className="title-premium text-sm text-lukso-purple">
+        {createDrop ? t.quickCreateHeaderCelebration : t.quickCreateHeaderReminder}
+      </p>
 
       <div>
         <label className="block text-xs text-white/50 mb-1">{t.quickCreateDate}</label>
@@ -95,9 +102,9 @@ export function QuickCreateFlow({ initialEvent, profileName, isSaving, onCancel,
           onChange={(e) => setRecurring(e.target.checked)}
           className="mt-0.5"
         />
-        <span>
+        <span className="min-w-0">
           <span className="block text-sm font-medium">{t.quickCreateRecurring}</span>
-          <span className="block text-xs text-white/45">{t.quickCreateRecurringSub}</span>
+          <span className="block text-xs text-white/45 break-words">{t.quickCreateRecurringSub}</span>
         </span>
       </label>
 
@@ -108,17 +115,17 @@ export function QuickCreateFlow({ initialEvent, profileName, isSaving, onCancel,
           onChange={(e) => setCreateDrop(e.target.checked)}
           className="mt-0.5"
         />
-        <span>
+        <span className="min-w-0">
           <span className="block text-sm font-medium">{t.quickCreateToggle}</span>
-          <span className="block text-xs text-white/45">{t.quickCreateToggleSub}</span>
+          <span className="block text-xs text-white/45 break-words">{t.quickCreateToggleSub}</span>
         </span>
       </label>
 
-      <div className="grid grid-cols-2 gap-2 pt-1">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
         <button
           type="button"
           onClick={onCancel}
-          className="btn-ghost text-xs py-2 border border-lukso-border"
+          className="btn-ghost text-xs sm:text-sm py-2 border border-lukso-border"
         >
           {t.cancel}
         </button>
@@ -126,7 +133,7 @@ export function QuickCreateFlow({ initialEvent, profileName, isSaving, onCancel,
           type="button"
           onClick={handleSubmit}
           disabled={!canSubmit || isSaving}
-          className="btn-primary text-xs py-2"
+          className="btn-primary text-xs sm:text-sm py-2"
         >
           {isSaving
             ? t.quickCreateSaving

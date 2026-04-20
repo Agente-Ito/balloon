@@ -19,6 +19,7 @@ import { DropForm } from "@/views/Editor/DropForm";
 import { useCreateDrop } from "@/hooks/useCreateDrop";
 import toast from "react-hot-toast";
 import type { Address, IndexedDrop } from "@/types";
+import { CelebrationType } from "@/types";
 import type { WalletClient } from "viem";
 import type { CreateDropParams } from "@/hooks/useCreateDrop";
 
@@ -106,7 +107,7 @@ function DropRow({
 }
 
 export function DropsManageView({ walletClient, chainId }: DropsManageViewProps) {
-  const { connectedAccount, setView, setActiveDropId, goBack } = useAppStore();
+  const { connectedAccount, setView, setActiveDropId, goBack, triggerBurst } = useAppStore();
   const t = useT();
 
   const [addingDrop, setAddingDrop] = useState(false);
@@ -123,6 +124,15 @@ export function DropsManageView({ walletClient, chainId }: DropsManageViewProps)
     try {
       await createDropMutation.mutateAsync(params);
       toast.success(t.toastDropCreated);
+      const dropTheme =
+        params.celebrationType === CelebrationType.Birthday
+          ? "birthday"
+          : params.celebrationType === CelebrationType.UPAnniversary
+            ? "anniversary"
+            : params.celebrationType === CelebrationType.GlobalHoliday
+              ? "holiday"
+              : "mixed";
+      triggerBurst("celebration", dropTheme);
       setAddingDrop(false);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : t.toastFailedDrop);

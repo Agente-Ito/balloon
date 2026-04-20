@@ -88,7 +88,7 @@ export function QuickSetupForm({ isSaving, onSave, onCancel }: QuickSetupFormPro
 
       <div>
         <label className="block text-xs text-white/50 mb-1">{t.birthday}</label>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           <div>
             <label className="block text-[10px] text-white/40 mb-1">{t.birthdayMonth}</label>
             <select
@@ -125,7 +125,7 @@ export function QuickSetupForm({ isSaving, onSave, onCancel }: QuickSetupFormPro
               onChange={(e) => setBirthdayYear(e.target.value)}
               min={1900}
               max={new Date().getFullYear()}
-              className="input text-sm py-1.5"
+              className="input text-sm py-1.5 col-span-2 sm:col-span-1"
             />
           </div>
         </div>
@@ -141,7 +141,7 @@ export function QuickSetupForm({ isSaving, onSave, onCancel }: QuickSetupFormPro
           maxLength={60}
           className="input mb-2"
         />
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           <div>
             <label className="block text-[10px] text-white/40 mb-1">{t.eventMonth}</label>
             <select
@@ -178,7 +178,7 @@ export function QuickSetupForm({ isSaving, onSave, onCancel }: QuickSetupFormPro
               onChange={(e) => setEventYear(e.target.value)}
               min={1900}
               max={2100}
-              className="input text-sm py-1.5"
+              className="input text-sm py-1.5 col-span-2 sm:col-span-1"
               required={!eventRecurring}
             />
           </div>
@@ -237,7 +237,7 @@ export function QuickSetupForm({ isSaving, onSave, onCancel }: QuickSetupFormPro
 
             <div>
               <p className="text-xs text-white/50 mb-1">{t.settingsReminderFreq}</p>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 {([
                   { key: "monthly", label: t.settingsReminderMonthly },
                   { key: "weekly", label: t.settingsReminderWeekly },
@@ -272,7 +272,7 @@ export function QuickSetupForm({ isSaving, onSave, onCancel }: QuickSetupFormPro
         </ul>
       </div>
 
-      <div className="flex gap-3 pt-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
         <button type="button" onClick={onCancel} className="btn-secondary flex-1" disabled={isSaving}>
           {t.cancel}
         </button>

@@ -46,13 +46,13 @@ export function ViewToolbar({
             strokeLinejoin="round"
           />
         </svg>
-        {backLabel}
+        <span className="max-[380px]:hidden">{backLabel}</span>
       </button>
 
       {/* Title */}
       {title && (
         <span
-          className="title-premium text-sm truncate mx-3 text-center flex-1"
+          className="title-premium text-xs sm:text-sm truncate mx-2 sm:mx-3 text-center flex-1 min-w-0"
           style={{ color: "#2C2C2C" }}
         >
           {title}

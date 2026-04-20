@@ -51,7 +51,7 @@ export function useClaimDrop(
       return { txHash: hash };
     },
     onSuccess: (_, vars) => {
-      triggerBurst();
+      triggerBurst("epic");
       queryClient.invalidateQueries({ queryKey: ["dropEligibility", vars.dropId] });
       queryClient.invalidateQueries({ queryKey: ["dropClaims", vars.dropId] });
       queryClient.invalidateQueries({ queryKey: ["drop", vars.dropId] });

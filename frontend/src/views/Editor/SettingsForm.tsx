@@ -141,7 +141,7 @@ export function SettingsForm({ settings, walletClient }: SettingsFormProps) {
 
       <div className="py-3 border-b border-lukso-border last:border-0">
         <p className="text-sm font-medium">{t.settingsReminderFreq}</p>
-        <div className="mt-2 grid grid-cols-3 gap-2">
+        <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2">
           {([
             { key: "monthly", label: t.settingsReminderMonthly },
             { key: "weekly", label: t.settingsReminderWeekly },
@@ -184,7 +184,7 @@ export function SettingsForm({ settings, walletClient }: SettingsFormProps) {
             {localReminders.length} {t.reminderSyncLocalCount}
           </span>
         </div>
-        <div className="grid grid-cols-2 gap-2 mt-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
           <button
             type="button"
             onClick={async () => {
@@ -232,7 +232,7 @@ export function SettingsForm({ settings, walletClient }: SettingsFormProps) {
 
       <div className="pt-3 space-y-2">
         <p className="text-[11px] text-white/45">{t.settingsBatchHint}</p>
-        <div className="flex gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <button
             type="button"
             onClick={() => setDraft(settings)}

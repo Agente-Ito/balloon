@@ -5,21 +5,17 @@
 import { useEffect, useState } from "react";
 import { useAppStore } from "@/store/useAppStore";
 import { BalloonIcon } from "./BalloonIcon";
+import type { BurstPreset, BurstTheme } from "@/store/useAppStore";
 
-const BALLOON_COLORS = [
-  "#6A1B9A",  // cel-violet
-  "#9C4EDB",  // cel-accent
-  "#FFD700",  // gold
-  "#E91E63",  // pink
-  "#00BCD4",  // cyan
-  "#FF7043",  // orange
-  "#A8E6CF",  // mint
-];
+const BALLOON_PALETTES: Record<BurstTheme, string[]> = {
+  mixed: ["#6A1B9A", "#9C4EDB", "#FFD700", "#E91E63", "#00BCD4", "#FF7043", "#A8E6CF"],
+  birthday: ["#E91E63", "#FFD700", "#9C4EDB", "#F472B6", "#FF8A65"],
+  graduation: ["#6A1B9A", "#1D4ED8", "#7C3AED", "#60A5FA", "#E8D9C8"],
+  holiday: ["#6A1B9A", "#16A34A", "#FFD700", "#DC2626", "#9C4EDB"],
+  anniversary: ["#6A1B9A", "#B45309", "#E8D9C8", "#C084FC", "#F59E0B"],
+};
 
-const CONFETTI_COLORS = [
-  "#6A1B9A", "#9C4EDB", "#FFD700",
-  "#E91E63", "#00BCD4", "#E8D9C8", "#FF7043",
-];
+const CONFETTI_BASE = ["#6A1B9A", "#9C4EDB", "#FFD700", "#E8D9C8", "#F5F0E1"];
 
 interface BalloonParticle {
   id: number; left: number; color: string;
@@ -31,23 +27,38 @@ interface ConfettiParticle {
   delay: number; duration: number; size: number; isRect: boolean;
 }
 
-function generateParticles() {
-  const balloons: BalloonParticle[] = Array.from({ length: 9 }, (_, i) => ({
+function generateParticles(preset: BurstPreset, theme: BurstTheme, isMobile: boolean) {
+  const config: Record<BurstPreset, { balloons: number; confetti: number; duration: number }> = {
+    single: { balloons: 1, confetti: 0, duration: 2.4 },
+    gentle: { balloons: 4, confetti: 8, duration: 3.0 },
+    celebration: { balloons: 8, confetti: 16, duration: 3.8 },
+    epic: { balloons: 13, confetti: 40, duration: 4.8 },
+  };
+  const baseCfg = config[preset];
+  const cfg = {
+    ...baseCfg,
+    // On mobile we tone down only the standard celebration confetti.
+    confetti: preset === "celebration" && isMobile ? 9 : baseCfg.confetti,
+  };
+  const palette = BALLOON_PALETTES[theme];
+  const confettiPalette = [...CONFETTI_BASE, ...palette.slice(0, 3)];
+
+  const balloons: BalloonParticle[] = Array.from({ length: cfg.balloons }, (_, i) => ({
     id: i,
     left: 4 + Math.random() * 92,
-    color: BALLOON_COLORS[Math.floor(Math.random() * BALLOON_COLORS.length)],
-    delay: Math.random() * 0.7,
-    duration: 2.3 + Math.random() * 1.2,
-    size: 28 + Math.random() * 22,
+    color: palette[Math.floor(Math.random() * palette.length)],
+    delay: Math.random() * 0.9,
+    duration: cfg.duration - 1 + Math.random() * 1.4,
+    size: 26 + Math.random() * 24,
   }));
 
-  const confetti: ConfettiParticle[] = Array.from({ length: 28 }, (_, i) => ({
+  const confetti: ConfettiParticle[] = Array.from({ length: cfg.confetti }, (_, i) => ({
     id: i,
     left: Math.random() * 100,
     top: -10 - Math.random() * 30,
-    color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
-    delay: Math.random() * 1.8,
-    duration: 2.2 + Math.random() * 1.8,
+    color: confettiPalette[Math.floor(Math.random() * confettiPalette.length)],
+    delay: Math.random() * 1.2,
+    duration: 2.1 + Math.random() * (preset === "epic" ? 2.6 : 1.6),
     size: 5 + Math.random() * 8,
     isRect: Math.random() > 0.45,
   }));
@@ -56,15 +67,17 @@ function generateParticles() {
 }
 
 export function BalloonBurst() {
-  const { burstActive, clearBurst } = useAppStore();
+  const { burstActive, burstPreset, burstTheme, clearBurst } = useAppStore();
   const [particles, setParticles] = useState<{ balloons: BalloonParticle[]; confetti: ConfettiParticle[] } | null>(null);
 
   useEffect(() => {
     if (!burstActive) return;
-    setParticles(generateParticles());
-    const timer = setTimeout(clearBurst, 4200);
+    const isMobile = typeof window !== "undefined" && window.matchMedia("(max-width: 640px)").matches;
+    setParticles(generateParticles(burstPreset, burstTheme, isMobile));
+    const lifetime = burstPreset === "single" ? 2200 : burstPreset === "gentle" ? 3200 : burstPreset === "epic" ? 5200 : 4300;
+    const timer = setTimeout(clearBurst, lifetime);
     return () => clearTimeout(timer);
-  }, [burstActive, clearBurst]);
+  }, [burstActive, burstPreset, burstTheme, clearBurst]);
 
   if (!burstActive || !particles) return null;
 
@@ -84,7 +97,7 @@ export function BalloonBurst() {
             "--rise-delay": `${b.delay}s`,
           } as React.CSSProperties}
         >
-          <BalloonIcon size={b.size} color={b.color} foil={b.color === "#6A1B9A" || b.color === "#9C4EDB"} />
+          <BalloonIcon size={b.size} color={b.color} foil />
         </div>
       ))}
 

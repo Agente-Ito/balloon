@@ -6,7 +6,8 @@ import { useT } from "@/hooks/useT";
 import { LoadingSpinner } from "./LoadingSpinner";
 import { Avatar } from "./Avatar";
 import { useLSP3Name } from "@/hooks/useLSP3Name";
-import type { Address, CelebrationType } from "@/types";
+import { useAppStore } from "@/store/useAppStore";
+import { CelebrationType, type Address } from "@/types";
 import type { WalletClient } from "viem";
 
 interface SendGreetingModalProps {
@@ -27,6 +28,7 @@ export function SendGreetingModal({
   chainId,
 }: SendGreetingModalProps) {
   const t = useT();
+  const triggerBurst = useAppStore((s) => s.triggerBurst);
   const [message, setMessage] = useState("");
   const { mutateAsync: sendGreeting, isPending } = useSendGreeting(
     walletClient ?? null,
@@ -44,6 +46,15 @@ export function SendGreetingModal({
     try {
       await sendGreeting({ to: recipientAddress, celebrationType, message: message.trim() });
       toast.success(t.toastGreetingSent);
+      if (celebrationType === CelebrationType.Birthday) {
+        triggerBurst("celebration", "birthday");
+      } else if (celebrationType === CelebrationType.GlobalHoliday) {
+        triggerBurst("gentle", "holiday");
+      } else if (celebrationType === CelebrationType.UPAnniversary) {
+        triggerBurst("gentle", "anniversary");
+      } else {
+        triggerBurst("gentle", "mixed");
+      }
       onClose();
     } catch (err) {
       const msg = err instanceof Error ? err.message : t.toastGreetingFailed;

@@ -4,6 +4,8 @@ import { useT } from "@/hooks/useT";
 import { Avatar } from "@/components/Avatar";
 import { useLSP3Name } from "@/hooks/useLSP3Name";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { useAppStore } from "@/store/useAppStore";
+import type { BurstPreset, BurstTheme } from "@/store/useAppStore";
 import type { Address } from "@/types";
 
 const INDEXER_URL = import.meta.env.VITE_INDEXER_URL ?? "http://localhost:3001/api";
@@ -17,6 +19,14 @@ const REACTIONS: Array<{ value: QuickReaction; emoji: string }> = [
   { value: "party", emoji: "🥳" },
   { value: "sparkle", emoji: "✨" },
 ];
+
+const REACTION_BURST: Record<QuickReaction, { preset: BurstPreset; theme: BurstTheme }> = {
+  celebrate: { preset: "gentle", theme: "holiday" },
+  hug: { preset: "single", theme: "anniversary" },
+  applause: { preset: "single", theme: "graduation" },
+  party: { preset: "celebration", theme: "birthday" },
+  sparkle: { preset: "single", theme: "mixed" },
+};
 
 interface QuickGreetingModalProps {
   onClose: () => void;
@@ -34,6 +44,7 @@ export function QuickGreetingModal({
   onOpenOnchain,
 }: QuickGreetingModalProps) {
   const t = useT();
+  const triggerBurst = useAppStore((s) => s.triggerBurst);
   const [reaction, setReaction] = useState<QuickReaction>("celebrate");
   const [message, setMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
@@ -68,6 +79,8 @@ export function QuickGreetingModal({
         throw new Error(String(body.error ?? `HTTP ${res.status}`));
       }
       toast.success(t.quickGreetingSent);
+      const fx = REACTION_BURST[reaction];
+      triggerBurst(fx.preset, fx.theme);
       onClose();
     } catch (err) {
       const msg = err instanceof Error ? err.message : t.quickGreetingFailed;

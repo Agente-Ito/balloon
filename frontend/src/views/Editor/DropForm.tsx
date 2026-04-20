@@ -5,13 +5,22 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import type { CreateDropParams } from "@/hooks/useCreateDrop";
 import type { Address, CelebrationType } from "@/types";
-import { HOLIDAY_DROP_TEMPLATES, holidayTemplateToFile } from "@/constants/dropTemplates";
+import { HOLIDAY_DROP_TEMPLATES, generateHolidaySVG, holidayTemplateToFile } from "@/constants/dropTemplates";
 import { useSocialContacts } from "@/hooks/useSocialContacts";
 import { useLSP3Name } from "@/hooks/useLSP3Name";
 import { Avatar } from "@/components/Avatar";
 import { useT } from "@/hooks/useT";
 import { useAppStore } from "@/store/useAppStore";
 import { getMonthNames } from "@/lib/monthNames";
+
+const TEMPLATE_ASSET_PATHS: Partial<Record<string, { en: string; es: string }>> = {
+  anniversary: { en: "/templates/anniversary-en.png", es: "/templates/anniversary-es.png" },
+  milestone: { en: "/templates/milestone-en.png", es: "/templates/milestone-es.png" },
+  celebration: { en: "/templates/celebration-en.png", es: "/templates/celebration-es.png" },
+  graduation: { en: "/templates/graduation-en.png", es: "/templates/graduation-es.png" },
+  holiday: { en: "/templates/holiday-en.png", es: "/templates/holiday-es.png" },
+  birthday: { en: "/templates/birthday-en.png", es: "/templates/birthday-es.png" },
+};
 
 export interface DropFormPrefill {
   name?: string;
@@ -119,28 +128,49 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
   const currentYear = new Date().getFullYear();
   const monthNames = useMemo(() => getMonthNames(t), [t]);
 
-  const CT_OPTIONS = [
-    { value: 0, label: t.typeBirthday },
-    { value: 1, label: t.typeAnniversary },
-    { value: 2, label: t.typeHoliday },
-    { value: 3, label: t.typeCustom },
-  ];
+  const initialTemplateId = useMemo(() => {
+    // If we already got concrete prefill data, don't force a template.
+    if (prefill?.name || prefill?.description || prefill?.imageFile) return null;
+    if (prefill?.celebrationType === 0) return "birthday";
+    if (prefill?.celebrationType === 1) return "anniversary";
+    if (prefill?.celebrationType === 2) return "holiday";
+    // Default for new drops: practical birthday-style starter.
+    return "birthday";
+  }, [prefill]);
 
-  const [name,        setName]        = useState(prefill?.name ?? "");
-  const [description, setDesc]        = useState(prefill?.description ?? "");
-  const [celebType,   setCelebType]   = useState<CelebrationType>(prefill?.celebrationType ?? 0);
+  const initialTemplate = useMemo(() => (
+    initialTemplateId ? HOLIDAY_DROP_TEMPLATES.find((tpl) => tpl.id === initialTemplateId) ?? null : null
+  ), [initialTemplateId]);
+
+  const initialName = useMemo(() => {
+    if (prefill?.name) return prefill.name;
+    if (!initialTemplate) return "";
+    return lang === "es" ? initialTemplate.nameEs : initialTemplate.name;
+  }, [prefill, initialTemplate, lang]);
+
+  const initialDescription = useMemo(() => {
+    if (prefill?.description) return prefill.description;
+    if (!initialTemplate) return "";
+    return lang === "es" ? initialTemplate.descEs : initialTemplate.description;
+  }, [prefill, initialTemplate, lang]);
+
+  const [name,        setName]        = useState(initialName);
+  const [description, setDesc]        = useState(initialDescription);
+  const [celebType,   setCelebType]   = useState<CelebrationType>(prefill?.celebrationType ?? (initialTemplate?.celebrationType ?? 0));
   const [year,        setYear]        = useState(prefill?.year ? String(prefill.year) : "");
   const [month,       setMonth]       = useState(prefill?.month ?? new Date().getMonth() + 1);
   const [day,         setDay]         = useState(prefill?.day ?? new Date().getDate());
   const [maxSupply,   setMaxSupply]   = useState("");
   const [endDate,     setEndDate]     = useState("");
-  const [imageFile,   setImageFile]   = useState<File | undefined>(prefill?.imageFile);
+  const [imageFile,   setImageFile]   = useState<File | undefined>(() => (
+    prefill?.imageFile ?? (initialTemplate ? holidayTemplateToFile(initialTemplate, currentYear, lang) : undefined)
+  ));
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Eligibility
   const [showEligibility, setShowEligibility] = useState(false);
-  const [requireFollow,   setRequireFollow]   = useState(false);
+  const [requireFollow,   setRequireFollow]   = useState(true);
   const [minFollowers,    setMinFollowers]     = useState("");
   const [lsp7List,        setLsp7List]         = useState<Address[]>([]);
   const [lsp8List,        setLsp8List]         = useState<Address[]>([]);
@@ -152,9 +182,94 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
   const [manualCoHost, setManualCoHost] = useState("");
   const { data: socialContacts = [] } = useSocialContacts(host);
 
-  // Templates picker
-  const [showTemplates, setShowTemplates] = useState(false);
-  const [selectedTplId, setSelectedTplId] = useState<string | null>(null);
+  const [selectedTplId, setSelectedTplId] = useState<string | null>(initialTemplate?.id ?? null);
+
+  const typeMenuOptions = useMemo(() => {
+    const templateOptions = HOLIDAY_DROP_TEMPLATES.map((tpl) => ({
+      value: `tpl:${tpl.id}`,
+      label: lang === "es" ? tpl.nameEs : tpl.name,
+    }));
+
+    return [...templateOptions, { value: "custom", label: t.typeCustom }]
+      .sort((a, b) => a.label.localeCompare(b.label, lang === "es" ? "es" : "en", { sensitivity: "base" }));
+  }, [lang, t]);
+
+  const typeMenuValue = useMemo(() => {
+    if (selectedTplId) return `tpl:${selectedTplId}`;
+    if (celebType === 0) return "tpl:birthday";
+    if (celebType === 1) return "tpl:anniversary";
+    if (celebType === 2) return "tpl:holiday";
+    return "custom";
+  }, [selectedTplId, celebType]);
+
+  const templateThumbs = useMemo(() => {
+    const byId: Record<string, string> = {};
+    for (const tpl of HOLIDAY_DROP_TEMPLATES) {
+      const assets = TEMPLATE_ASSET_PATHS[tpl.id];
+      if (assets) {
+        byId[tpl.id] = lang === "es" ? assets.es : assets.en;
+      } else {
+        const svg = generateHolidaySVG(tpl, currentYear, lang);
+        byId[tpl.id] = `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+      }
+    }
+    return byId;
+  }, [currentYear, lang]);
+
+  async function templateAssetToFile(tplId: string): Promise<File | undefined> {
+    const assets = TEMPLATE_ASSET_PATHS[tplId];
+    if (!assets) return undefined;
+    const src = lang === "es" ? assets.es : assets.en;
+    try {
+      const res = await fetch(src, { cache: "no-store" });
+      if (!res.ok) return undefined;
+      const blob = await res.blob();
+      const type = blob.type || "image/png";
+      const ext = type.includes("jpeg") ? "jpg" : type.includes("webp") ? "webp" : "png";
+      return new File([blob], `${tplId}-${lang}.${ext}`, { type });
+    } catch {
+      return undefined;
+    }
+  }
+
+  async function normalizeToSquarePng(file: File, size = 1024): Promise<File> {
+    const objectUrl = URL.createObjectURL(file);
+    try {
+      const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const el = new Image();
+        el.onload = () => resolve(el);
+        el.onerror = () => reject(new Error("Failed to decode image"));
+        el.src = objectUrl;
+      });
+
+      const srcW = img.naturalWidth || img.width;
+      const srcH = img.naturalHeight || img.height;
+      const side = Math.min(srcW, srcH);
+      const sx = Math.floor((srcW - side) / 2);
+      const sy = Math.floor((srcH - side) / 2);
+
+      const canvas = document.createElement("canvas");
+      canvas.width = size;
+      canvas.height = size;
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return file;
+
+      ctx.drawImage(img, sx, sy, side, side, 0, 0, size, size);
+
+      const blob = await new Promise<Blob | null>((resolve) => {
+        canvas.toBlob((b) => resolve(b), "image/png", 0.95);
+      });
+      if (!blob) return file;
+
+      const baseName = file.name.replace(/\.[^.]+$/, "") || "template";
+      return new File([blob], `${baseName}-square.png`, { type: "image/png" });
+    } catch {
+      return file;
+    } finally {
+      URL.revokeObjectURL(objectUrl);
+    }
+  }
 
   useEffect(() => {
     if (!imageFile) { setImagePreview(null); return; }
@@ -180,19 +295,29 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
 
   const canAddManualCoHost = manualCoHost.trim().startsWith("0x") && manualCoHost.trim().length === 42;
 
-  function applyHolidayTemplate(tplId: string) {
+  async function applyHolidayTemplate(tplId: string) {
     const tpl = HOLIDAY_DROP_TEMPLATES.find((t) => t.id === tplId);
     if (!tpl) return;
     setSelectedTplId(tplId);
     const localName = lang === "es" ? tpl.nameEs : tpl.name;
-    setName(`${localName} ${currentYear}`);
+    setName(localName);
     setDesc(lang === "es" ? tpl.descEs : tpl.description);
     setCelebType(tpl.celebrationType);
     if (tpl.month > 0) setMonth(tpl.month);
     if (tpl.day > 0) setDay(tpl.day);
-    setYear(String(currentYear));
-    setImageFile(holidayTemplateToFile(tpl, currentYear, lang));
-    setShowTemplates(false);
+    setYear(tpl.month > 0 && tpl.day > 0 ? String(currentYear) : "");
+    const realImageFile = await templateAssetToFile(tplId);
+    const nextFile = realImageFile ?? holidayTemplateToFile(tpl, currentYear, lang);
+    setImageFile(await normalizeToSquarePng(nextFile));
+  }
+
+  async function handleTypeMenuChange(value: string) {
+    if (value === "custom") {
+      setSelectedTplId(null);
+      setCelebType(3 as CelebrationType);
+      return;
+    }
+    await applyHolidayTemplate(value.replace("tpl:", ""));
   }
 
   const handleSubmit = () => {
@@ -223,46 +348,6 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
 
   return (
     <div className="flex flex-col gap-5">
-
-      {/* ── Holiday templates picker ───────────────────────────────── */}
-      <div className="border border-lukso-border rounded-2xl overflow-hidden">
-        <button type="button"
-          onClick={() => setShowTemplates((v) => !v)}
-          className="w-full flex items-center justify-between px-4 py-3 hover:bg-white/5 transition-colors"
-        >
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">{t.dropFormTemplates}</span>
-            {selectedTplId && (
-              <span className="badge bg-lukso-purple/20 text-lukso-purple text-xs">{t.dropFormTemplateApplied}</span>
-            )}
-          </div>
-          <span className="text-white/40 text-xs">{showTemplates ? t.dropFormTemplateHide : t.dropFormTemplateBrowse}</span>
-        </button>
-
-        {showTemplates && (
-          <div className="border-t border-lukso-border px-3 pb-3 pt-2 overflow-x-auto">
-            <div className="flex gap-2" style={{ minWidth: "max-content" }}>
-              {HOLIDAY_DROP_TEMPLATES.map((tpl) => (
-                <button
-                  key={tpl.id}
-                  type="button"
-                  onClick={() => applyHolidayTemplate(tpl.id)}
-                  className={`flex flex-col items-center gap-1 px-3 py-2.5 rounded-xl border transition-colors flex-shrink-0 ${
-                    selectedTplId === tpl.id
-                      ? "border-lukso-purple bg-lukso-purple/15"
-                      : "border-lukso-border hover:border-white/30 bg-white/5"
-                  }`}
-                >
-                  <span className="text-2xl">{tpl.emoji}</span>
-                  <span className="text-[10px] text-white/70 whitespace-nowrap font-medium">
-                    {lang === "es" ? tpl.nameEs : tpl.name}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
 
       {/* ── Badge image ────────────────────────────────────────────── */}
       <div>
@@ -306,19 +391,51 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
 
       <div>
         <label className="block text-xs text-white/40 mb-1">{t.dropFormType}</label>
-        <select value={celebType}
-          onChange={(e) => setCelebType(Number(e.target.value) as CelebrationType)}
+        <select value={typeMenuValue}
+          onChange={(e) => { void handleTypeMenuChange(e.target.value); }}
           className="input w-full">
-          {CT_OPTIONS.map((o) => (
+          {typeMenuOptions.map((o) => (
             <option key={o.value} value={o.value}>{o.label}</option>
           ))}
         </select>
+
+        <div className="mt-2 overflow-x-auto">
+          <div className="flex gap-2" style={{ minWidth: "max-content" }}>
+            {HOLIDAY_DROP_TEMPLATES.map((tpl) => {
+              const active = selectedTplId === tpl.id;
+              return (
+                <button
+                  key={tpl.id}
+                  type="button"
+                  onClick={() => { void applyHolidayTemplate(tpl.id); }}
+                  className={`w-[76px] rounded-xl border p-1.5 transition-colors ${
+                    active ? "border-lukso-purple bg-lukso-purple/15" : "border-lukso-border bg-white/5 hover:border-white/30"
+                  }`}
+                  title={lang === "es" ? tpl.nameEs : tpl.name}
+                >
+                  <img
+                    src={templateThumbs[tpl.id]}
+                    alt={lang === "es" ? tpl.nameEs : tpl.name}
+                    className="w-full h-10 rounded-md object-cover"
+                    onError={(e) => {
+                      const svg = generateHolidaySVG(tpl, currentYear, lang);
+                      e.currentTarget.src = `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+                    }}
+                  />
+                  <span className="mt-1 block text-[10px] leading-tight text-white/70 truncate">
+                    {lang === "es" ? tpl.nameEs : tpl.name}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       {/* ── Date ───────────────────────────────────────────────────── */}
       <div>
         <label className="block text-xs text-white/40 mb-1">{t.dropFormDate}</label>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
           <select value={month} onChange={(e) => setMonth(Number(e.target.value))}
             className="input text-sm py-1.5">
             {monthNames.map((m, i) => (
@@ -332,12 +449,12 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
             ))}
           </select>
           <input type="number" value={year} onChange={(e) => setYear(e.target.value)}
-            placeholder={t.dropFormYearAny} min={0} max={2100} className="input text-sm py-1.5" />
+            placeholder={t.dropFormYearAny} min={0} max={2100} className="input text-sm py-1.5 col-span-2 md:col-span-1" />
         </div>
       </div>
 
       {/* ── Limits ─────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div>
           <label className="block text-xs text-white/40 mb-1">
             {t.dropFormClosesOn} <span className="text-white/20">{t.dropFormOptional}</span>
@@ -519,7 +636,7 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
         )}
       </div>
 
-      <div className="flex gap-2 pt-1">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
         <button type="button" onClick={onCancel}
           className="btn-ghost flex-1 text-sm border border-lukso-border">{t.cancel}</button>
         <button type="button" onClick={handleSubmit}

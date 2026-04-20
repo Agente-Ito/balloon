@@ -118,7 +118,7 @@ export function EventForm({ onSave, onCancel }: EventFormProps) {
       {/* Date */}
       <div>
         <label className="block text-xs text-white/50 mb-1">{t.eventDate}</label>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           <div>
             <label className="block text-[10px] text-white/40 mb-1">{t.eventMonth}</label>
             <select value={month} onChange={(e) => setMonth(e.target.value)} className="input text-sm py-1.5">
@@ -148,7 +148,7 @@ export function EventForm({ onSave, onCancel }: EventFormProps) {
               placeholder={recurring ? t.eventYearOpt : "e.g. 2025"}
               min={1900}
               max={2100}
-              className="input text-sm py-1.5"
+              className="input text-sm py-1.5 col-span-2 sm:col-span-1"
               required={!recurring}
             />
           </div>
@@ -248,7 +248,7 @@ export function EventForm({ onSave, onCancel }: EventFormProps) {
         </div>
       </div>
 
-      <div className="flex gap-3 pt-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
         <button type="button" onClick={onCancel} className="btn-secondary flex-1">
           {t.cancel}
         </button>

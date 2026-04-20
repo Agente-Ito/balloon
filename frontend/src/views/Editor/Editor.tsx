@@ -51,6 +51,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
     editorEntryTab,
     editorEntrySubView,
     clearEditorEntry,
+    triggerBurst,
   } = useAppStore();
   const t = useT();
   const monthNames = useMemo(() => getMonthNames(t), [t]);
@@ -118,6 +119,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
 
   // After saving an event, offer to create a drop from it
   const [pendingDropFromEvent, setPendingDropFromEvent] = useState<Celebration | null>(null);
+  const [quickCreateAsCelebration, setQuickCreateAsCelebration] = useState(false);
 
   const [birthdayMonth, setBirthdayMonth] = useState("");
   const [birthdayDay, setBirthdayDay] = useState("");
@@ -293,19 +295,22 @@ export function Editor({ walletClient, chainId }: EditorProps) {
         <ViewToolbar
           onBack={() => {
             setPendingEventDraft(null);
+            setQuickCreateAsCelebration(false);
             setSubView("main");
           }}
           backLabel={t.back}
-          title={t.quickCreateTitle}
+          title={quickCreateAsCelebration ? t.quickCreateHeaderCelebration : t.quickCreateHeaderReminder}
           right={<LanguageToggle />}
         />
         <div className="flex-1 overflow-y-auto p-4">
           <QuickCreateFlow
             initialEvent={pendingEventDraft ?? undefined}
             profileName={profileName ?? undefined}
+            onModeChange={setQuickCreateAsCelebration}
             isSaving={addEventMutation.isPending || replaceEventsMutation.isPending}
             onCancel={() => {
               setPendingEventDraft(null);
+              setQuickCreateAsCelebration(false);
               setSubView("main");
             }}
             onSubmit={async ({ event, createDrop }) => {
@@ -368,6 +373,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
                 }
 
                 if (createDrop) {
+                  triggerBurst("gentle");
                   setPendingDropFromEvent({ ...event, storage: "local" });
                   setPendingAnniversaryDrop(false);
                   setPendingEventDraft(null);
@@ -377,6 +383,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
 
                 saveReminder({ ...event, storage: "local" });
                 toast.success(t.toastLocalReminderSaved);
+                triggerBurst("single");
                 setPendingEventDraft(null);
                 setSubView("main");
               } catch (err) {
@@ -413,6 +420,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
               try {
                 await quickSetupMutation.mutateAsync({ birthday, event, settings });
                 toast.success(t.toastQuickSetupSaved);
+                triggerBurst("gentle");
                 setPendingDropFromEvent(event);
                 setSubView("main");
               } catch (err) {
@@ -544,6 +552,15 @@ export function Editor({ walletClient, chainId }: EditorProps) {
               try {
                 await createDropMutation.mutateAsync(params);
                 toast.success(t.toastDropCreated);
+                const dropTheme =
+                  params.celebrationType === CelebrationType.Birthday
+                    ? "birthday"
+                    : params.celebrationType === CelebrationType.UPAnniversary
+                      ? "anniversary"
+                      : params.celebrationType === CelebrationType.GlobalHoliday
+                        ? "holiday"
+                        : "mixed";
+                triggerBurst("celebration", dropTheme);
                 setSubView("main");
                 setPendingDropFromEvent(null);
                 setPendingDropDate(null);
@@ -643,7 +660,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
                       )}
                     </button>
                     <p className="text-[11px] text-white/40 text-center">{t.firstStepsStepByStep}</p>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <button
                         onClick={() => {
                           rememberSetupMode("step");
@@ -679,7 +696,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {!hasBirthdayConfigured && (
                       <button
                         onClick={() => setIsBirthdayEditing(true)}
@@ -766,7 +783,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
                   {!birthdayDisplay && (
                     <p className="text-xs text-white/50 mb-3">{t.birthdayCurrent} <span className="text-white/40">{t.birthdayNotSet}</span></p>
                   )}
-                  <div className="grid grid-cols-3 gap-2 mb-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-2">
                     <div>
                       <label className="block text-[10px] text-white/40 mb-1">{t.birthdayMonth}</label>
                       <select
@@ -802,7 +819,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
                         placeholder="e.g. 1990"
                         min={1900}
                         max={new Date().getFullYear()}
-                        className="input text-sm py-1.5"
+                        className="input text-sm py-1.5 col-span-2 sm:col-span-1"
                       />
                     </div>
                   </div>

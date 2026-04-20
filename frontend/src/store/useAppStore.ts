@@ -2,10 +2,25 @@ import { create } from "zustand";
 import type { Address, AppView, Celebration } from "@/types";
 import { type Lang, getStoredLang, setStoredLang } from "@/lib/i18n";
 
+export type BurstPreset = "single" | "gentle" | "celebration" | "epic";
+export type BurstTheme = "mixed" | "birthday" | "graduation" | "holiday" | "anniversary";
+
+const BURST_COOLDOWN_MS = 1500;
+
+function burstRank(preset: BurstPreset): number {
+  if (preset === "single") return 1;
+  if (preset === "gentle") return 2;
+  if (preset === "celebration") return 3;
+  return 4;
+}
+
 interface AppStore {
   // Balloon burst celebration animation
   burstActive: boolean;
-  triggerBurst: () => void;
+  burstPreset: BurstPreset;
+  burstTheme: BurstTheme;
+  lastBurstAt: number;
+  triggerBurst: (preset?: BurstPreset, theme?: BurstTheme) => void;
   clearBurst: () => void;
 
   // Navigation
@@ -70,7 +85,21 @@ interface AppStore {
 
 export const useAppStore = create<AppStore>((set, get) => ({
   burstActive: false,
-  triggerBurst: () => set({ burstActive: true }),
+  burstPreset: "celebration",
+  burstTheme: "mixed",
+  lastBurstAt: 0,
+  triggerBurst: (preset = "celebration", theme = "mixed") => {
+    const state = get();
+    const now = Date.now();
+    const withinCooldown = now - state.lastBurstAt < BURST_COOLDOWN_MS;
+
+    // Prevent visual spam: during cooldown only allow stronger bursts to override.
+    if (withinCooldown && burstRank(preset) <= burstRank(state.burstPreset)) {
+      return;
+    }
+
+    set({ burstActive: true, burstPreset: preset, burstTheme: theme, lastBurstAt: now });
+  },
   clearBurst: () => set({ burstActive: false }),
 
   currentView: "grid",

@@ -9,7 +9,8 @@ import { getCelebrationTypeKey } from "@/constants/celebrationTypes";
 import { useT } from "@/hooks/useT";
 import { LoadingSpinner } from "./LoadingSpinner";
 import { useLSP3Name } from "@/hooks/useLSP3Name";
-import type { Address, CelebrationType } from "@/types";
+import { useAppStore } from "@/store/useAppStore";
+import { CelebrationType, type Address } from "@/types";
 import type { CelebrationTemplate } from "@/lib/celebrationTemplates";
 import type { WalletClient } from "viem";
 
@@ -36,6 +37,7 @@ export function MintBadgeModal({
   const [customImageFile, setCustomImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const triggerBurst = useAppStore((s) => s.triggerBurst);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { mutateAsync: mintBadge, isPending } = useMintBadge(walletClient ?? null, chainId);
   const { data: recipientName } = useLSP3Name(recipientAddress, chainId);
@@ -90,6 +92,15 @@ export function MintBadgeModal({
 
       await mintBadge({ to: recipientAddress, celebrationType, year, soulbound, imageUrl, imageHash });
       toast.success("Badge minted! 🎖️");
+      if (celebrationType === CelebrationType.Birthday) {
+        triggerBurst("celebration", "birthday");
+      } else if (celebrationType === CelebrationType.UPAnniversary) {
+        triggerBurst("celebration", "anniversary");
+      } else if (celebrationType === CelebrationType.GlobalHoliday) {
+        triggerBurst("celebration", "holiday");
+      } else {
+        triggerBurst("celebration", "mixed");
+      }
       onClose();
     } catch (err) {
       setIsUploading(false);
