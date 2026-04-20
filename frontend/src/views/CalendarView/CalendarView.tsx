@@ -344,6 +344,7 @@ export function CalendarView({ chainId, walletClient }: CalendarViewProps) {
             month={month}
             celebrationDays={celebrationDays}
             onDayClick={handleDayClick}
+            selectedDate={selectedDay?.date ?? null}
           />
         )}
 

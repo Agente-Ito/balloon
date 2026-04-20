@@ -13,11 +13,12 @@ interface CalendarGridProps {
   month: Date;
   celebrationDays: CelebrationDay[];
   onDayClick: (date: string) => void;
+  selectedDate?: string | null;
 }
 
 const WEEKDAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
-export function CalendarGrid({ month, celebrationDays, onDayClick }: CalendarGridProps) {
+export function CalendarGrid({ month, celebrationDays, onDayClick, selectedDate }: CalendarGridProps) {
   const monthStart = startOfMonth(month);
   const monthEnd = endOfMonth(month);
   const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
@@ -54,18 +55,27 @@ export function CalendarGrid({ month, celebrationDays, onDayClick }: CalendarGri
           const cellData = celebrationMap.get(dateStr);
           const hasCelebrations = !!cellData && cellData.celebrations.length > 0;
           const isTodayDate = isToday(day);
+          const isSelected = selectedDate === dateStr;
+
+          const baseClasses = "relative aspect-square flex flex-col items-center justify-center rounded-lg text-sm transition-colors cursor-pointer border";
+          const selectedClasses = "bg-lukso-purple/30 border-lukso-purple/70 text-lukso-purple font-semibold shadow-[inset_0_0_0_1px_rgba(156,78,219,0.4)]";
+          const todayClasses = "bg-lukso-pink/20 border-lukso-pink/45 text-lukso-pink font-semibold";
+          const hasEventsClasses = "bg-white/10 border-white/20 hover:bg-white/15 hover:border-lukso-purple/35";
+          const emptyClasses = "text-white/45 border-transparent hover:bg-white/10 hover:border-white/15 hover:text-white/70";
+
+          const stateClasses = isSelected
+            ? selectedClasses
+            : isTodayDate
+              ? todayClasses
+              : hasCelebrations
+                ? hasEventsClasses
+                : emptyClasses;
 
           return (
             <button
               key={dateStr}
               onClick={() => onDayClick(dateStr)}
-              className={`
-                relative aspect-square flex flex-col items-center justify-center rounded-lg text-sm
-                transition-colors cursor-pointer
-                ${isTodayDate ? "bg-lukso-pink/20 border border-lukso-pink/40 font-semibold text-lukso-pink" : ""}
-                ${hasCelebrations && !isTodayDate ? "bg-white/5 hover:bg-white/10" : ""}
-                ${!hasCelebrations && !isTodayDate ? "text-white/40 hover:bg-white/5 hover:text-white/60" : ""}
-              `}
+              className={`${baseClasses} ${stateClasses}`}
             >
               <span className="text-xs leading-none">{format(day, "d")}</span>
 
