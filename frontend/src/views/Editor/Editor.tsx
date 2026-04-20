@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import toast from "react-hot-toast";
+import { es as esLocale } from "date-fns/locale";
 import { useT } from "@/hooks/useT";
 import { getMonthNames } from "@/lib/monthNames";
 import { useGridSize } from "@/lib/useGridSize";
@@ -18,6 +19,8 @@ import { ViewToolbar } from "@/components/ViewToolbar";
 import { CELEBRATION_COLORS } from "@/constants/celebrationTypes";
 import { useCreateDrop, type CreateDropParams } from "@/hooks/useCreateDrop";
 import { useUPCreationDate } from "@/hooks/useUPCreationDate";
+import { useLocalReminders } from "@/hooks/useLocalReminders";
+import { useReminderSync } from "@/hooks/useReminderSync";
 import { computeAnniversary } from "@/lib/upCreationDate";
 import { anniversarySVGToFile } from "@/lib/anniversaryBadge";
 import type { Celebration, WishlistItem, Address } from "@/types";
@@ -47,12 +50,15 @@ export function Editor({ walletClient, chainId }: EditorProps) {
     setPendingAnniversaryDrop,
     pendingEventDraft,
     setPendingEventDraft,
+    connectedAccount,
+    lang,
     editorEntryTab,
     editorEntrySubView,
     clearEditorEntry,
   } = useAppStore();
   const t = useT();
   const monthNames = useMemo(() => getMonthNames(t), [t]);
+  const dateLocale = lang === "es" ? esLocale : undefined;
   const [activeTab, setActiveTab] = useState<EditorTab>(editorEntryTab ?? "dates");
 
   // If coming from the calendar "Create drop for this day" action,
@@ -71,6 +77,24 @@ export function Editor({ walletClient, chainId }: EditorProps) {
   }, [editorEntryTab, editorEntrySubView, clearEditorEntry]);
 
   const { data: profileData, isLoading } = useProfileData(contextProfile, chainId);
+  const {
+    reminders: localReminders,
+    allReminderRecords,
+    saveReminder,
+    updateReminder,
+    replaceReminders,
+  } = useLocalReminders(contextProfile as Address | null);
+  const {
+    backupReminders,
+    restoreReminders,
+    isBackingUp: isBackingUpReminders,
+    isRestoring: isRestoringReminders,
+    lastSyncMeta,
+  } = useReminderSync({
+    walletClient: walletClient ?? undefined,
+    profileAddress: contextProfile as Address | null,
+    connectedAccount,
+  });
 
   const { mutateAsync: setBirthday, isPending: isSavingBirthday } = useSetBirthday({
     walletClient: walletClient!,
@@ -121,7 +145,8 @@ export function Editor({ walletClient, chainId }: EditorProps) {
 
   const currentBirthday = profileData?.birthday ?? "";
   const hasBirthdayConfigured = !!currentBirthday;
-  const hasCustomEvents = (profileData?.events.length ?? 0) > 0;
+  const ownerEvents = [...(profileData?.events ?? []), ...localReminders];
+  const hasCustomEvents = ownerEvents.length > 0;
   const showFirstSteps = !hasBirthdayConfigured || !hasCustomEvents;
   const canUseQuickSetup = !hasBirthdayConfigured && !hasCustomEvents;
 
@@ -295,6 +320,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
         <div className="flex-1 overflow-y-auto p-4">
           <QuickCreateFlow
             initialEvent={pendingEventDraft ?? undefined}
+            profileName={profileName ?? undefined}
             isSaving={addEventMutation.isPending || replaceEventsMutation.isPending}
             onCancel={() => {
               setPendingEventDraft(null);
@@ -307,6 +333,31 @@ export function Editor({ walletClient, chainId }: EditorProps) {
               }
               try {
                 if (pendingEventDraft) {
+                  if (pendingEventDraft.storage === "local") {
+                    const updatedLocalEvent: Celebration = {
+                      ...pendingEventDraft,
+                      title: event.title,
+                      date: event.date,
+                      description: event.description,
+                      storage: "local",
+                    };
+
+                    updateReminder(updatedLocalEvent);
+                    toast.success(t.toastEventUpdated);
+
+                    if (createDrop) {
+                      setPendingDropFromEvent(updatedLocalEvent);
+                      setPendingAnniversaryDrop(false);
+                      setPendingEventDraft(null);
+                      setSubView("addDrop");
+                      return;
+                    }
+
+                    setPendingEventDraft(null);
+                    setSubView("main");
+                    return;
+                  }
+
                   const updatedEvent: Celebration = {
                     ...pendingEventDraft,
                     title: event.title,
@@ -334,15 +385,16 @@ export function Editor({ walletClient, chainId }: EditorProps) {
                   return;
                 }
 
-                await addEventMutation.mutateAsync(event);
-                toast.success(t.toastEventAdded);
                 if (createDrop) {
-                  setPendingDropFromEvent(event);
+                  setPendingDropFromEvent({ ...event, storage: "local" });
                   setPendingAnniversaryDrop(false);
                   setPendingEventDraft(null);
                   setSubView("addDrop");
                   return;
                 }
+
+                saveReminder({ ...event, storage: "local" });
+                toast.success(t.toastEventAdded);
                 setPendingEventDraft(null);
                 setSubView("main");
               } catch (err) {
@@ -624,7 +676,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
                       <button
                         onClick={() => {
                           rememberSetupMode("step");
-                          setSubView("addEvent");
+                          setSubView("quickCreate");
                         }}
                         className={`text-xs py-1.5 border border-lukso-border inline-flex items-center justify-center gap-1 ${
                           preferredSetupMode === "step" ? "btn-secondary" : "btn-ghost"
@@ -651,7 +703,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
                     )}
                     {!hasCustomEvents && (
                       <button
-                        onClick={() => setSubView("addEvent")}
+                        onClick={() => setSubView("quickCreate")}
                         className="btn-ghost flex-1 text-xs py-1.5 border border-lukso-border"
                       >
                         {t.firstStepsReminder}
@@ -860,13 +912,13 @@ export function Editor({ walletClient, chainId }: EditorProps) {
                 </button>
               </div>
 
-              {profileData?.events.length === 0 && !anniversaryDismissed ? (
+              {ownerEvents.length === 0 && !anniversaryDismissed ? (
                 <div className="card text-center py-4">
                   <p className="text-sm text-white/30">{t.eventsEmpty}</p>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {profileData?.events.map((event) => (
+                  {ownerEvents.map((event) => (
                     <div key={event.id} className="card flex items-center gap-3">
                       <span className={`w-3 h-3 rounded-full flex-shrink-0 ${CELEBRATION_COLORS[event.type]}`} />
                       <div className="flex-1 min-w-0">
@@ -875,6 +927,11 @@ export function Editor({ walletClient, chainId }: EditorProps) {
                           {event.date} · {event.recurring ? t.eventsRecurring : t.eventsOneTime}
                         </p>
                       </div>
+                      {event.storage === "local" && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-lukso-purple/10 border border-lukso-purple/20 text-lukso-purple">
+                          {t.eventsLocalBadge}
+                        </span>
+                      )}
                     </div>
                   ))}
                   {/* Anniversary shown here once the banner is dismissed */}
@@ -901,6 +958,69 @@ export function Editor({ walletClient, chainId }: EditorProps) {
                   )}
                 </div>
               )}
+
+              <div className="card border-lukso-purple/20 bg-lukso-purple/5">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="title-premium text-sm text-lukso-purple mb-1">{t.reminderSyncTitle}</p>
+                    <p className="text-xs text-white/45">{t.reminderSyncSub}</p>
+                    {lastSyncMeta?.lastSyncedAt ? (
+                      <p className="text-[11px] text-white/35 mt-1">
+                        {t.reminderSyncLastSaved} {format(new Date(lastSyncMeta.lastSyncedAt * 1000), "PPP p", { locale: dateLocale })}
+                      </p>
+                    ) : (
+                      <p className="text-[11px] text-white/35 mt-1">{t.reminderSyncNoBackup}</p>
+                    )}
+                  </div>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 border border-white/10 text-white/60">
+                    {localReminders.length} {t.reminderSyncLocalCount}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 mt-3">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        await backupReminders(allReminderRecords);
+                        toast.success(t.toastReminderBackupSaved);
+                      } catch (err) {
+                        const msg = err instanceof Error ? err.message : t.toastReminderBackupFailed;
+                        toast.error(msg.slice(0, 120) || t.toastReminderBackupFailed);
+                      }
+                    }}
+                    disabled={isBackingUpReminders || isRestoringReminders || !connectedAccount}
+                    className="btn-primary text-xs py-2"
+                  >
+                    {isBackingUpReminders ? t.saving : t.reminderSyncBackupBtn}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        const payload = await restoreReminders(allReminderRecords);
+                        const activeReminders = payload.reminders.filter((reminder) => !reminder.deletedAt);
+                        if (!activeReminders.length) {
+                          toast.error(t.toastReminderRestoreEmpty);
+                          return;
+                        }
+                        if (localReminders.length > 0 && !window.confirm(t.reminderSyncRestoreConfirm)) {
+                          return;
+                        }
+                        replaceReminders(payload.reminders);
+                        toast.success(t.toastReminderRestoreSuccess);
+                      } catch (err) {
+                        const msg = err instanceof Error ? err.message : t.toastReminderRestoreFailed;
+                        toast.error(msg.slice(0, 120) || t.toastReminderRestoreFailed);
+                      }
+                    }}
+                    disabled={isBackingUpReminders || isRestoringReminders || !connectedAccount}
+                    className="btn-secondary text-xs py-2"
+                  >
+                    {isRestoringReminders ? t.loading : t.reminderSyncRestoreBtn}
+                  </button>
+                </div>
+                <p className="text-[11px] text-white/35 mt-2">{t.reminderSyncHint}</p>
+              </div>
             </div>
           </>
         )}

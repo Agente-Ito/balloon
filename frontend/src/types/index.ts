@@ -19,6 +19,9 @@ export interface Celebration {
   title: string;
   date: string; // "YYYY-MM-DD" or "MM-DD" for recurring
   recurring: boolean;
+  storage?: "onchain" | "local";
+  updatedAt?: number;
+  deletedAt?: number | null;
   profileAddress?: Address; // for social celebrations from followed profiles
   description?: string;
   imageUrl?: string; // ipfs:// URL of an attached image

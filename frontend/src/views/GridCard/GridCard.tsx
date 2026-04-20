@@ -7,6 +7,7 @@ import { useProfileData } from "@/hooks/useUniversalProfile";
 import { NetworkBadge } from "@/components/NetworkBadge";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { BalloonIcon } from "@/components/BalloonIcon";
+import { BalloonLogo } from "@/components/BalloonLogo";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { useT } from "@/hooks/useT";
 import { useLSP3Profile } from "@/hooks/useLSP3Profile";
@@ -32,7 +33,6 @@ export function GridCard({ chainId }: GridCardProps) {
     actions.push({
       key: "birthday",
       label: t.gridAddBirthdayCta,
-      primary: true,
       onClick: () => {
         setEditorEntry("dates", "main");
         setView("editor");
@@ -44,6 +44,7 @@ export function GridCard({ chainId }: GridCardProps) {
     actions.push({
       key: "create",
       label: t.gridCreateDropReminderCta,
+      primary: true,
       onClick: () => {
         setEditorEntry("dates", "quickCreate");
         setView("editor");
@@ -75,9 +76,8 @@ export function GridCard({ chainId }: GridCardProps) {
     <div className="h-full flex flex-col p-4 gap-4 overflow-y-auto">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 min-w-0">
-          <BalloonIcon size={28} className="animate-balloon-header" />
+          <BalloonLogo className="animate-balloon-header" displayHeight={34} />
           <div className="min-w-0">
-            <p className="title-home text-sm">Balloon</p>
             {lsp3?.name && (
               <p className="text-[11px] leading-tight truncate" style={{ color: "#8B7D7D" }}>
                 {lsp3.name}
@@ -91,13 +91,24 @@ export function GridCard({ chainId }: GridCardProps) {
         </div>
       </div>
 
-      <div className="flex-1 min-h-[220px] flex flex-col items-center justify-center text-center gap-4 card">
+      <div className="flex-1 min-h-[220px] flex flex-col items-center justify-center text-center gap-4 card px-4 py-5">
         <BalloonIcon size={112} className="animate-float" />
         <p className="title-home text-base">
           {t.gridHeroLine1}
           <br />
           {t.gridHeroLine2}
         </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-md pt-1">
+          {actions.slice(0, 3).map((action, index) => (
+            <button
+              key={action.key}
+              onClick={action.onClick}
+              className={`text-sm py-3 ${action.primary ? "btn-primary" : "btn-secondary"} ${actions.length === 3 && index === 0 ? "sm:col-span-2" : ""}`}
+            >
+              {action.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Debug overlay — dev only, never renders in prod */}
@@ -107,18 +118,6 @@ export function GridCard({ chainId }: GridCardProps) {
           <div>isOwner: {String(isOwner)}</div>
         </div>
       )}
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-auto">
-        {actions.slice(0, 3).map((action, index) => (
-          <button
-            key={action.key}
-            onClick={action.onClick}
-            className={`text-sm py-3 ${action.primary ? "btn-primary" : "btn-secondary"} ${actions.length === 3 && index === 0 ? "sm:col-span-2" : ""}`}
-          >
-            {action.label}
-          </button>
-        ))}
-      </div>
     </div>
   );
 }

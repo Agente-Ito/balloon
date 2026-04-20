@@ -138,6 +138,35 @@ export function createSchema(db: Database.Database): void {
       updated_at      INTEGER NOT NULL DEFAULT (unixepoch())
     );
 
+    -- ── Local reminder sync (off-chain backup/restore) ─────────────────────
+    CREATE TABLE IF NOT EXISTS synced_reminders (
+      profile_address TEXT PRIMARY KEY,
+      reminders_json  TEXT NOT NULL DEFAULT '[]',
+      updated_at      INTEGER NOT NULL DEFAULT (unixepoch()),
+      updated_by      TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS reminder_sync_challenges (
+      id              TEXT PRIMARY KEY,
+      profile_address TEXT NOT NULL,
+      signer_address  TEXT NOT NULL,
+      nonce           TEXT NOT NULL,
+      message         TEXT NOT NULL,
+      expires_at      INTEGER NOT NULL,
+      consumed_at     INTEGER
+    );
+
+    CREATE TABLE IF NOT EXISTS reminder_sync_sessions (
+      token           TEXT PRIMARY KEY,
+      profile_address TEXT NOT NULL,
+      signer_address  TEXT NOT NULL,
+      expires_at      INTEGER NOT NULL,
+      created_at      INTEGER NOT NULL DEFAULT (unixepoch())
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_sync_sessions_profile ON reminder_sync_sessions(profile_address, expires_at);
+    CREATE INDEX IF NOT EXISTS idx_sync_challenges_profile ON reminder_sync_challenges(profile_address, expires_at);
+
     -- ── Drop series (community-curated recurring drops) ──────────────────────
     -- A series is a recurring event (e.g. "New Year Drop") where a different
     -- artist submits the badge image each cycle. The curator picks the winner.

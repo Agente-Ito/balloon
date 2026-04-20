@@ -12,9 +12,22 @@ import {
   getSubmissionsWithVotes, castVote, removeVote,
 } from "../resolvers/series";
 import { createQuickGreeting, getQuickGreetingsForRecipient } from "../resolvers/quickGreetings";
+import {
+  createReminderSyncChallenge,
+  createReminderSyncSession,
+  getSyncedReminders,
+  saveSyncedReminders,
+  validateReminderSyncSession,
+} from "../resolvers/reminderSync";
 import { getDb } from "../storage/db";
 
 const router = Router();
+
+function getBearerToken(req: Request) {
+  const header = req.headers.authorization;
+  if (!header?.startsWith("Bearer ")) return null;
+  return header.slice(7).trim();
+}
 
 // ── Health ────────────────────────────────────────────────────────────────────
 
@@ -285,6 +298,79 @@ router.get("/social-calendar", (req: Request, res: Response) => {
   });
 
   return res.json({ profiles, drops });
+});
+
+// ── Reminder backup / restore (off-chain, signature-gated) ─────────────────
+
+router.post("/reminder-sync/challenge", (req: Request, res: Response) => {
+  const { profileAddress, signerAddress } = req.body as Record<string, unknown>;
+  if (!profileAddress || !signerAddress) {
+    return res.status(400).json({ error: "profileAddress and signerAddress are required" });
+  }
+
+  return res.json(createReminderSyncChallenge(String(profileAddress).toLowerCase() as `0x${string}`, String(signerAddress).toLowerCase() as `0x${string}`));
+});
+
+router.post("/reminder-sync/session", async (req: Request, res: Response) => {
+  const { challengeId, signature } = req.body as Record<string, unknown>;
+  if (!challengeId || !signature) {
+    return res.status(400).json({ error: "challengeId and signature are required" });
+  }
+
+  try {
+    const session = await createReminderSyncSession(String(challengeId), String(signature) as `0x${string}`);
+    return res.status(201).json(session);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.startsWith("ReminderSync")) {
+      return res.status(401).json({ error: msg });
+    }
+    return res.status(500).json({ error: msg });
+  }
+});
+
+router.get("/reminder-sync/reminders", (req: Request, res: Response) => {
+  const { profile } = req.query;
+  if (!profile || typeof profile !== "string") {
+    return res.status(400).json({ error: "profile query param required" });
+  }
+
+  const token = getBearerToken(req);
+  if (!token) {
+    return res.status(401).json({ error: "ReminderSyncMissingToken" });
+  }
+
+  const session = validateReminderSyncSession(token, profile.toLowerCase() as `0x${string}`);
+  if (!session) {
+    return res.status(401).json({ error: "ReminderSyncInvalidSession" });
+  }
+
+  return res.json(getSyncedReminders(profile.toLowerCase() as `0x${string}`) ?? {
+    profileAddress: profile.toLowerCase(),
+    reminders: [],
+    updatedAt: 0,
+    updatedBy: session.signer_address,
+  });
+});
+
+router.put("/reminder-sync/reminders", (req: Request, res: Response) => {
+  const { profileAddress, reminders } = req.body as Record<string, unknown>;
+  if (!profileAddress || !Array.isArray(reminders)) {
+    return res.status(400).json({ error: "profileAddress and reminders[] are required" });
+  }
+
+  const token = getBearerToken(req);
+  if (!token) {
+    return res.status(401).json({ error: "ReminderSyncMissingToken" });
+  }
+
+  const normalizedProfile = String(profileAddress).toLowerCase() as `0x${string}`;
+  const session = validateReminderSyncSession(token, normalizedProfile);
+  if (!session) {
+    return res.status(401).json({ error: "ReminderSyncInvalidSession" });
+  }
+
+  return res.json(saveSyncedReminders(normalizedProfile, reminders, session.signer_address));
 });
 
 // ── Drop series ───────────────────────────────────────────────────────────────

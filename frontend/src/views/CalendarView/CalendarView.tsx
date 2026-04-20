@@ -18,6 +18,7 @@ import { ViewToolbar } from "@/components/ViewToolbar";
 import { SendGreetingModal } from "@/components/SendGreetingModal";
 import { QuickGreetingModal } from "@/components/QuickGreetingModal";
 import { useLSP3Name } from "@/hooks/useLSP3Name";
+import { useLocalReminders } from "@/hooks/useLocalReminders";
 import { useT } from "@/hooks/useT";
 import { CelebrationType } from "@/types";
 import type { CelebrationDay, Address } from "@/types";
@@ -75,13 +76,19 @@ export function CalendarView({ chainId, walletClient }: CalendarViewProps) {
   });
 
   const { data: profileData, isLoading } = useProfileData(contextProfile, chainId);
-  const { celebrationDays } = useCalendar({ profileData, month });
+  const isOwner = contextProfile?.toLowerCase() === connectedAccount?.toLowerCase();
+  const { reminders: localReminders, deleteReminder: deleteLocalReminder } = useLocalReminders(
+    isOwner ? (contextProfile as Address | null) : null
+  );
+  const mergedProfileData = isOwner && profileData
+    ? { ...profileData, events: [...profileData.events, ...localReminders] }
+    : profileData;
+  const { celebrationDays } = useCalendar({ profileData: mergedProfileData, month });
   const replaceEventsMutation = useReplaceEvents({
     walletClient: walletClient as WalletClient,
     upAddress: contextProfile as Address,
     chainId,
   });
-  const isOwner = contextProfile?.toLowerCase() === connectedAccount?.toLowerCase();
   const { data: ownDrops } = useDrops({
     host: contextProfile as Address | null,
     enabled: !!contextProfile && isOwner,
@@ -215,6 +222,31 @@ export function CalendarView({ chainId, walletClient }: CalendarViewProps) {
 
   const ownCalendarRows: OwnCalendarRow[] = isOwner
     ? [
+        ...localReminders.map((event) => ({
+          ...(() => {
+            const status = getRowStatusMeta(event.date);
+            return {
+              statusLabel: status.label,
+              statusClassName: status.className,
+            };
+          })(),
+          id: `local-event:${event.id}`,
+          rawDate: event.date,
+          title: event.title,
+          typeLabel: t.myCalendarTypeReminder,
+          actionLabel: t.rowEdit,
+          action: async () => {
+            setPendingEventDraft(event);
+            setEditorEntry("dates", "quickCreate");
+            setView("editor");
+          },
+          secondaryActionLabel: t.rowDelete,
+          secondaryAction: async () => {
+            if (!window.confirm(t.myCalendarDeleteConfirm)) return;
+            deleteLocalReminder(event.id);
+            toast.success(t.toastEventDeleted);
+          },
+        })),
         ...(profileData?.events ?? []).map((event) => ({
           ...(() => {
             const status = getRowStatusMeta(event.date);

@@ -13,6 +13,15 @@ import type { Address, CelebrationType, IndexedDrop } from "@/types";
 import { keccak256 } from "viem";
 import type { WalletClient } from "viem";
 
+async function resolveAccount(walletClient: WalletClient, fallback: Address): Promise<Address> {
+  try {
+    const accounts = await walletClient.requestAddresses();
+    return (accounts[0] ?? fallback) as Address;
+  } catch {
+    return fallback;
+  }
+}
+
 const CREATE_DROP_ABI = [
   {
     name: "createDrop",
@@ -140,6 +149,7 @@ export function useCreateDrop(
       if (!walletClient) throw new Error("Wallet not connected");
 
       const { metadataBytes, imageIPFS } = await buildDropMetadataBytes(params);
+      const account = await resolveAccount(walletClient, params.host);
 
       const cfg = {
         host:               params.host,
@@ -164,7 +174,7 @@ export function useCreateDrop(
         abi: CREATE_DROP_ABI,
         functionName: "createDrop",
         args: [cfg],
-        account: params.host,
+        account,
         chain: null,
       });
 

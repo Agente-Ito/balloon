@@ -4,18 +4,25 @@ import { useT } from "@/hooks/useT";
 
 interface QuickCreateFlowProps {
   initialEvent?: Celebration;
+  profileName?: string;
   isSaving: boolean;
   onCancel: () => void;
   onSubmit: (payload: { event: Celebration; createDrop: boolean }) => Promise<void>;
 }
 
-export function QuickCreateFlow({ initialEvent, isSaving, onCancel, onSubmit }: QuickCreateFlowProps) {
+export function QuickCreateFlow({ initialEvent, profileName, isSaving, onCancel, onSubmit }: QuickCreateFlowProps) {
   const t = useT();
   const today = new Date().toISOString().slice(0, 10);
   const [date, setDate] = useState(initialEvent?.date ?? today);
   const [title, setTitle] = useState(initialEvent?.title ?? "");
   const [description, setDescription] = useState(initialEvent?.description ?? "");
   const [createDrop, setCreateDrop] = useState(false);
+  const personalizedNamePlaceholder = profileName
+    ? t.quickCreateNamePlaceholderWithName.replace("{name}", profileName)
+    : t.quickCreateNamePlaceholder;
+  const personalizedDescPlaceholder = profileName
+    ? t.quickCreateDescPlaceholderWithName.replace("{name}", profileName)
+    : t.quickCreateDescPlaceholder;
 
   useEffect(() => {
     if (!initialEvent) return;
@@ -63,7 +70,7 @@ export function QuickCreateFlow({ initialEvent, isSaving, onCancel, onSubmit }: 
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder={t.quickCreateNamePlaceholder}
+          placeholder={personalizedNamePlaceholder}
           className="input text-sm"
           maxLength={72}
         />
@@ -74,7 +81,7 @@ export function QuickCreateFlow({ initialEvent, isSaving, onCancel, onSubmit }: 
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder={t.quickCreateDescPlaceholder}
+          placeholder={personalizedDescPlaceholder}
           className="input text-sm min-h-[74px]"
           maxLength={180}
         />
