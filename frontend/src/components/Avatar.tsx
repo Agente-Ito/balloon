@@ -1,4 +1,5 @@
 import { useLSP3Avatar } from "@/hooks/useLSP3Avatar";
+import { useEffect, useState } from "react";
 import type { Address } from "@/types";
 
 interface AvatarProps {
@@ -16,19 +17,24 @@ export function Avatar({ address, size = 40, className = "", chainId, imageUrl, 
   // Only run the internal fetch when a pre-resolved imageUrl is NOT provided
   const { data: fetchedUrl } = useLSP3Avatar(imageUrl ? null : address, chainId);
   const resolvedUrl = imageUrl ?? fetchedUrl;
+  const [imageFailed, setImageFailed] = useState(false);
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [resolvedUrl]);
 
   if (!address && !resolvedUrl) {
     return <GradientAvatar address="0x0000" size={size} className={className} />;
   }
 
-  if (resolvedUrl) {
+  if (resolvedUrl && !imageFailed) {
     return (
       <img
         src={resolvedUrl}
         alt={name ?? ""}
         style={{ width: size, height: size }}
         className={`rounded-full object-cover flex-shrink-0 ${className}`}
-        onError={() => {/* silent */}}
+        onError={() => setImageFailed(true)}
       />
     );
   }
@@ -58,7 +64,7 @@ function GradientAvatar({
   const hue2 = (hue + 60) % 360;
 
   const initials = name
-    ? name.trim().split(/\s+/).slice(0, 2).map((w) => w[0].toUpperCase()).join("")
+    ? name.trim().charAt(0).toUpperCase()
     : address.slice(2, 4).toUpperCase();
 
   return (

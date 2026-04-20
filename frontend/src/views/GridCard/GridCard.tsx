@@ -78,10 +78,17 @@ export function GridCard({ chainId }: GridCardProps) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 min-w-0">
           {contextProfile ? (
-            <Avatar address={contextProfile} size={34} chainId={chainId} className="ring-1 ring-[#E8D9C8]" />
+            <Avatar
+              address={contextProfile}
+              size={34}
+              chainId={chainId}
+              imageUrl={lsp3?.imageUrl}
+              name={lsp3?.name}
+              className="ring-1 ring-[#E8D9C8]"
+            />
           ) : null}
           <div className="min-w-0">
-            <BalloonLogo className="animate-balloon-header mb-1 max-w-[92px] sm:max-w-none" displayHeight={24} />
+            <BalloonLogo className="animate-balloon-header mb-1 max-w-[150px] sm:max-w-none" displayHeight={52} />
             {lsp3?.name && (
               <p className="text-[11px] leading-tight truncate" style={{ color: "#8B7D7D" }}>
                 {lsp3.name}
