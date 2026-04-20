@@ -76,10 +76,11 @@ export default {
           "50%":      { transform: "translateY(-3px)" },
         },
         balloonRise: {
-          "0%":   { transform: "translateY(0)",      opacity: "0" },
+          "0%":   { transform: "translate3d(var(--x-start, 0px), 0, 0) rotate(var(--rot-start, 0deg))", opacity: "0" },
           "8%":   { opacity: "1" },
+          "50%":  { transform: "translate3d(var(--x-mid, 0px), -58vh, 0) rotate(var(--rot-mid, 0deg))" },
           "88%":  { opacity: "1" },
-          "100%": { transform: "translateY(-115vh)", opacity: "0" },
+          "100%": { transform: "translate3d(var(--x-end, 0px), -115vh, 0) rotate(var(--rot-end, 0deg))", opacity: "0" },
         },
         confettiFall: {
           "0%":   { transform: "translateY(0) rotate(0deg)",    opacity: "1" },

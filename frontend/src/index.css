@@ -24,6 +24,8 @@
 /* ─── Base ───────────────────────────────────────────────────────────── */
 @layer base {
   body {
+    position: relative;
+    isolation: isolate;
     background-color: var(--cel-cream);
     color: var(--cel-text);
     font-family: "Poppins", system-ui, sans-serif;
@@ -32,31 +34,33 @@
     text-rendering: optimizeLegibility;
     /* Grid apps embedded in iframes */
     overflow: hidden;
-    /* Celebration pattern tile + warm vignette on top */
+  }
+
+  /* Dedicated pattern layer always behind application content */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
     background-image:
       radial-gradient(ellipse at 15% 0%, rgba(156, 78, 219, 0.06) 0%, transparent 55%),
       radial-gradient(ellipse at 85% 100%, rgba(106, 27, 154, 0.05) 0%, transparent 55%),
       url("/celebration-pattern.png");
     background-repeat: no-repeat, no-repeat, repeat;
     background-size: auto, auto, 340px;
-    /* Tint the pattern to match cream palette and keep it very subtle */
-    /* The radial gradients are drawn on top; pattern sits underneath */
+    opacity: 0.54;
+    pointer-events: none;
+    z-index: -2;
   }
 
-  /* Pattern overlay: screen-blend so pattern only shows in light areas
-     and disappears behind dark cards, keeping UI readable */
-  body::before {
+  /* Soft cream veil to keep pattern subtle and never dominant */
+  body::after {
     content: "";
     position: fixed;
     inset: 0;
-    /* Cream wash that dims the pattern globally */
-    background: rgba(245, 240, 225, 0.82);
+    background: rgba(245, 240, 225, 0.84);
     pointer-events: none;
-    z-index: 0;
+    z-index: -1;
   }
-
-  /* Ensure all direct children render above the ::before overlay */
-  body > * { position: relative; z-index: 1; }
 
   * { box-sizing: border-box; }
 
@@ -303,15 +307,15 @@
   .group:hover .group-hover\:text-white\/50 { color: rgba(44, 44, 44, 0.50) !important; }
 
   /* ── bg-white/* → subtle violet tints ───────────────────────────────── */
-  .bg-white\/5          { background-color: rgba(106, 27, 154, 0.04) !important; }
-  .bg-white\/8          { background-color: rgba(106, 27, 154, 0.05) !important; }
-  .bg-white\/10         { background-color: rgba(106, 27, 154, 0.07) !important; }
-  .bg-white\/15         { background-color: rgba(106, 27, 154, 0.09) !important; }
-  .bg-white\/20         { background-color: rgba(106, 27, 154, 0.11) !important; }
+  .bg-white\/5          { background-color: #f6f2ea !important; }
+  .bg-white\/8          { background-color: #f4eee5 !important; }
+  .bg-white\/10         { background-color: #f2ebe1 !important; }
+  .bg-white\/15         { background-color: #eee6d8 !important; }
+  .bg-white\/20         { background-color: #eadecc !important; }
 
   /* hover: bg variants */
-  .hover\:bg-white\/10:hover  { background-color: rgba(106, 27, 154, 0.09) !important; }
-  .hover\:bg-white\/20:hover  { background-color: rgba(106, 27, 154, 0.12) !important; }
+  .hover\:bg-white\/10:hover  { background-color: #efe7db !important; }
+  .hover\:bg-white\/20:hover  { background-color: #e8dcc8 !important; }
 
   /* ── border-white/* → subtle violet borders ─────────────────────────── */
   .border-white\/5      { border-color: rgba(106, 27, 154, 0.08) !important; }

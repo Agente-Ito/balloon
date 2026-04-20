@@ -20,6 +20,8 @@ const CONFETTI_BASE = ["#6A1B9A", "#9C4EDB", "#FFD700", "#E8D9C8", "#F5F0E1"];
 interface BalloonParticle {
   id: number; left: number; color: string;
   delay: number; duration: number; size: number;
+  driftStart: number; driftMid: number; driftEnd: number;
+  rotStart: number; rotMid: number; rotEnd: number;
 }
 
 interface ConfettiParticle {
@@ -34,6 +36,12 @@ function generateParticles(preset: BurstPreset, theme: BurstTheme, isMobile: boo
     celebration: { balloons: 8, confetti: 16, duration: 3.8 },
     epic: { balloons: 13, confetti: 40, duration: 4.8 },
   };
+  const balloonSizeRanges: Record<BurstPreset, [number, number]> = {
+    single: [44, 58],
+    gentle: [42, 64],
+    celebration: [48, 76],
+    epic: [54, 88],
+  };
   const baseCfg = config[preset];
   const cfg = {
     ...baseCfg,
@@ -42,6 +50,8 @@ function generateParticles(preset: BurstPreset, theme: BurstTheme, isMobile: boo
   };
   const palette = BALLOON_PALETTES[theme];
   const confettiPalette = [...CONFETTI_BASE, ...palette.slice(0, 3)];
+  const [minSize, maxSize] = balloonSizeRanges[preset];
+  const sizeScale = isMobile ? 0.9 : 1;
 
   const balloons: BalloonParticle[] = Array.from({ length: cfg.balloons }, (_, i) => ({
     id: i,
@@ -49,7 +59,13 @@ function generateParticles(preset: BurstPreset, theme: BurstTheme, isMobile: boo
     color: palette[Math.floor(Math.random() * palette.length)],
     delay: Math.random() * 0.9,
     duration: cfg.duration - 1 + Math.random() * 1.4,
-    size: 26 + Math.random() * 24,
+    size: (minSize + Math.random() * (maxSize - minSize)) * sizeScale,
+    driftStart: -10 + Math.random() * 20,
+    driftMid: -28 + Math.random() * 56,
+    driftEnd: -48 + Math.random() * 96,
+    rotStart: -10 + Math.random() * 20,
+    rotMid: -8 + Math.random() * 16,
+    rotEnd: -12 + Math.random() * 24,
   }));
 
   const confetti: ConfettiParticle[] = Array.from({ length: cfg.confetti }, (_, i) => ({
@@ -95,6 +111,12 @@ export function BalloonBurst() {
             left: `${b.left}%`,
             "--rise-dur": `${b.duration}s`,
             "--rise-delay": `${b.delay}s`,
+            "--x-start": `${b.driftStart}px`,
+            "--x-mid": `${b.driftMid}px`,
+            "--x-end": `${b.driftEnd}px`,
+            "--rot-start": `${b.rotStart}deg`,
+            "--rot-mid": `${b.rotMid}deg`,
+            "--rot-end": `${b.rotEnd}deg`,
           } as React.CSSProperties}
         >
           <BalloonIcon size={b.size} color={b.color} foil />
