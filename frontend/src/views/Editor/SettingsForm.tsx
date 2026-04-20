@@ -1,9 +1,13 @@
 import { useAppStore } from "@/store/useAppStore";
 import { useSetSettings } from "@/hooks/useUniversalProfile";
+import { useLocalReminders } from "@/hooks/useLocalReminders";
+import { useReminderSync } from "@/hooks/useReminderSync";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { useT } from "@/hooks/useT";
 import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
+import { format } from "date-fns";
+import { es as esLocale } from "date-fns/locale";
 import type { ProfileSettings, Address } from "@/types";
 import type { WalletClient } from "viem";
 
@@ -48,11 +52,28 @@ function ToggleRow({ label, description, checked, onChange, disabled = false }: 
 }
 
 export function SettingsForm({ settings, walletClient }: SettingsFormProps) {
-  const { contextProfile } = useAppStore();
+  const { contextProfile, connectedAccount, lang } = useAppStore();
   const t = useT();
+  const dateLocale = lang === "es" ? esLocale : undefined;
   const { mutateAsync: saveSettings, isPending } = useSetSettings({
     walletClient: walletClient!,
     upAddress: contextProfile as Address,
+  });
+  const {
+    reminders: localReminders,
+    allReminderRecords,
+    replaceReminders,
+  } = useLocalReminders(contextProfile as Address | null);
+  const {
+    backupReminders,
+    restoreReminders,
+    isBackingUp: isBackingUpReminders,
+    isRestoring: isRestoringReminders,
+    lastSyncMeta,
+  } = useReminderSync({
+    walletClient: walletClient ?? undefined,
+    profileAddress: contextProfile as Address | null,
+    connectedAccount,
   });
 
   const [draft, setDraft] = useState<ProfileSettings>(settings);
@@ -144,6 +165,69 @@ export function SettingsForm({ settings, walletClient }: SettingsFormProps) {
             );
           })}
         </div>
+      </div>
+
+      <div className="py-3 border-b border-lukso-border last:border-0">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="title-premium text-sm mb-1">{t.reminderSyncTitle}</p>
+            <p className="text-xs text-white/45">{t.reminderSyncSub}</p>
+            {lastSyncMeta?.lastSyncedAt ? (
+              <p className="text-[11px] text-white/35 mt-1">
+                {t.reminderSyncLastSaved} {format(new Date(lastSyncMeta.lastSyncedAt * 1000), "PPP p", { locale: dateLocale })}
+              </p>
+            ) : (
+              <p className="text-[11px] text-white/35 mt-1">{t.reminderSyncNoBackup}</p>
+            )}
+          </div>
+          <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 border border-white/10 text-white/60">
+            {localReminders.length} {t.reminderSyncLocalCount}
+          </span>
+        </div>
+        <div className="grid grid-cols-2 gap-2 mt-3">
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                await backupReminders(allReminderRecords);
+                toast.success(t.toastReminderBackupSaved);
+              } catch (err) {
+                const msg = err instanceof Error ? err.message : t.toastReminderBackupFailed;
+                toast.error(msg.slice(0, 120) || t.toastReminderBackupFailed);
+              }
+            }}
+            disabled={isBackingUpReminders || isRestoringReminders || !connectedAccount}
+            className="btn-primary text-xs py-2"
+          >
+            {isBackingUpReminders ? t.saving : t.reminderSyncBackupBtn}
+          </button>
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                const payload = await restoreReminders(allReminderRecords);
+                const activeReminders = payload.reminders.filter((reminder) => !reminder.deletedAt);
+                if (!activeReminders.length) {
+                  toast.error(t.toastReminderRestoreEmpty);
+                  return;
+                }
+                if (localReminders.length > 0 && !window.confirm(t.reminderSyncRestoreConfirm)) {
+                  return;
+                }
+                replaceReminders(payload.reminders);
+                toast.success(t.toastReminderRestoreSuccess);
+              } catch (err) {
+                const msg = err instanceof Error ? err.message : t.toastReminderRestoreFailed;
+                toast.error(msg.slice(0, 120) || t.toastReminderRestoreFailed);
+              }
+            }}
+            disabled={isBackingUpReminders || isRestoringReminders || !connectedAccount}
+            className="btn-secondary text-xs py-2"
+          >
+            {isRestoringReminders ? t.loading : t.reminderSyncRestoreBtn}
+          </button>
+        </div>
+        <p className="text-[11px] text-white/35 mt-2">{t.reminderSyncHint}</p>
       </div>
 
       <div className="pt-3 space-y-2">

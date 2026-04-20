@@ -147,6 +147,7 @@ export function DropsManageView({ walletClient, chainId }: DropsManageViewProps)
         <div className="flex-1 overflow-y-auto px-4 py-4">
           <DropForm
             host={connectedAccount}
+            chainId={chainId}
             onSave={handleCreate}
             onCancel={() => setAddingDrop(false)}
             isSaving={createDropMutation.isPending}

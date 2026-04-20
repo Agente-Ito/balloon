@@ -6,6 +6,9 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import type { CreateDropParams } from "@/hooks/useCreateDrop";
 import type { Address, CelebrationType } from "@/types";
 import { HOLIDAY_DROP_TEMPLATES, holidayTemplateToFile } from "@/constants/dropTemplates";
+import { useSocialContacts } from "@/hooks/useSocialContacts";
+import { useLSP3Name } from "@/hooks/useLSP3Name";
+import { Avatar } from "@/components/Avatar";
 import { useT } from "@/hooks/useT";
 import { getMonthNames } from "@/lib/monthNames";
 
@@ -22,10 +25,53 @@ export interface DropFormPrefill {
 
 interface DropFormProps {
   host: Address;
+  chainId?: number;
   onSave: (params: CreateDropParams) => void;
   onCancel: () => void;
   isSaving: boolean;
   prefill?: DropFormPrefill;
+}
+
+function CoHostRow({
+  address,
+  chainId,
+  source,
+  selected,
+  onToggle,
+}: {
+  address: Address;
+  chainId: number;
+  source: "following" | "followers" | "both";
+  selected: boolean;
+  onToggle: () => void;
+}) {
+  const t = useT();
+  const { data: name } = useLSP3Name(address, chainId);
+
+  const sourceLabel = source === "both"
+    ? t.dropFormCoHostsBoth
+    : source === "following"
+      ? t.dropFormCoHostsFollowing
+      : t.dropFormCoHostsFollowers;
+
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className={`w-full flex items-center gap-2 rounded-lg border px-2 py-1.5 text-left transition-colors ${
+        selected
+          ? "border-lukso-purple/50 bg-lukso-purple/10"
+          : "border-white/10 bg-white/5 hover:border-white/20"
+      }`}
+    >
+      <Avatar address={address} size={22} chainId={chainId} className="ring-1 ring-white/10" />
+      <div className="min-w-0 flex-1">
+        <p className="text-xs truncate">{name ?? `${address.slice(0, 6)}…${address.slice(-4)}`}</p>
+        <p className="text-[10px] text-white/40 truncate">{address}</p>
+      </div>
+      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/10 text-white/60">{sourceLabel}</span>
+    </button>
+  );
 }
 
 function AddressListField({
@@ -66,7 +112,7 @@ function AddressListField({
   );
 }
 
-export function DropForm({ host, onSave, onCancel, isSaving, prefill }: DropFormProps) {
+export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, prefill }: DropFormProps) {
   const t = useT();
   const currentYear = new Date().getFullYear();
   const monthNames = useMemo(() => getMonthNames(t), [t]);
@@ -97,6 +143,13 @@ export function DropForm({ host, onSave, onCancel, isSaving, prefill }: DropForm
   const [lsp7List,        setLsp7List]         = useState<Address[]>([]);
   const [lsp8List,        setLsp8List]         = useState<Address[]>([]);
 
+  // Optional co-celebrators
+  const [showCoHosts, setShowCoHosts] = useState(false);
+  const [coHostSearch, setCoHostSearch] = useState("");
+  const [coHosts, setCoHosts] = useState<Address[]>([]);
+  const [manualCoHost, setManualCoHost] = useState("");
+  const { data: socialContacts = [] } = useSocialContacts(host);
+
   // Templates picker
   const [showTemplates, setShowTemplates] = useState(false);
   const [selectedTplId, setSelectedTplId] = useState<string | null>(null);
@@ -117,6 +170,14 @@ export function DropForm({ host, onSave, onCancel, isSaving, prefill }: DropForm
 
   const hasConditions = requireFollow || !!minFollowers || lsp7List.length > 0 || lsp8List.length > 0;
 
+  const filteredContacts = useMemo(() => {
+    const q = coHostSearch.trim().toLowerCase();
+    if (!q) return socialContacts;
+    return socialContacts.filter((contact) => contact.address.toLowerCase().includes(q));
+  }, [coHostSearch, socialContacts]);
+
+  const canAddManualCoHost = manualCoHost.trim().startsWith("0x") && manualCoHost.trim().length === 42;
+
   function applyHolidayTemplate(tplId: string) {
     const tpl = HOLIDAY_DROP_TEMPLATES.find((t) => t.id === tplId);
     if (!tpl) return;
@@ -133,6 +194,12 @@ export function DropForm({ host, onSave, onCancel, isSaving, prefill }: DropForm
 
   const handleSubmit = () => {
     if (!name || !month || !day) return;
+
+    const normalizedCoHosts = Array.from(new Set(coHosts.map((a) => a.toLowerCase())));
+    const metaSuffix = normalizedCoHosts.length
+      ? `\n\n[co-celebrators:${normalizedCoHosts.join(",")}]`
+      : "";
+
     onSave({
       host,
       celebrationType: celebType,
@@ -146,7 +213,7 @@ export function DropForm({ host, onSave, onCancel, isSaving, prefill }: DropForm
       requiredLSP7:      lsp7List,
       requiredLSP8:      lsp8List,
       name,
-      description,
+      description: `${description ?? ""}${metaSuffix}`.trim(),
       imageFile,
     });
   };
@@ -351,6 +418,105 @@ export function DropForm({ host, onSave, onCancel, isSaving, prefill }: DropForm
       </div>
 
       {/* ── Actions ────────────────────────────────────────────────── */}
+      <div className="border border-lukso-border rounded-2xl overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setShowCoHosts((v) => !v)}
+          className="w-full flex items-center justify-between px-4 py-3 hover:bg-white/5 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">{t.dropFormCoHosts}</span>
+            {coHosts.length > 0 && (
+              <span className="badge bg-lukso-purple/20 text-lukso-purple text-xs">
+                {coHosts.length} {t.dropFormCoHostsSelected}
+              </span>
+            )}
+          </div>
+          <span className="text-white/40 text-xs">
+            {showCoHosts ? t.dropFormCoHostsHide : t.dropFormCoHostsConfigure}
+          </span>
+        </button>
+
+        {showCoHosts && (
+          <div className="px-4 pb-4 pt-3 border-t border-lukso-border space-y-3">
+            <p className="text-xs text-white/35">{t.dropFormCoHostsHint}</p>
+
+            <input
+              type="text"
+              value={coHostSearch}
+              onChange={(e) => setCoHostSearch(e.target.value)}
+              placeholder={t.dropFormCoHostsSearchPlaceholder}
+              className="input w-full text-sm"
+            />
+
+            <div className="max-h-44 overflow-y-auto space-y-1.5 pr-1">
+              {filteredContacts.length === 0 ? (
+                <p className="text-xs text-white/35">{t.dropFormCoHostsEmpty}</p>
+              ) : (
+                filteredContacts.map((contact) => (
+                  <CoHostRow
+                    key={contact.address}
+                    address={contact.address}
+                    chainId={chainId}
+                    source={contact.source}
+                    selected={coHosts.includes(contact.address)}
+                    onToggle={() => {
+                      setCoHosts((prev) => (
+                        prev.includes(contact.address)
+                          ? prev.filter((a) => a !== contact.address)
+                          : [...prev, contact.address]
+                      ));
+                    }}
+                  />
+                ))
+              )}
+            </div>
+
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={manualCoHost}
+                onChange={(e) => setManualCoHost(e.target.value)}
+                placeholder={t.dropFormCoHostsManualPlaceholder}
+                className="input flex-1 text-xs font-mono"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const addr = manualCoHost.trim() as Address;
+                  if (!addr.startsWith("0x") || addr.length !== 42) return;
+                  setCoHosts((prev) => (prev.includes(addr) ? prev : [...prev, addr]));
+                  setManualCoHost("");
+                }}
+                disabled={!canAddManualCoHost}
+                className="btn-ghost text-xs px-3 border border-lukso-border disabled:opacity-40"
+              >
+                {t.dropFormAddBtn}
+              </button>
+            </div>
+
+            {coHosts.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {coHosts.map((addr) => (
+                  <span key={addr} className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-lukso-purple/10 border border-lukso-purple/20 text-[11px]">
+                    {addr.slice(0, 6)}…{addr.slice(-4)}
+                    <button
+                      type="button"
+                      onClick={() => setCoHosts((prev) => prev.filter((a) => a !== addr))}
+                      className="text-white/45 hover:text-red-400 leading-none"
+                    >
+                      ✕
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            <p className="text-[11px] text-white/35">{t.dropFormCoHostsMetaNote}</p>
+          </div>
+        )}
+      </div>
+
       <div className="flex gap-2 pt-1">
         <button type="button" onClick={onCancel}
           className="btn-ghost flex-1 text-sm border border-lukso-border">{t.cancel}</button>

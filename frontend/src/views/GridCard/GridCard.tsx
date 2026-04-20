@@ -8,6 +8,7 @@ import { NetworkBadge } from "@/components/NetworkBadge";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { BalloonIcon } from "@/components/BalloonIcon";
 import { BalloonLogo } from "@/components/BalloonLogo";
+import { Avatar } from "@/components/Avatar";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { useT } from "@/hooks/useT";
 import { useLSP3Profile } from "@/hooks/useLSP3Profile";
@@ -76,8 +77,11 @@ export function GridCard({ chainId }: GridCardProps) {
     <div className="h-full flex flex-col p-4 gap-4 overflow-y-auto">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 min-w-0">
-          <BalloonLogo className="animate-balloon-header" displayHeight={34} />
+          {contextProfile ? (
+            <Avatar address={contextProfile} size={34} chainId={chainId} className="ring-1 ring-[#E8D9C8]" />
+          ) : null}
           <div className="min-w-0">
+            <BalloonLogo className="animate-balloon-header mb-1 max-w-[92px] sm:max-w-none" displayHeight={24} />
             {lsp3?.name && (
               <p className="text-[11px] leading-tight truncate" style={{ color: "#8B7D7D" }}>
                 {lsp3.name}
@@ -91,19 +95,20 @@ export function GridCard({ chainId }: GridCardProps) {
         </div>
       </div>
 
-      <div className="flex-1 min-h-[220px] flex flex-col items-center justify-center text-center gap-4 card px-4 py-5">
-        <BalloonIcon size={112} className="animate-float" />
-        <p className="title-home text-base">
+      <div className="flex-1 min-h-[220px] flex flex-col items-center justify-center text-center gap-3 sm:gap-4 card px-3 sm:px-4 py-4 sm:py-5 overflow-hidden">
+        <BalloonIcon size={88} className="animate-float sm:hidden" />
+        <BalloonIcon size={112} className="animate-float hidden sm:block" />
+        <p className="title-home text-[15px] leading-[1.1] sm:text-base max-w-[15ch] sm:max-w-none">
           {t.gridHeroLine1}
           <br />
           {t.gridHeroLine2}
         </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-md pt-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-md pt-1 px-1 sm:px-0">
           {actions.slice(0, 3).map((action, index) => (
             <button
               key={action.key}
               onClick={action.onClick}
-              className={`text-sm py-3 ${action.primary ? "btn-primary" : "btn-secondary"} ${actions.length === 3 && index === 0 ? "sm:col-span-2" : ""}`}
+              className={`text-sm py-3 px-3 leading-tight w-full ${action.primary ? "btn-primary" : "btn-secondary"} ${actions.length === 3 && index === 0 ? "sm:col-span-2" : ""}`}
             >
               {action.label}
             </button>

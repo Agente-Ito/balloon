@@ -52,9 +52,11 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
             position="bottom-right"
             toastOptions={{
               style: {
-                background: "#252629",
+                background: "linear-gradient(135deg, #6A1B9A 0%, #9C4EDB 45%, #6A1B9A 100%)",
                 color: "#fff",
-                border: "1px solid #3A3B3E",
+                border: "1px solid rgba(255,255,255,0.24)",
+                boxShadow: "0 8px 24px rgba(106,27,154,0.35), inset 0 1px 0 rgba(255,255,255,0.25)",
+                fontWeight: 600,
               },
             }}
           />
