@@ -77,22 +77,22 @@ export function GridCard({ chainId }: GridCardProps) {
     <div className="h-full flex flex-col p-4 gap-4 overflow-y-auto">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 min-w-0">
-          {contextProfile ? (
-            <Avatar
-              address={contextProfile}
-              size={34}
-              chainId={chainId}
-              imageUrl={lsp3?.imageUrl}
-              name={lsp3?.name}
-              className="ring-1 ring-[#E8D9C8]"
-            />
-          ) : null}
-          <div className="min-w-0 flex flex-col justify-center">
-            <div className="h-[34px] flex items-center">
+          <div className="min-w-0 flex flex-col gap-0">
+            <div className="flex items-center gap-2">
+              {contextProfile ? (
+                <Avatar
+                  address={contextProfile}
+                  size={34}
+                  chainId={chainId}
+                  imageUrl={lsp3?.imageUrl}
+                  name={lsp3?.name}
+                  className="ring-1 ring-[#E8D9C8] shrink-0"
+                />
+              ) : null}
               <BalloonLogo className="max-w-[150px] sm:max-w-none" displayHeight={52} />
             </div>
             {lsp3?.name && (
-              <p className="text-[11px] leading-tight truncate" style={{ color: "#8B7D7D" }}>
+              <p className="text-[11px] leading-tight truncate pl-[42px]" style={{ color: "#8B7D7D" }}>
                 {lsp3.name}
               </p>
             )}
@@ -108,7 +108,7 @@ export function GridCard({ chainId }: GridCardProps) {
             }}
             aria-label={t.tabSettings}
             title={t.tabSettings}
-            className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl border border-lukso-border bg-white/5 hover:bg-lukso-purple/10 hover:border-lukso-purple/30 transition-colors flex items-center justify-center p-1"
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl border border-lukso-border bg-white/5 hover:bg-lukso-purple/10 hover:border-lukso-purple/30 transition-colors flex items-center justify-center p-0.5"
           >
             <img
               src="/settings-gear.png"
