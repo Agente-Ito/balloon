@@ -46,6 +46,7 @@ export default {
         "slide-up":     "slideUp 0.25s ease-out",
         "float":        "float 3s ease-in-out infinite",
         "float-slow":   "float 4.5s ease-in-out infinite",
+        "float-mobile": "floatMobile 4s ease-in-out infinite",
         "float-logo":   "floatLogo 7s ease-in-out infinite",
         "balloon-rise": "balloonRise var(--rise-dur, 2.8s) ease-out var(--rise-delay, 0s) forwards",
         "confetti-fall":"confettiFall var(--fall-dur, 3s) ease-in var(--fall-delay, 0s) forwards",
@@ -65,6 +66,10 @@ export default {
         float: {
           "0%, 100%": { transform: "translateY(0) rotate(-2deg)" },
           "50%":      { transform: "translateY(-7px) rotate(2deg)" },
+        },
+        floatMobile: {
+          "0%, 100%": { transform: "translateY(0) rotate(-1deg)" },
+          "50%":      { transform: "translateY(-4px) rotate(1deg)" },
         },
         floatLogo: {
           "0%, 100%": { transform: "translateY(3px)" },

@@ -91,11 +91,7 @@ export function GridCard({ chainId }: GridCardProps) {
               ) : null}
               <BalloonLogo className="max-w-[150px] sm:max-w-none" displayHeight={52} />
             </div>
-            {lsp3?.name && (
-              <p className="text-[11px] leading-tight truncate pl-[42px]" style={{ color: "#8B7D7D" }}>
-                {lsp3.name}
-              </p>
-            )}
+
           </div>
         </div>
         <div className="flex items-center gap-1.5">
@@ -108,7 +104,7 @@ export function GridCard({ chainId }: GridCardProps) {
             }}
             aria-label={t.tabSettings}
             title={t.tabSettings}
-            className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl border border-lukso-border bg-white/5 hover:bg-lukso-purple/10 hover:border-lukso-purple/30 transition-colors flex items-center justify-center p-0.5"
+            className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl border border-lukso-border bg-white/5 hover:bg-lukso-purple/10 hover:border-lukso-purple/30 transition-colors flex items-center justify-center p-0.5"
           >
             <img
               src="/settings-gear.png"
@@ -127,7 +123,7 @@ export function GridCard({ chainId }: GridCardProps) {
       </div>
 
       <div className="flex-1 min-h-[200px] sm:min-h-[220px] flex flex-col items-center justify-center text-center gap-2 sm:gap-4 card px-3 sm:px-4 py-3 sm:py-5 overflow-hidden">
-        <BalloonIcon size={70} className="sm:hidden" />
+        <BalloonIcon size={70} className="animate-float-mobile sm:hidden" />
         <BalloonIcon size={112} className="animate-float hidden sm:block" />
         <p className="title-home text-[13px] leading-[1.08] sm:text-base">
           <span className="block whitespace-nowrap">{t.gridHeroLine1}</span>

@@ -10,6 +10,7 @@ import { useSocialContacts } from "@/hooks/useSocialContacts";
 import { useLSP3Name } from "@/hooks/useLSP3Name";
 import { Avatar } from "@/components/Avatar";
 import { useT } from "@/hooks/useT";
+import { useAppStore } from "@/store/useAppStore";
 import { getMonthNames } from "@/lib/monthNames";
 
 export interface DropFormPrefill {
@@ -114,6 +115,7 @@ function AddressListField({
 
 export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, prefill }: DropFormProps) {
   const t = useT();
+  const lang = useAppStore((s) => s.lang);
   const currentYear = new Date().getFullYear();
   const monthNames = useMemo(() => getMonthNames(t), [t]);
 
@@ -127,7 +129,7 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
   const [name,        setName]        = useState(prefill?.name ?? "");
   const [description, setDesc]        = useState(prefill?.description ?? "");
   const [celebType,   setCelebType]   = useState<CelebrationType>(prefill?.celebrationType ?? 0);
-  const [year,        setYear]        = useState(prefill?.year ?? currentYear);
+  const [year,        setYear]        = useState(prefill?.year ? String(prefill.year) : "");
   const [month,       setMonth]       = useState(prefill?.month ?? new Date().getMonth() + 1);
   const [day,         setDay]         = useState(prefill?.day ?? new Date().getDate());
   const [maxSupply,   setMaxSupply]   = useState("");
@@ -182,13 +184,14 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
     const tpl = HOLIDAY_DROP_TEMPLATES.find((t) => t.id === tplId);
     if (!tpl) return;
     setSelectedTplId(tplId);
-    setName(`${tpl.name} ${currentYear}`);
-    setDesc(tpl.description);
+    const localName = lang === "es" ? tpl.nameEs : tpl.name;
+    setName(`${localName} ${currentYear}`);
+    setDesc(lang === "es" ? tpl.descEs : tpl.description);
     setCelebType(tpl.celebrationType);
-    setMonth(tpl.month);
-    setDay(tpl.day);
-    setYear(currentYear);
-    setImageFile(holidayTemplateToFile(tpl, currentYear));
+    if (tpl.month > 0) setMonth(tpl.month);
+    if (tpl.day > 0) setDay(tpl.day);
+    setYear(String(currentYear));
+    setImageFile(holidayTemplateToFile(tpl, currentYear, lang));
     setShowTemplates(false);
   }
 
@@ -203,7 +206,7 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
     onSave({
       host,
       celebrationType: celebType,
-      year,
+      year: year ? Number(year) : 0,
       month,
       day,
       endAt:             endDate ? new Date(endDate) : undefined,
@@ -252,10 +255,7 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
                 >
                   <span className="text-2xl">{tpl.emoji}</span>
                   <span className="text-[10px] text-white/70 whitespace-nowrap font-medium">
-                    {tpl.name}
-                  </span>
-                  <span className="text-[9px] text-white/30">
-                    {String(tpl.month).padStart(2,"0")}/{String(tpl.day).padStart(2,"0")}
+                    {lang === "es" ? tpl.nameEs : tpl.name}
                   </span>
                 </button>
               ))}
@@ -292,12 +292,14 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
       <div>
         <label className="block text-xs text-white/40 mb-1">{t.dropFormName}</label>
         <input type="text" value={name} onChange={(e) => setName(e.target.value)}
+          onFocus={(e) => e.target.select()}
           placeholder={t.dropFormNamePlaceholder} className="input w-full" />
       </div>
 
       <div>
         <label className="block text-xs text-white/40 mb-1">{t.dropFormDescription}</label>
         <textarea value={description} onChange={(e) => setDesc(e.target.value)}
+          onFocus={(e) => e.target.select()}
           placeholder={t.dropFormDescPlaceholder}
           rows={2} className="input w-full resize-none" />
       </div>
@@ -329,8 +331,8 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
               <option key={d} value={d}>{d}</option>
             ))}
           </select>
-          <input type="number" value={year} onChange={(e) => setYear(Number(e.target.value))}
-            min={currentYear} max={2100} className="input text-sm py-1.5" />
+          <input type="number" value={year} onChange={(e) => setYear(e.target.value)}
+            placeholder={t.dropFormYearAny} min={0} max={2100} className="input text-sm py-1.5" />
         </div>
       </div>
 

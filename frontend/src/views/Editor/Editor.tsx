@@ -472,8 +472,12 @@ export function Editor({ walletClient, chainId }: EditorProps) {
         const name = profileName
           ? t.birthdayDropName.replace("{name}", profileName)
           : "";
+        const desc = profileName
+          ? t.birthdayDropDesc.replace("{name}", profileName)
+          : "";
         return {
           name,
+          description: desc,
           month: Number(mm),
           day: Number(dd),
           year: Number(yy) || new Date().getFullYear(),

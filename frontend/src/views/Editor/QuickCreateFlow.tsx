@@ -17,6 +17,7 @@ export function QuickCreateFlow({ initialEvent, profileName, isSaving, onCancel,
   const [title, setTitle] = useState(initialEvent?.title ?? "");
   const [description, setDescription] = useState(initialEvent?.description ?? "");
   const [createDrop, setCreateDrop] = useState(false);
+  const [recurring, setRecurring] = useState(true);
   const personalizedNamePlaceholder = profileName
     ? t.quickCreateNamePlaceholderWithName.replace("{name}", profileName)
     : t.quickCreateNamePlaceholder;
@@ -43,7 +44,7 @@ export function QuickCreateFlow({ initialEvent, profileName, isSaving, onCancel,
       type: CelebrationType.CustomEvent,
       title: title.trim(),
       date,
-      recurring: initialEvent?.recurring ?? false,
+      recurring: initialEvent?.recurring ?? recurring,
       description: description.trim() || undefined,
     };
 
@@ -86,6 +87,19 @@ export function QuickCreateFlow({ initialEvent, profileName, isSaving, onCancel,
           maxLength={180}
         />
       </div>
+
+      <label className="flex items-start gap-3 rounded-xl border border-lukso-border px-3 py-2">
+        <input
+          type="checkbox"
+          checked={recurring}
+          onChange={(e) => setRecurring(e.target.checked)}
+          className="mt-0.5"
+        />
+        <span>
+          <span className="block text-sm font-medium">{t.quickCreateRecurring}</span>
+          <span className="block text-xs text-white/45">{t.quickCreateRecurringSub}</span>
+        </span>
+      </label>
 
       <label className="flex items-start gap-3 rounded-xl border border-lukso-border px-3 py-2">
         <input
