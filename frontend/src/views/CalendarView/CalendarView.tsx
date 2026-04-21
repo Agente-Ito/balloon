@@ -10,6 +10,7 @@ import { useSocialCalendar } from "@/hooks/useSocialCalendar";
 import { useDrops } from "@/hooks/useDrops";
 import { useGridSize } from "@/lib/useGridSize";
 import { CalendarGrid } from "./CalendarGrid";
+import { CalendarFrame } from "./CalendarFrame";
 import { DayPopover } from "./DayPopover";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Avatar } from "@/components/Avatar";
@@ -391,25 +392,27 @@ export function CalendarView({ chainId, walletClient }: CalendarViewProps) {
         right={<LanguageToggle />}
       />
 
-      {/* Month navigation */}
-      <div className="flex items-center justify-between px-4 py-2">
-        <button
-          onClick={() => setMonth((m) => subMonths(m, 1))}
-          className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-sm transition-colors"
-        >
-          ‹
-        </button>
-        <span className="font-semibold">{format(month, "MMMM yyyy")}</span>
-        <button
-          onClick={() => setMonth((m) => addMonths(m, 1))}
-          className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-sm transition-colors"
-        >
-          ›
-        </button>
-      </div>
+      {/* Decorative frame container with month navigation */}
+      <CalendarFrame isLoading={isLoading}>
+        {/* Month navigation - inside frame at top */}
+        <div className="flex items-center justify-between mb-4">
+          <button
+            onClick={() => setMonth((m) => subMonths(m, 1))}
+            className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-sm transition-colors"
+          >
+            ‹
+          </button>
+          <span className="font-semibold text-white/90">{format(month, "MMMM yyyy")}</span>
+          <button
+            onClick={() => setMonth((m) => addMonths(m, 1))}
+            className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-sm transition-colors"
+          >
+            ›
+          </button>
+        </div>
 
-      {/* Calendar body */}
-      <div className="flex-1 overflow-y-auto px-4 pb-4">
+        {/* Calendar body content - scrollable within frame */}
+        <div className="flex-1 overflow-y-auto pr-2">
         {isLoading ? (
           <div className="flex items-center justify-center h-48">
             <LoadingSpinner />
@@ -692,7 +695,8 @@ export function CalendarView({ chainId, walletClient }: CalendarViewProps) {
             )}
           </div>
         )}
-      </div>
+        </div>
+      </CalendarFrame>
 
       {/* Day popover */}
       {selectedDay && (
