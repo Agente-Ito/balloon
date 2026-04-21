@@ -69,8 +69,9 @@ export function CalendarView({ chainId, walletClient }: CalendarViewProps) {
   const [quickGreetingRecipient, setQuickGreetingRecipient] = useState<Address | null>(null);
   const [onchainGreetingRecipient, setOnchainGreetingRecipient] = useState<Address | null>(null);
   const isLargeGrid = useGridSize();
-  const [showFriends, setShowFriends] = useState(() => isLargeGrid);
-  const [showSocialDrops, setShowSocialDrops] = useState(() => isLargeGrid);
+  const [showFriends, setShowFriends] = useState(false);
+  const [showSocialDrops, setShowSocialDrops] = useState(false);
+  const [showCalendarExtras, setShowCalendarExtras] = useState(false);
   const [showOnlyActiveReminders, setShowOnlyActiveReminders] = useState(() => {
     try {
       return localStorage.getItem("celebrations:calendar:only-active-reminders") === "1";
@@ -129,6 +130,31 @@ export function CalendarView({ chainId, walletClient }: CalendarViewProps) {
     }
   }, [showOnlyActiveReminders]);
 
+  useEffect(() => {
+    if (!contextProfile) {
+      setShowCalendarExtras(false);
+      return;
+    }
+
+    try {
+      const key = `celebrations:calendar:show-extras:${contextProfile.toLowerCase()}`;
+      setShowCalendarExtras(localStorage.getItem(key) === "1");
+    } catch {
+      // ignore persistence errors and keep default
+      setShowCalendarExtras(false);
+    }
+  }, [contextProfile]);
+
+  useEffect(() => {
+    if (!contextProfile) return;
+    try {
+      const key = `celebrations:calendar:show-extras:${contextProfile.toLowerCase()}`;
+      localStorage.setItem(key, showCalendarExtras ? "1" : "0");
+    } catch {
+      // ignore persistence errors (private mode, disabled storage)
+    }
+  }, [contextProfile, showCalendarExtras]);
+
   const socialProfilesForMonthRaw = ((socialData?.profiles ?? [])
     .filter((p) => p.birthdayMonth === month.getMonth() + 1)
     .sort((a, b) => {
@@ -139,19 +165,11 @@ export function CalendarView({ chainId, walletClient }: CalendarViewProps) {
     }));
 
   const activeReminderCount = socialProfilesForMonthRaw.filter((p) => p.reminderDueSoon).length;
-  const socialDropsCount = (socialData?.drops ?? []).length;
-  const hasCommunityActivity = socialProfilesForMonthRaw.length > 0 || socialDropsCount > 0;
-  const communityScore = socialProfilesForMonthRaw.length + socialDropsCount + activeReminderCount;
-  const communityMomentum: "high" | "medium" | "starting" =
-    communityScore >= 8 ? "high" : communityScore >= 3 ? "medium" : "starting";
-  const socialProfilesPreview = socialProfilesForMonthRaw.slice(0, 3);
-  const socialDropsPreview = (socialData?.drops ?? [])
-    .slice()
-    .sort((a, b) => b.claimed - a.claimed)
-    .slice(0, 2);
 
   const socialProfilesForMonth = socialProfilesForMonthRaw
     .filter((p) => (showOnlyActiveReminders ? !!p.reminderDueSoon : true));
+
+  const hasExtraSections = isOwner || socialProfilesForMonthRaw.length > 0 || (socialData?.drops ?? []).length > 0;
 
   useEffect(() => {
     if (!isOwner || !contextProfile) return;
@@ -398,14 +416,14 @@ export function CalendarView({ chainId, walletClient }: CalendarViewProps) {
         <div className="flex items-center justify-between mb-4">
           <button
             onClick={() => setMonth((m) => subMonths(m, 1))}
-            className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-sm transition-colors"
+            className="w-8 h-8 rounded-full bg-[#fff4da]/70 border border-[#dbc49a] hover:bg-[#ffeec7] text-[#5a3d0a] flex items-center justify-center text-sm transition-colors"
           >
             ‹
           </button>
-          <span className="font-semibold text-white/90">{format(month, "MMMM yyyy")}</span>
+          <span className="font-semibold text-[#4a3510]">{format(month, "MMMM yyyy")}</span>
           <button
             onClick={() => setMonth((m) => addMonths(m, 1))}
-            className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-sm transition-colors"
+            className="w-8 h-8 rounded-full bg-[#fff4da]/70 border border-[#dbc49a] hover:bg-[#ffeec7] text-[#5a3d0a] flex items-center justify-center text-sm transition-colors"
           >
             ›
           </button>
@@ -426,13 +444,25 @@ export function CalendarView({ chainId, walletClient }: CalendarViewProps) {
           />
         )}
 
-        {isOwner && (
+        {hasExtraSections && (
+          <div className="mt-4 flex justify-center">
+            <button
+              type="button"
+              onClick={() => setShowCalendarExtras((v) => !v)}
+              className="btn-ghost text-xs py-1.5 px-3 border border-lukso-border"
+            >
+              {showCalendarExtras ? t.uiDismiss : t.uiShowDetails}
+            </button>
+          </div>
+        )}
+
+        {showCalendarExtras && isOwner && (
           <div className="mt-4">
             <p className="title-premium text-xs uppercase mb-2">
               {t.myCalendarTitle}
             </p>
             {ownCalendarRows.length === 0 ? (
-              <div className="card text-center py-4 text-sm text-white/40">
+              <div className="card text-center py-4 text-sm text-[#7b6950]">
                 {t.myCalendarEmpty}
               </div>
             ) : (
@@ -440,10 +470,10 @@ export function CalendarView({ chainId, walletClient }: CalendarViewProps) {
                 {ownCalendarRows.map((row) => (
                   <div key={row.id} className="card flex items-center gap-2.5">
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs text-white/40">{formatRowDate(row.rawDate)}</p>
+                      <p className="text-xs text-[#7b6950]">{formatRowDate(row.rawDate)}</p>
                       <p className="text-sm font-medium truncate">{row.title}</p>
                     </div>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 border border-white/10 text-white/70">
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#fff5dc] border border-[#d7bf90] text-[#6b4a12]">
                       {row.typeLabel}
                     </span>
                     <span className={`text-[10px] px-2 py-0.5 rounded-full border ${row.statusClassName}`}>
@@ -465,7 +495,7 @@ export function CalendarView({ chainId, walletClient }: CalendarViewProps) {
                           onClick={() => {
                             void row.secondaryAction?.();
                           }}
-                          className="text-xs py-1.5 px-2 text-white/55 hover:text-white/80"
+                          className="text-xs py-1.5 px-2 text-[#7d6a4d] hover:text-[#4e3810]"
                         >
                           {row.secondaryActionLabel}
                         </button>
@@ -478,110 +508,8 @@ export function CalendarView({ chainId, walletClient }: CalendarViewProps) {
           </div>
         )}
 
-        {/* Community pulse: reinforces that this app is social, not single-player */}
-        <div className="mt-4 card border-lukso-purple/25 bg-lukso-purple/10">
-          <div className="flex items-center justify-between gap-2">
-            <p className="title-premium text-xs uppercase text-lukso-purple/70">
-              {t.calendarCommunityTitle}
-            </p>
-            <span className={`text-[10px] px-2 py-0.5 rounded-full border ${
-              communityMomentum === "high"
-                ? "bg-green-500/15 text-green-300 border-green-400/30"
-                : communityMomentum === "medium"
-                  ? "bg-yellow-500/15 text-yellow-300 border-yellow-400/30"
-                  : "bg-white/10 text-white/70 border-white/20"
-            }`}>
-              {communityMomentum === "high"
-                ? t.calendarCommunityMomentumHigh
-                : communityMomentum === "medium"
-                  ? t.calendarCommunityMomentumMedium
-                  : t.calendarCommunityMomentumStarting}
-            </span>
-          </div>
-          <p className="text-[11px] text-white/50 mt-1">
-            {communityMomentum === "high"
-              ? t.calendarCommunityMomentumHighSub
-              : communityMomentum === "medium"
-                ? t.calendarCommunityMomentumMediumSub
-                : t.calendarCommunityMomentumStartingSub}
-          </p>
-          {hasCommunityActivity ? (
-            <>
-              <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <div className="rounded-lg bg-white/5 border border-white/10 px-3 py-2">
-                  <p className="text-base font-semibold">{socialProfilesForMonthRaw.length}</p>
-                  <p className="text-[11px] text-white/50">{t.calendarCommunityBirthdays}</p>
-                </div>
-                <div className="rounded-lg bg-white/5 border border-white/10 px-3 py-2">
-                  <p className="text-base font-semibold">{socialDropsCount}</p>
-                  <p className="text-[11px] text-white/50">{t.calendarCommunityDrops}</p>
-                </div>
-              </div>
-
-              {socialProfilesPreview.length > 0 && (
-                <div className="mt-3">
-                  <p className="text-[11px] text-white/45 mb-1">{t.calendarCommunityPeopleNow}</p>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {socialProfilesPreview.map((p) => (
-                      <div key={p.address} className="inline-flex items-center gap-1.5 rounded-full bg-white/5 border border-white/10 px-2 py-1">
-                        <Avatar address={p.address as Address} size={18} />
-                        <span className="text-[11px] text-white/70">
-                          <ProfileNameLine address={p.address as Address} chainId={chainId} />
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {socialDropsPreview.length > 0 && (
-                <div className="mt-3">
-                  <p className="text-[11px] text-white/45 mb-1">{t.calendarCommunityRecentDrops}</p>
-                  <div className="space-y-1.5">
-                    {socialDropsPreview.map((drop) => (
-                      <button
-                        key={drop.dropId}
-                        type="button"
-                        onClick={() => {
-                          setActiveDropId(drop.dropId);
-                          setView("drop-detail");
-                        }}
-                        className="w-full text-left rounded-lg bg-white/5 border border-white/10 px-2.5 py-1.5 hover:border-lukso-border/80 transition-colors"
-                      >
-                        <p className="text-xs text-white/80 truncate">{drop.name}</p>
-                        <p className="text-[11px] text-white/45">{drop.claimed} {t.calendarClaimed}</p>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="mt-3 flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setView("drops")}
-                  className="btn-ghost text-xs py-1.5 px-3 border border-lukso-border"
-                >
-                  {t.calendarCommunityOpenDrops}
-                </button>
-                {socialProfilesForMonthRaw.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setShowFriends(true)}
-                    className="btn-secondary text-xs py-1.5 px-3"
-                  >
-                    {t.calendarCommunityOpenBirthdays}
-                  </button>
-                )}
-              </div>
-            </>
-          ) : (
-            <p className="text-xs text-white/50 mt-2">{t.calendarCommunityEmpty}</p>
-          )}
-        </div>
-
         {/* Social section: friends' birthdays this month — collapsed by default */}
-        {socialProfilesForMonthRaw.length > 0 && (
+        {showCalendarExtras && socialProfilesForMonthRaw.length > 0 && (
           <div className="mt-4">
             <div className="flex items-center justify-between gap-2 py-1 mb-2">
               <button
@@ -589,7 +517,7 @@ export function CalendarView({ chainId, walletClient }: CalendarViewProps) {
                 className="flex items-center gap-2 min-w-0 group"
               >
                 <p className={`title-premium text-xs uppercase truncate ${
-                  isLargeGrid ? "text-white/40" : "text-white/60"
+                  isLargeGrid ? "text-[#7b6950]" : "text-[#6f5c3f]"
                 }`}>
                   {t.calendarFriends} ({socialProfilesForMonthRaw.length})
                 </p>
@@ -607,7 +535,7 @@ export function CalendarView({ chainId, walletClient }: CalendarViewProps) {
                   showOnlyActiveReminders
                     ? "bg-lukso-purple/25 border-lukso-purple/50 text-lukso-purple"
                     : isLargeGrid
-                      ? "bg-white/5 border-white/10 text-white/45 hover:text-white/70"
+                          ? "bg-[#fff6e4]/80 border-[#d9c49b] text-[#7b6950] hover:text-[#4f3a1d]"
                       : "bg-white/10 border-white/25 text-white/75 hover:text-white"
                 }`}
               >
@@ -619,7 +547,7 @@ export function CalendarView({ chainId, walletClient }: CalendarViewProps) {
             {showFriends && (
               <div className="space-y-2">
                 {socialProfilesForMonth.length === 0 && showOnlyActiveReminders ? (
-                  <p className="text-xs text-white/45 px-1 py-2">
+                  <p className="text-xs text-[#7b6950] px-1 py-2">
                     {t.calendarNoActiveReminders}
                   </p>
                 ) : socialProfilesForMonth.map((p) => (
@@ -629,7 +557,7 @@ export function CalendarView({ chainId, walletClient }: CalendarViewProps) {
                         <p className="text-xs text-white/60">
                           <ProfileNameLine address={p.address as Address} chainId={chainId} />
                         </p>
-                        <p className="text-xs text-white/40">
+                        <p className="text-xs text-[#7b6950]">
                           {t.calendarBirthday} — {format(new Date(2000, p.birthdayMonth - 1, p.birthdayDay), "MMMM d")}
                         </p>
                         {p.reminderDueSoon && p.notifyFollowers !== false && (
@@ -656,7 +584,7 @@ export function CalendarView({ chainId, walletClient }: CalendarViewProps) {
         )}
 
         {/* Active drops from followed profiles this month — collapsed by default */}
-        {(socialData?.drops ?? []).length > 0 && (
+        {showCalendarExtras && (socialData?.drops ?? []).length > 0 && (
           <div className="mt-4 pb-4">
             <button
               onClick={() => setShowSocialDrops((v) => !v)}
@@ -683,7 +611,7 @@ export function CalendarView({ chainId, walletClient }: CalendarViewProps) {
                     <span className="w-3 h-3 rounded-full bg-lukso-purple flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{drop.name}</p>
-                      <p className="text-xs text-white/40">
+                      <p className="text-xs text-[#7b6950]">
                         {drop.claimed} {t.calendarClaimed}
                         {drop.maxSupply != null ? ` / ${drop.maxSupply}` : ""}
                       </p>

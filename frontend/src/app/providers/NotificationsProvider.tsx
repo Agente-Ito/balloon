@@ -92,7 +92,7 @@ export function useNotifications(): NotificationsContextValue {
 // ── UI ────────────────────────────────────────────────────────────────────────
 
 const TYPE_STYLES: Record<NotificationType, string> = {
-  success: "border-green-500/30 bg-green-500/10",
+  success: "border-amber-500/35 bg-amber-500/12",
   error:   "border-red-500/30 bg-red-500/10",
   info:    "border-lukso-purple/30 bg-lukso-purple/10",
 };

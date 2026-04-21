@@ -9,7 +9,7 @@ export function NetworkBadge({ chainId }: NetworkBadgeProps) {
 
   return (
     <span
-      className={`badge ${isMainnet ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-400"}`}
+      className={`badge ${isMainnet ? "bg-amber-500/20 text-amber-300" : "bg-yellow-500/20 text-yellow-400"}`}
     >
       <span className="w-1.5 h-1.5 rounded-full bg-current" />
       {isMainnet ? "LUKSO" : "Testnet"}

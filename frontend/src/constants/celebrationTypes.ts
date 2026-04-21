@@ -15,10 +15,10 @@ export const CELEBRATION_EMOJIS: Record<CelebrationType, string> = {
 };
 
 export const CELEBRATION_COLORS: Record<CelebrationType, string> = {
-  [CelebrationType.Birthday]: "bg-pink-500",
-  [CelebrationType.UPAnniversary]: "bg-purple-500",
-  [CelebrationType.GlobalHoliday]: "bg-yellow-500",
-  [CelebrationType.CustomEvent]: "bg-blue-500",
+  [CelebrationType.Birthday]: "bg-amber-400",
+  [CelebrationType.UPAnniversary]: "bg-amber-500",
+  [CelebrationType.GlobalHoliday]: "bg-yellow-400",
+  [CelebrationType.CustomEvent]: "bg-yellow-500",
 };
 
 export const GLOBAL_HOLIDAYS: GlobalHoliday[] = [

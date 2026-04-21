@@ -41,8 +41,8 @@ function ToggleRow({ label, description, checked, onChange, disabled = false }: 
         aria-checked={checked}
         className={`w-14 h-8 sm:w-12 sm:h-7 rounded-full transition-all border inline-flex items-center px-1 sm:px-0.5 flex-shrink-0 mt-0.5 touch-manipulation ${
           checked
-            ? "bg-lukso-purple border-lukso-purple/70 justify-end"
-            : "bg-white/10 border-white/15 justify-start"
+            ? "bg-[#c99a2e] border-[#9c7421] justify-end"
+            : "bg-[#f2e7cd] border-[#d8bf90] justify-start"
         }`}
       >
         <span className="w-6 h-6 sm:w-5 sm:h-5 rounded-full bg-white shadow-md" />
@@ -156,8 +156,8 @@ export function SettingsForm({ settings, walletClient }: SettingsFormProps) {
                 disabled={isPending}
                 className={`text-xs py-1.5 rounded-lg border transition-colors ${
                   selected
-                    ? "bg-lukso-purple/20 border-lukso-purple/50 text-lukso-purple"
-                    : "bg-white/5 border-white/10 text-white/60 hover:text-white/80"
+                    ? "bg-[#f6e7bf] border-[#c99a2e]/70 text-[#6b4a12]"
+                    : "bg-[#fff8ea] border-[#dcc79f] text-[#7b6950] hover:text-[#5a4320]"
                 }`}
               >
                 {option.label}

@@ -33,7 +33,7 @@ export function WishlistForm({ onSave, onCancel }: WishlistFormProps) {
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* Type */}
       <div>
-        <label className="block text-xs text-white/50 mb-1">{t.wishlistType}</label>
+        <label className="block text-xs text-[#7b6950] mb-1">{t.wishlistType}</label>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-1">
           {(["lsp8", "lsp7", "note"] as WishlistItemType[]).map((tp) => (
             <button
@@ -41,7 +41,7 @@ export function WishlistForm({ onSave, onCancel }: WishlistFormProps) {
               type="button"
               onClick={() => setType(tp)}
               className={`py-2 rounded-xl text-xs font-medium transition-colors ${
-                type === tp ? "bg-lukso-purple text-white" : "bg-white/5 text-white/50 hover:bg-white/10"
+                type === tp ? "bg-lukso-purple text-white" : "bg-[#fff8ea] border border-[#dcc79f] text-[#7b6950] hover:text-[#4f3a1d]"
               }`}
             >
               {tp === "lsp8" ? t.wishlistTypeNFT : tp === "lsp7" ? t.wishlistTypeToken : t.wishlistTypeNote}
@@ -52,7 +52,7 @@ export function WishlistForm({ onSave, onCancel }: WishlistFormProps) {
 
       {/* Name */}
       <div>
-        <label className="block text-xs text-white/50 mb-1">{t.wishlistName}</label>
+        <label className="block text-xs text-[#7b6950] mb-1">{t.wishlistName}</label>
         <input
           type="text"
           value={name}
@@ -66,7 +66,7 @@ export function WishlistForm({ onSave, onCancel }: WishlistFormProps) {
       {/* Contract address */}
       {type !== "note" && (
         <div>
-          <label className="block text-xs text-white/50 mb-1">{t.wishlistContract}</label>
+          <label className="block text-xs text-[#7b6950] mb-1">{t.wishlistContract}</label>
           <input
             type="text"
             value={assetAddress}
@@ -80,7 +80,7 @@ export function WishlistForm({ onSave, onCancel }: WishlistFormProps) {
       {/* Token ID */}
       {type === "lsp8" && (
         <div>
-          <label className="block text-xs text-white/50 mb-1">{t.wishlistTokenId}</label>
+          <label className="block text-xs text-[#7b6950] mb-1">{t.wishlistTokenId}</label>
           <input
             type="text"
             value={tokenId}
@@ -93,7 +93,7 @@ export function WishlistForm({ onSave, onCancel }: WishlistFormProps) {
 
       {/* Description */}
       <div>
-        <label className="block text-xs text-white/50 mb-1">{t.wishlistDesc}</label>
+        <label className="block text-xs text-[#7b6950] mb-1">{t.wishlistDesc}</label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}

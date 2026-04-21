@@ -144,9 +144,9 @@ export function CelebrationView({ walletClient, chainId }: CelebrationViewProps)
         {!isOwner && (
           <button
             onClick={() => setOpenModal("gift")}
-            className="card flex flex-col items-center gap-2 py-3 hover:border-green-500/40 transition-colors"
+            className="card flex flex-col items-center gap-2 py-3 hover:border-amber-500/40 transition-colors"
           >
-            <span className="w-5 h-5 rounded-full bg-green-500/60" />
+            <span className="w-5 h-5 rounded-full bg-amber-500/60" />
             <span className="text-xs text-center text-white/70 leading-tight">{t.celebrationGiftAsset}</span>
           </button>
         )}

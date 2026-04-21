@@ -104,7 +104,7 @@ export function EventForm({ onSave, onCancel }: EventFormProps) {
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* Title */}
       <div>
-        <label className="block text-xs text-white/50 mb-1">{t.eventName}</label>
+        <label className="block text-xs text-[#7b6950] mb-1">{t.eventName}</label>
         <input
           type="text"
           value={title}
@@ -117,7 +117,7 @@ export function EventForm({ onSave, onCancel }: EventFormProps) {
 
       {/* Date */}
       <div>
-        <label className="block text-xs text-white/50 mb-1">{t.eventDate}</label>
+        <label className="block text-xs text-[#7b6950] mb-1">{t.eventDate}</label>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           <div>
             <label className="block text-[10px] text-white/40 mb-1">{t.eventMonth}</label>
@@ -236,12 +236,12 @@ export function EventForm({ onSave, onCancel }: EventFormProps) {
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-sm font-medium">{t.eventRepeats}</p>
-            <p className="text-xs text-white/40">{t.eventRepeatsSub}</p>
+            <p className="text-xs text-[#7b6950]">{t.eventRepeatsSub}</p>
           </div>
           <button
             type="button"
             onClick={() => setRecurring(!recurring)}
-            className={`w-12 h-6 rounded-full transition-colors relative flex-shrink-0 ${recurring ? "bg-lukso-purple" : "bg-white/10"}`}
+            className={`w-12 h-6 rounded-full transition-colors relative flex-shrink-0 border ${recurring ? "bg-[#c99a2e] border-[#9c7421]" : "bg-[#f2e7cd] border-[#d8bf90]"}`}
           >
             <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${recurring ? "translate-x-6" : "translate-x-0"}`} />
           </button>

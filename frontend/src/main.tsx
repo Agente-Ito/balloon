@@ -58,6 +58,19 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
                 boxShadow: "0 8px 24px rgba(106,27,154,0.35), inset 0 1px 0 rgba(255,255,255,0.25)",
                 fontWeight: 600,
               },
+              success: {
+                style: {
+                  background: "linear-gradient(135deg, #b07a1b 0%, #d7a23a 45%, #9c6d16 100%)",
+                  color: "#2c1e08",
+                  border: "1px solid rgba(255, 245, 215, 0.8)",
+                  boxShadow: "0 10px 22px rgba(128, 87, 18, 0.32), inset 0 1px 0 rgba(255,255,255,0.45)",
+                  fontWeight: 700,
+                },
+                iconTheme: {
+                  primary: "#6d4a0f",
+                  secondary: "#f8ebc8",
+                },
+              },
             }}
           />
         </NotificationsProvider>

@@ -93,19 +93,19 @@ function SubmissionCard({
       {/* Artist */}
       <div className="flex items-center gap-2">
         <Avatar address={submission.artist as Address} size={20} />
-        <p className="text-xs text-white/50">
+        <p className="text-xs text-[#7b6950]">
           <ArtistName address={submission.artist} chainId={chainId} />
         </p>
       </div>
 
       {/* Message */}
       {submission.message && (
-        <p className="text-xs text-white/40 italic">"{submission.message}"</p>
+        <p className="text-xs text-[#7b6950] italic">"{submission.message}"</p>
       )}
 
       {/* Vote row */}
       <div className="flex items-center justify-between">
-        <span className="text-xs text-white/40">
+        <span className="text-xs text-[#7b6950]">
           {submission.voteCount} {submission.voteCount === 1 ? "vote" : "votes"}
         </span>
         {isOpen && viewer && (
@@ -122,7 +122,7 @@ function SubmissionCard({
           </button>
         )}
         {!isOpen && submission.selected && (
-          <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">
+          <span className="text-xs bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full">
             Winner
           </span>
         )}
@@ -177,7 +177,7 @@ function SubmitForm({
   return (
     <div className="card flex flex-col gap-4">
       <p className="text-sm font-semibold">Submit your artwork</p>
-      <p className="text-xs text-white/40">
+      <p className="text-xs text-[#7b6950]">
         Upload your badge design. PNG, JPG, GIF or SVG — max 10 MB.
         The community will vote for their favourite.
       </p>
@@ -194,7 +194,7 @@ function SubmitForm({
       <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
 
       <div>
-        <label className="block text-xs text-white/40 mb-1">Artist statement (optional)</label>
+        <label className="block text-xs text-[#7b6950] mb-1">Artist statement (optional)</label>
         <textarea
           value={message}
           onChange={(e) => setMessage(e.target.value.slice(0, 200))}
@@ -262,16 +262,16 @@ export function SeriesView({ walletClient, chainId }: SeriesViewProps) {
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-base font-bold">{series.name}</p>
-            <p className="text-xs text-white/40 mt-0.5">
+            <p className="text-xs text-[#7b6950] mt-0.5">
               {monthLabel} {series.day}
               {deadline && ` · Voting closes ${format(fromUnixTime(deadline), "MMM d")}`}
             </p>
             {series.description && (
-              <p className="text-xs text-white/50 mt-1">{series.description}</p>
+              <p className="text-xs text-[#6f5c3f] mt-1">{series.description}</p>
             )}
           </div>
           <div className={`text-xs px-2 py-1 rounded-full flex-shrink-0 ${
-            isOpen ? "bg-green-500/20 text-green-400" : "bg-white/10 text-white/40"
+            isOpen ? "bg-amber-500/20 text-amber-300" : "bg-white/10 text-white/40"
           }`}>
             {isOpen ? "Open" : "Closed"}
           </div>
@@ -294,7 +294,7 @@ export function SeriesView({ walletClient, chainId }: SeriesViewProps) {
         ) : sortedSubs.length === 0 ? (
           <div className="card text-center py-10">
             <p className="text-3xl mb-2">🎨</p>
-            <p className="text-sm text-white/40">No submissions yet.</p>
+            <p className="text-sm text-[#7b6950]">No submissions yet.</p>
             {isOpen && connectedAccount && (
               <p className="text-xs text-white/30 mt-1">Be the first artist to submit!</p>
             )}

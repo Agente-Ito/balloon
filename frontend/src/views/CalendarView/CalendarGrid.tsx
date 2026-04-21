@@ -37,7 +37,7 @@ export function CalendarGrid({ month, celebrationDays, onDayClick, selectedDate 
       {/* Weekday headers */}
       <div className="grid grid-cols-7 mb-1">
         {WEEKDAYS.map((wd) => (
-          <div key={wd} className="text-center text-xs text-white/30 py-1 font-medium">
+          <div key={wd} className="text-center text-xs text-[#5a4a2f] py-1 font-semibold tracking-wide">
             {wd}
           </div>
         ))}
@@ -57,11 +57,11 @@ export function CalendarGrid({ month, celebrationDays, onDayClick, selectedDate 
           const isTodayDate = isToday(day);
           const isSelected = selectedDate === dateStr;
 
-          const baseClasses = "relative aspect-square min-h-[44px] select-none flex flex-col items-center justify-center rounded-lg text-sm border cursor-pointer transition-[background-color,border-color,color,transform,box-shadow] duration-150 outline-none focus-visible:ring-2 focus-visible:ring-lukso-purple/55 focus-visible:ring-offset-1 focus-visible:ring-offset-[#f5f0e1] active:scale-[0.98]";
-          const selectedClasses = "bg-lukso-purple/30 border-lukso-purple/70 text-lukso-purple font-semibold shadow-[inset_0_0_0_1px_rgba(156,78,219,0.4)] active:bg-lukso-purple/35";
-          const todayClasses = "bg-lukso-pink/20 border-lukso-pink/45 text-lukso-pink font-semibold active:bg-lukso-pink/25";
-          const hasEventsClasses = "bg-white/10 border-white/20 hover:bg-white/15 hover:border-lukso-purple/35 active:bg-white/20";
-          const emptyClasses = "text-white/45 border-transparent hover:bg-white/10 hover:border-white/15 hover:text-white/70 active:bg-white/15 active:text-white/80";
+          const baseClasses = "relative aspect-square min-h-[44px] select-none flex flex-col items-center justify-center rounded-lg text-sm border cursor-pointer transition-[background-color,border-color,color,transform,box-shadow] duration-150 outline-none focus-visible:ring-2 focus-visible:ring-[#c99a2e]/60 focus-visible:ring-offset-1 focus-visible:ring-offset-[#f5f0e1] active:scale-[0.98]";
+          const selectedClasses = "bg-[#f8ecd0] border-[#c99a2e]/80 text-[#4f3300] font-semibold shadow-[0_2px_8px_rgba(107,75,14,0.24),inset_0_0_0_1px_rgba(201,154,46,0.42)] active:bg-[#f3e1b7]";
+          const todayClasses = "bg-[#fde9b7] border-[#d7a63b]/75 text-[#5a3a00] font-semibold shadow-[inset_0_0_0_1px_rgba(215,166,59,0.35)] active:bg-[#f8df9f]";
+          const hasEventsClasses = "bg-[#fff7e5]/75 border-[#d2bc8d]/70 text-[#3f301a] hover:bg-[#fff1d4] hover:border-[#c99a2e]/55 active:bg-[#f7e8c8]";
+          const emptyClasses = "text-[#5c4b2e] border-transparent hover:bg-[#fff7e8]/80 hover:border-[#dac7a0]/70 hover:text-[#3f3019] active:bg-[#f8ebd0]";
 
           const stateClasses = isSelected
             ? selectedClasses

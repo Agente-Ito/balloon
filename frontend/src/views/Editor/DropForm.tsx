@@ -77,9 +77,9 @@ function CoHostRow({
       <Avatar address={address} size={22} chainId={chainId} className="ring-1 ring-white/10" />
       <div className="min-w-0 flex-1">
         <p className="text-xs truncate">{name ?? `${address.slice(0, 6)}…${address.slice(-4)}`}</p>
-        <p className="text-[10px] text-white/40 truncate">{address}</p>
+        <p className="text-[10px] text-[#7b6950] truncate">{address}</p>
       </div>
-      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/10 text-white/60">{sourceLabel}</span>
+      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#fff5df] border border-[#d9c49a] text-[#6f5c3f]">{sourceLabel}</span>
     </button>
   );
 }
@@ -99,7 +99,7 @@ function AddressListField({
   };
   return (
     <div>
-      <label className="block text-xs text-white/40 mb-1">{label}</label>
+      <label className="block text-xs text-[#7b6950] mb-1">{label}</label>
       <div className="flex gap-2">
         <input type="text" value={input} onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && add()}
@@ -111,7 +111,7 @@ function AddressListField({
         <div className="mt-2 space-y-1">
           {list.map((addr) => (
             <div key={addr} className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-1.5">
-              <span className="text-xs font-mono text-white/60 flex-1 truncate">{addr}</span>
+              <span className="text-xs font-mono text-[#6f5c3f] flex-1 truncate">{addr}</span>
               <button type="button" onClick={() => onRemove(addr)}
                 className="text-white/30 hover:text-red-400 text-xs leading-none">✕</button>
             </div>
@@ -364,7 +364,7 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
 
       {/* ── Badge image ────────────────────────────────────────────── */}
       <div>
-        <p className="text-xs text-white/40 mb-1.5">{t.dropFormBadgePreview}</p>
+        <p className="text-xs text-[#7b6950] mb-1.5">{t.dropFormBadgePreview}</p>
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -375,11 +375,11 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
               ? <img src={imagePreview} alt="badge" className="w-full h-full object-cover" />
               : <span className="text-2xl">🖼️</span>}
           </button>
-          <div className="flex-1 text-xs text-white/40">
+          <div className="flex-1 text-xs text-[#7b6950]">
             {imageFile
-              ? <><span className="text-white/60">{imageDisplayName}</span><button type="button" onClick={() => { setImageFile(undefined); setSelectedTplId(null); }} className="block text-white/30 hover:text-white/60 mt-1">{t.dropImageRemove}</button></>
+              ? <><span className="text-[#6f5c3f]">{imageDisplayName}</span><button type="button" onClick={() => { setImageFile(undefined); setSelectedTplId(null); }} className="block text-[#9b8a6a] hover:text-[#6f5c3f] mt-1">{t.dropImageRemove}</button></>
               : selectedTplId
-                ? <span className="text-white/60">{t.dropFormTemplateApplied}</span>
+                ? <span className="text-[#6f5c3f]">{t.dropFormTemplateApplied}</span>
                 : t.dropFormBadgeHint ?? "Upload your own or pick a template above"}
           </div>
         </div>
@@ -388,14 +388,14 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
 
       {/* ── Basics ─────────────────────────────────────────────────── */}
       <div>
-        <label className="block text-xs text-white/40 mb-1">{t.dropFormName}</label>
+        <label className="block text-xs text-[#7b6950] mb-1">{t.dropFormName}</label>
         <input type="text" value={name} onChange={(e) => setName(e.target.value)}
           onFocus={(e) => e.target.select()}
           placeholder={t.dropFormNamePlaceholder} className="input w-full" />
       </div>
 
       <div>
-        <label className="block text-xs text-white/40 mb-1">{t.dropFormDescription}</label>
+        <label className="block text-xs text-[#7b6950] mb-1">{t.dropFormDescription}</label>
         <textarea value={description} onChange={(e) => setDesc(e.target.value)}
           onFocus={(e) => e.target.select()}
           placeholder={t.dropFormDescPlaceholder}
@@ -403,7 +403,7 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
       </div>
 
       <div>
-        <label className="block text-xs text-white/40 mb-1">{t.dropFormType}</label>
+        <label className="block text-xs text-[#7b6950] mb-1">{t.dropFormType}</label>
         <select value={typeMenuValue}
           onChange={(e) => { void handleTypeMenuChange(e.target.value); }}
           className="input w-full">
@@ -444,7 +444,7 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
 
       {/* ── Date ───────────────────────────────────────────────────── */}
       <div>
-        <label className="block text-xs text-white/40 mb-1">{t.dropFormDate}</label>
+        <label className="block text-xs text-[#7b6950] mb-1">{t.dropFormDate}</label>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
           <select value={month} onChange={(e) => setMonth(Number(e.target.value))}
             className="input text-sm py-1.5">
@@ -466,15 +466,15 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
       {/* ── Limits ─────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs text-white/40 mb-1">
-            {t.dropFormClosesOn} <span className="text-white/20">{t.dropFormOptional}</span>
+          <label className="block text-xs text-[#7b6950] mb-1">
+            {t.dropFormClosesOn} <span className="text-[#9b8a6a]">{t.dropFormOptional}</span>
           </label>
           <input type="datetime-local" value={endDate} onChange={(e) => setEndDate(e.target.value)}
             className="input w-full text-sm" />
         </div>
         <div>
-          <label className="block text-xs text-white/40 mb-1">
-            {t.dropFormMaxClaims} <span className="text-white/20">{t.dropFormOptional}</span>
+          <label className="block text-xs text-[#7b6950] mb-1">
+            {t.dropFormMaxClaims} <span className="text-[#9b8a6a]">{t.dropFormOptional}</span>
           </label>
           <input type="number" value={maxSupply} onChange={(e) => setMaxSupply(e.target.value)}
             placeholder={t.dropFormUnlimited} min={1} className="input w-full text-sm" />
@@ -494,14 +494,14 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
               </span>
             )}
           </div>
-          <span className="text-white/40 text-xs">
+          <span className="text-[#7b6950] text-xs">
             {showEligibility ? t.dropFormEligHide : t.dropFormEligConfigure}
           </span>
         </button>
 
         {showEligibility && (
           <div className="px-4 pb-4 flex flex-col gap-4 border-t border-lukso-border">
-            <p className="text-xs text-white/30 pt-3">
+            <p className="text-xs text-[#7b6950] pt-3">
               {t.dropFormEligHint}
             </p>
 
@@ -516,13 +516,13 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
               </div>
               <div>
                 <p className="text-sm">{t.dropFormMustFollow}</p>
-                <p className="text-xs text-white/30">{t.dropFormMustFollowSub}</p>
+                <p className="text-xs text-[#7b6950]">{t.dropFormMustFollowSub}</p>
               </div>
             </label>
 
             <div>
-              <label className="block text-xs text-white/40 mb-1">
-                {t.dropFormMinFollowers} <span className="text-white/20">{t.dropFormMinFollowersHint}</span>
+              <label className="block text-xs text-[#7b6950] mb-1">
+                {t.dropFormMinFollowers} <span className="text-[#9b8a6a]">{t.dropFormMinFollowersHint}</span>
               </label>
               <input type="number" value={minFollowers}
                 onChange={(e) => setMinFollowers(e.target.value)}
@@ -561,14 +561,14 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
               </span>
             )}
           </div>
-          <span className="text-white/40 text-xs">
+          <span className="text-[#7b6950] text-xs">
             {showCoHosts ? t.dropFormCoHostsHide : t.dropFormCoHostsConfigure}
           </span>
         </button>
 
         {showCoHosts && (
           <div className="px-4 pb-4 pt-3 border-t border-lukso-border space-y-3">
-            <p className="text-xs text-white/35">{t.dropFormCoHostsHint}</p>
+            <p className="text-xs text-[#7b6950]">{t.dropFormCoHostsHint}</p>
 
             <input
               type="text"
@@ -580,7 +580,7 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
 
             <div className="max-h-44 overflow-y-auto space-y-1.5 pr-1">
               {filteredContacts.length === 0 ? (
-                <p className="text-xs text-white/35">{t.dropFormCoHostsEmpty}</p>
+                <p className="text-xs text-[#7b6950]">{t.dropFormCoHostsEmpty}</p>
               ) : (
                 filteredContacts.map((contact) => (
                   <CoHostRow
@@ -632,7 +632,7 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
                     <button
                       type="button"
                       onClick={() => setCoHosts((prev) => prev.filter((a) => a !== addr))}
-                      className="text-white/45 hover:text-red-400 leading-none"
+                      className="text-[#9b8a6a] hover:text-red-400 leading-none"
                     >
                       ✕
                     </button>
@@ -641,7 +641,7 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
               </div>
             )}
 
-            <p className="text-[11px] text-white/35">{t.dropFormCoHostsMetaNote}</p>
+            <p className="text-[11px] text-[#7b6950]">{t.dropFormCoHostsMetaNote}</p>
           </div>
         )}
       </div>

@@ -1,6 +1,7 @@
 import { format, parseISO } from "date-fns";
 import { CELEBRATION_EMOJIS, getCelebrationTypeKey } from "@/constants/celebrationTypes";
 import { Avatar } from "@/components/Avatar";
+import { BalloonIcon } from "@/components/BalloonIcon";
 import { useAppStore } from "@/store/useAppStore";
 import { useLSP3Name } from "@/hooks/useLSP3Name";
 import { useT } from "@/hooks/useT";
@@ -49,7 +50,7 @@ export function DayPopover({ day, onClose, isOwner, chainId }: DayPopoverProps) 
           </h3>
           <button
             onClick={onClose}
-            className="text-white/40 hover:text-white text-xl leading-none"
+            className="text-[#6b5a3a] hover:text-[#3f3118] text-xl leading-none"
           >
             {t.close}
           </button>
@@ -63,11 +64,11 @@ export function DayPopover({ day, onClose, isOwner, chainId }: DayPopoverProps) 
                 <span className="text-2xl">{CELEBRATION_EMOJIS[celebration.type]}</span>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium">{celebration.title}</p>
-                  <p className="text-xs text-white/40">{t[getCelebrationTypeKey(celebration.type) as keyof typeof t]}</p>
+                  <p className="text-xs text-[#7b6950]">{t[getCelebrationTypeKey(celebration.type) as keyof typeof t]}</p>
                   {celebration.profileAddress && (
                     <div className="flex items-center gap-1 mt-1">
                       <Avatar address={celebration.profileAddress} size={14} />
-                      <span className="text-xs text-white/30">
+                      <span className="text-xs text-[#8a7a61]">
                         <ProfileNameInline
                           address={celebration.profileAddress as Address}
                           chainId={chainId}
@@ -90,7 +91,7 @@ export function DayPopover({ day, onClose, isOwner, chainId }: DayPopoverProps) 
             ))}
           </div>
         ) : (
-          <p className="text-sm text-white/30 mb-4 text-center py-4">
+          <p className="text-sm text-[#7b6950] mb-4 text-center py-4">
             {t.calendarNone}
           </p>
         )}
@@ -102,10 +103,10 @@ export function DayPopover({ day, onClose, isOwner, chainId }: DayPopoverProps) 
               onClick={handleCreateDrop}
               className="btn-primary w-full flex items-center justify-center gap-2"
             >
-              <span>🎈</span>
+              <BalloonIcon size={16} foil className="shrink-0" />
               <span>{t.calendarCreateDrop}</span>
             </button>
-            <p className="text-[11px] text-white/30 text-center mt-2 hidden [@media(min-height:560px)]:block">
+            <p className="text-[11px] text-[#7b6950] text-center mt-2 hidden [@media(min-height:560px)]:block">
               {t.calendarDropHint} {format(parseISO(day.date), "MMMM d")}
             </p>
           </div>

@@ -32,7 +32,7 @@ interface EditorProps {
   chainId: number;
 }
 
-type EditorTab = "dates" | "wishlist" | "settings" | "drops";
+type EditorTab = "dates" | "wishlist" | "settings";
 type SubView = "main" | "addEvent" | "addWishlist" | "addDrop" | "quickSetup" | "quickCreate";
 type SetupMode = "quick" | "step";
 
@@ -56,7 +56,13 @@ export function Editor({ walletClient, chainId }: EditorProps) {
   } = useAppStore();
   const t = useT();
   const monthNames = useMemo(() => getMonthNames(t), [t]);
-  const [activeTab, setActiveTab] = useState<EditorTab>(editorEntryTab ?? "dates");
+  const initialEditorEntry = useMemo(() => ({
+    tab: editorEntryTab,
+    subView: editorEntrySubView,
+  }), []);
+  const [activeTab, setActiveTab] = useState<EditorTab>(
+    editorEntryTab === "wishlist" || editorEntryTab === "settings" ? editorEntryTab : "dates"
+  );
 
   // If coming from the calendar "Create drop for this day" action,
   // open the drop form immediately and consume the pending date.
@@ -162,6 +168,56 @@ export function Editor({ walletClient, chainId }: EditorProps) {
     } catch {
       // ignore storage errors
     }
+  };
+
+  const toolbarActions = (
+    <div className="flex items-center gap-1.5">
+      <button
+        type="button"
+        onClick={() => {
+          setSubView("main");
+          setActiveTab("settings");
+        }}
+        aria-label={t.tabSettings}
+        title={t.tabSettings}
+        className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl border transition-all duration-200 flex items-center justify-center p-0"
+        style={{
+          borderColor: activeTab === "settings" && subView === "main" ? "rgba(201,154,46,0.92)" : "#E8D9C8",
+          background: activeTab === "settings" && subView === "main"
+            ? "linear-gradient(180deg, rgba(246,231,191,0.95) 0%, rgba(233,211,158,0.92) 100%)"
+            : "rgba(255,255,255,0.05)",
+          boxShadow: activeTab === "settings" && subView === "main"
+            ? "0 0 0 2px rgba(201,154,46,0.18), 0 10px 24px rgba(156,116,33,0.18)"
+            : "none",
+          transform: activeTab === "settings" && subView === "main" ? "translateY(-1px)" : "translateY(0)",
+        }}
+      >
+        <img
+          src="/settings-gear.png"
+          alt={t.tabSettings}
+          className="w-[92%] h-[92%] object-contain"
+          loading="lazy"
+          decoding="async"
+          onError={(e) => {
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = "/settings-gear-metallic.svg";
+          }}
+        />
+      </button>
+      <LanguageToggle />
+    </div>
+  );
+
+  const exitQuickCreate = () => {
+    setPendingEventDraft(null);
+    setQuickCreateAsCelebration(false);
+
+    if (initialEditorEntry.subView === "quickCreate" && !pendingEventDraft) {
+      goBack("grid");
+      return;
+    }
+
+    setSubView("main");
   };
 
   // Pre-populate form fields when profile data loads
@@ -282,6 +338,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
           onBack={() => setSubView("main")}
           backLabel={t.back}
           title={t.subAddEvent}
+          right={toolbarActions}
         />
         <div className="flex-1 overflow-y-auto p-4">
           <EventForm onSave={handleAddEvent} onCancel={() => setSubView("main")} />
@@ -294,14 +351,10 @@ export function Editor({ walletClient, chainId }: EditorProps) {
     return (
       <div className="h-full flex flex-col overflow-hidden">
         <ViewToolbar
-          onBack={() => {
-            setPendingEventDraft(null);
-            setQuickCreateAsCelebration(false);
-            setSubView("main");
-          }}
+          onBack={exitQuickCreate}
           backLabel={t.back}
           title={quickCreateAsCelebration ? t.quickCreateHeaderCelebration : t.quickCreateHeaderReminder}
-          right={<LanguageToggle />}
+          right={toolbarActions}
         />
         <div className="flex-1 overflow-y-auto p-4">
           <QuickCreateFlow
@@ -309,11 +362,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
             profileName={profileName ?? undefined}
             onModeChange={setQuickCreateAsCelebration}
             isSaving={addEventMutation.isPending || replaceEventsMutation.isPending}
-            onCancel={() => {
-              setPendingEventDraft(null);
-              setQuickCreateAsCelebration(false);
-              setSubView("main");
-            }}
+            onCancel={exitQuickCreate}
             onSubmit={async ({ event, createDrop }) => {
               if (!walletClient) {
                 toast.error(t.toastNoWallet);
@@ -406,7 +455,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
           onBack={() => setSubView("main")}
           backLabel={t.back}
           title={t.quickSetupTitle}
-          right={<LanguageToggle />}
+          right={toolbarActions}
         />
 
         <div className="flex-1 overflow-y-auto px-4 pb-4">
@@ -443,6 +492,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
           onBack={() => setSubView("main")}
           backLabel={t.back}
           title={t.subAddWishlist}
+          right={toolbarActions}
         />
         <div className="flex-1 overflow-y-auto p-4">
           <WishlistForm onSave={handleAddWishlistItem} onCancel={() => setSubView("main")} />
@@ -536,6 +586,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
                 ? `${t.dropForEvent} "${prefill.name}"`
                 : t.subAddDrop
           }
+          right={toolbarActions}
         />
         <div className="flex-1 overflow-y-auto p-4">
           <DropForm
@@ -591,12 +642,12 @@ export function Editor({ walletClient, chainId }: EditorProps) {
         onBack={() => goBack("grid")}
         backLabel={t.navHome}
         title={t.editorHeaderTitle}
-        right={<LanguageToggle />}
+        right={toolbarActions}
       />
 
       {/* Tabs */}
       <div className="flex gap-1 px-4 pt-2 mb-1">
-        {(["dates", "drops", "wishlist", "settings"] as EditorTab[]).map((tab) => (
+        {(["dates", "wishlist"] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -606,7 +657,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
               color: activeTab === tab ? "#6A1B9A" : "#8B7D7D",
             }}
           >
-            {tab === "dates" ? t.tabDates : tab === "drops" ? t.tabDrops : tab === "wishlist" ? t.tabWishlist : t.tabSettings}
+            {tab === "dates" ? t.tabDates : t.tabWishlist}
           </button>
         ))}
       </div>
@@ -623,13 +674,13 @@ export function Editor({ walletClient, chainId }: EditorProps) {
                 <div className="space-y-2 mb-3">
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-white/80">{t.firstStepsBirthday}</span>
-                    <span className={hasBirthdayConfigured ? "text-green-400" : "text-white/40"}>
+                    <span className={hasBirthdayConfigured ? "text-amber-300" : "text-[#7b6950]"}>
                       {hasBirthdayConfigured ? t.firstStepsDone : "•"}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-white/80">{t.firstStepsReminder}</span>
-                    <span className={hasCustomEvents ? "text-green-400" : "text-white/40"}>
+                    <span className={hasCustomEvents ? "text-amber-300" : "text-[#7b6950]"}>
                       {hasCustomEvents ? t.firstStepsDone : "•"}
                     </span>
                   </div>
@@ -638,7 +689,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
                   <div className="space-y-2">
                     {preferredSetupMode && (
                       <div className="flex items-center justify-center gap-2">
-                        <p className="text-[11px] text-white/50 text-center">
+                        <p className="text-[11px] text-[#6f5c3f] text-center">
                           {preferredSetupMode === "quick" ? t.firstStepsPersonalizedQuick : t.firstStepsPersonalizedStep}
                         </p>
                         <button
@@ -668,7 +719,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
                         </span>
                       )}
                     </button>
-                    <p className="text-[11px] text-white/40 text-center">{t.firstStepsStepByStep}</p>
+                    <p className="text-[11px] text-[#7b6950] text-center">{t.firstStepsStepByStep}</p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <button
                         onClick={() => {
@@ -726,6 +777,49 @@ export function Editor({ walletClient, chainId }: EditorProps) {
                 )}
               </div>
             )}
+
+            <button
+              type="button"
+              onClick={() => setActiveTab("wishlist")}
+              className="card w-full flex items-center justify-between gap-3 text-left hover:border-lukso-purple/35 transition-colors"
+            >
+              <div>
+                <p className="title-premium text-xs uppercase text-lukso-purple/80 mb-1">
+                  {t.wishlistShortcutTitle}
+                </p>
+                <p className="text-xs text-[#7b6950]">
+                  {t.wishlistShortcutSub}
+                </p>
+              </div>
+              <span className="btn-ghost text-xs px-3 py-1 border border-lukso-border flex-shrink-0">
+                {t.wishlistShortcutCta}
+              </span>
+            </button>
+
+            <div className="card flex items-center justify-between gap-3">
+              <div>
+                <p className="title-premium text-xs uppercase text-lukso-purple/80 mb-1">
+                  {t.tabDrops}
+                </p>
+                <p className="text-xs text-[#7b6950]">
+                  {t.dropsManageSubtitle}
+                </p>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <button
+                  onClick={() => setView("drops")}
+                  className="btn-ghost text-xs px-3 py-1.5"
+                >
+                  {t.dropsExploreCta}
+                </button>
+                <button
+                  onClick={() => setView("drops-manage")}
+                  className="btn-primary text-xs px-3 py-1.5"
+                >
+                  {t.dropsManageCta}
+                </button>
+              </div>
+            </div>
 
             {/* Post-event drop prompt */}
             {pendingDropFromEvent && (
@@ -1017,27 +1111,6 @@ export function Editor({ walletClient, chainId }: EditorProps) {
             )}
           </div>
         )}
-
-        {activeTab === "drops" && (
-          <div className="card flex flex-col items-center gap-4 py-8 text-center">
-            <p className="text-sm text-white/50">{t.dropsManageSubtitle}</p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setView("drops")}
-                className="btn-ghost text-xs px-4 py-1.5"
-              >
-                {t.dropsExploreCta}
-              </button>
-              <button
-                onClick={() => setView("drops-manage")}
-                className="btn-primary text-xs px-4 py-1.5"
-              >
-                {t.dropsManageCta}
-              </button>
-            </div>
-          </div>
-        )}
-
         {activeTab === "settings" && profileData && walletClient && (
           <SettingsForm
             settings={profileData.settings}

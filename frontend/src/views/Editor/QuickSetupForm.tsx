@@ -87,10 +87,10 @@ export function QuickSetupForm({ isSaving, onSave, onCancel }: QuickSetupFormPro
       </div>
 
       <div>
-        <label className="block text-xs text-white/50 mb-1">{t.birthday}</label>
+        <label className="block text-xs text-[#7b6950] mb-1">{t.birthday}</label>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          <div>
-            <label className="block text-[10px] text-white/40 mb-1">{t.birthdayMonth}</label>
+          <div className="min-w-0">
+            <label className="block text-[10px] text-[#7b6950] mb-1">{t.birthdayMonth}</label>
             <select
               value={birthdayMonth}
               onChange={(e) => setBirthdayMonth(e.target.value)}
@@ -102,8 +102,8 @@ export function QuickSetupForm({ isSaving, onSave, onCancel }: QuickSetupFormPro
               ))}
             </select>
           </div>
-          <div>
-            <label className="block text-[10px] text-white/40 mb-1">{t.birthdayDay}</label>
+          <div className="min-w-0">
+            <label className="block text-[10px] text-[#7b6950] mb-1">{t.birthdayDay}</label>
             <select
               value={birthdayDay}
               onChange={(e) => setBirthdayDay(e.target.value)}
@@ -115,9 +115,9 @@ export function QuickSetupForm({ isSaving, onSave, onCancel }: QuickSetupFormPro
               ))}
             </select>
           </div>
-          <div>
-            <label className="block text-[10px] text-white/40 mb-1">
-              {t.birthdayYear} <span className="text-white/25">{t.birthdayYearOpt}</span>
+          <div className="min-w-0">
+            <label className="block text-[10px] text-[#7b6950] mb-1">
+              {t.birthdayYear} <span className="text-[#9b8a6a]">{t.birthdayYearOpt}</span>
             </label>
             <input
               type="number"
@@ -131,8 +131,8 @@ export function QuickSetupForm({ isSaving, onSave, onCancel }: QuickSetupFormPro
         </div>
       </div>
 
-      <div>
-        <label className="block text-xs text-white/50 mb-1">{t.quickSetupReminderTitle}</label>
+      <div className="min-w-0">
+        <label className="block text-xs text-[#7b6950] mb-1">{t.quickSetupReminderTitle}</label>
         <input
           type="text"
           value={eventTitle}
@@ -142,8 +142,8 @@ export function QuickSetupForm({ isSaving, onSave, onCancel }: QuickSetupFormPro
           className="input mb-2"
         />
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          <div>
-            <label className="block text-[10px] text-white/40 mb-1">{t.eventMonth}</label>
+          <div className="min-w-0">
+            <label className="block text-[10px] text-[#7b6950] mb-1">{t.eventMonth}</label>
             <select
               value={eventMonth}
               onChange={(e) => setEventMonth(e.target.value)}
@@ -155,8 +155,8 @@ export function QuickSetupForm({ isSaving, onSave, onCancel }: QuickSetupFormPro
               ))}
             </select>
           </div>
-          <div>
-            <label className="block text-[10px] text-white/40 mb-1">{t.eventDay}</label>
+          <div className="min-w-0">
+            <label className="block text-[10px] text-[#7b6950] mb-1">{t.eventDay}</label>
             <select
               value={eventDay}
               onChange={(e) => setEventDay(e.target.value)}
@@ -168,9 +168,9 @@ export function QuickSetupForm({ isSaving, onSave, onCancel }: QuickSetupFormPro
               ))}
             </select>
           </div>
-          <div>
-            <label className="block text-[10px] text-white/40 mb-1">
-              {t.eventYear} {eventRecurring ? <span className="text-white/25">{t.eventYearOpt}</span> : "*"}
+          <div className="min-w-0">
+            <label className="block text-[10px] text-[#7b6950] mb-1">
+              {t.eventYear} {eventRecurring ? <span className="text-[#9b8a6a]">{t.eventYearOpt}</span> : "*"}
             </label>
             <input
               type="number"
@@ -178,7 +178,7 @@ export function QuickSetupForm({ isSaving, onSave, onCancel }: QuickSetupFormPro
               onChange={(e) => setEventYear(e.target.value)}
               min={1900}
               max={2100}
-              className="input text-sm py-1.5 col-span-2 sm:col-span-1"
+              className="input text-sm py-1.5"
               required={!eventRecurring}
             />
           </div>
@@ -189,12 +189,12 @@ export function QuickSetupForm({ isSaving, onSave, onCancel }: QuickSetupFormPro
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-sm font-medium">{t.eventRepeats}</p>
-            <p className="text-xs text-white/40">{t.eventRepeatsSub}</p>
+            <p className="text-xs text-[#7b6950]">{t.eventRepeatsSub}</p>
           </div>
           <button
             type="button"
             onClick={() => setEventRecurring((v) => !v)}
-            className={`w-12 h-6 rounded-full transition-colors relative flex-shrink-0 ${eventRecurring ? "bg-lukso-purple" : "bg-white/10"}`}
+            className={`w-12 h-6 rounded-full transition-colors relative flex-shrink-0 border ${eventRecurring ? "bg-[#c99a2e] border-[#9c7421]" : "bg-[#f2e7cd] border-[#d8bf90]"}`}
           >
             <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${eventRecurring ? "translate-x-6" : "translate-x-0"}`} />
           </button>
@@ -205,12 +205,12 @@ export function QuickSetupForm({ isSaving, onSave, onCancel }: QuickSetupFormPro
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-sm font-medium">{t.quickSetupIncludeSettings}</p>
-            <p className="text-xs text-white/40">{t.quickSetupIncludeSettingsSub}</p>
+            <p className="text-xs text-[#7b6950]">{t.quickSetupIncludeSettingsSub}</p>
           </div>
           <button
             type="button"
             onClick={() => setIncludeSettings((v) => !v)}
-            className={`w-12 h-6 rounded-full transition-colors relative flex-shrink-0 ${includeSettings ? "bg-lukso-purple" : "bg-white/10"}`}
+            className={`w-12 h-6 rounded-full transition-colors relative flex-shrink-0 border ${includeSettings ? "bg-[#c99a2e] border-[#9c7421]" : "bg-[#f2e7cd] border-[#d8bf90]"}`}
             aria-checked={includeSettings}
             role="switch"
           >
@@ -221,14 +221,14 @@ export function QuickSetupForm({ isSaving, onSave, onCancel }: QuickSetupFormPro
         {includeSettings && (
           <div className="mt-3 space-y-3">
             <div>
-              <p className="text-xs text-white/50 mb-1">{t.settingsNotify}</p>
+              <p className="text-xs text-[#7b6950] mb-1">{t.settingsNotify}</p>
               <button
                 type="button"
                 onClick={() => setNotifyFollowers((v) => !v)}
                 className={`text-xs px-2 py-1 rounded-lg border ${
                   notifyFollowers
-                    ? "bg-lukso-purple/20 border-lukso-purple/50 text-lukso-purple"
-                    : "bg-white/5 border-white/10 text-white/60"
+                    ? "bg-[#f6e7bf] border-[#c99a2e]/70 text-[#6b4a12]"
+                    : "bg-[#fff8ea] border-[#dcc79f] text-[#7b6950]"
                 }`}
               >
                 {notifyFollowers ? t.quickSetupNotifyOn : t.quickSetupNotifyOff}
@@ -236,7 +236,7 @@ export function QuickSetupForm({ isSaving, onSave, onCancel }: QuickSetupFormPro
             </div>
 
             <div>
-              <p className="text-xs text-white/50 mb-1">{t.settingsReminderFreq}</p>
+              <p className="text-xs text-[#7b6950] mb-1">{t.settingsReminderFreq}</p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 {([
                   { key: "monthly", label: t.settingsReminderMonthly },
@@ -249,8 +249,8 @@ export function QuickSetupForm({ isSaving, onSave, onCancel }: QuickSetupFormPro
                     onClick={() => setReminderFrequency(option.key)}
                     className={`text-xs py-1.5 rounded-lg border transition-colors ${
                       reminderFrequency === option.key
-                        ? "bg-lukso-purple/20 border-lukso-purple/50 text-lukso-purple"
-                        : "bg-white/5 border-white/10 text-white/60"
+                        ? "bg-[#f6e7bf] border-[#c99a2e]/70 text-[#6b4a12]"
+                        : "bg-[#fff8ea] border-[#dcc79f] text-[#7b6950]"
                     }`}
                   >
                     {option.label}

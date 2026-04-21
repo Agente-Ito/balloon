@@ -59,7 +59,7 @@ export function CalendarFrame({ children, isLoading }: CalendarFrameProps) {
 
       {/* Calendar content wrapper - positioned inside the frame */}
       <div
-        className="relative z-10 h-full flex flex-col"
+        className="relative z-10 h-full flex flex-col rounded-[28px] border border-[#dec79e]/55"
         style={{
           // Responsive padding that adapts from mobile to desktop
           // Uses clamp to create smooth transitions
@@ -67,6 +67,8 @@ export function CalendarFrame({ children, isLoading }: CalendarFrameProps) {
           paddingBottom: "clamp(1.5rem, 8vw, 2.5rem)",
           paddingLeft: "clamp(1.25rem, 6vw, 3rem)",
           paddingRight: "clamp(1.25rem, 6vw, 3rem)",
+          background: "linear-gradient(180deg, rgba(255,246,225,0.28) 0%, rgba(255,245,220,0.14) 100%)",
+          backdropFilter: "blur(1.5px)",
         }}
       >
         {/* Content container with scroll */}

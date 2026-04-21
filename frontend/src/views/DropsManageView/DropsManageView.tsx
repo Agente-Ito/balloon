@@ -83,7 +83,7 @@ function DropRow({
           <span
             className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${
               drop.isActive
-                ? "bg-green-500/20 text-green-400"
+                ? "bg-amber-500/20 text-amber-300"
                 : "bg-white/10 text-white/40"
             }`}
           >

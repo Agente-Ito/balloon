@@ -27,7 +27,7 @@ interface DropDetailViewProps {
 }
 
 export function DropDetailView({ walletClient, chainId }: DropDetailViewProps) {
-  const { connectedAccount, activeDropId: dropId, goBack, setView, setEditorEntry } = useAppStore();
+  const { connectedAccount, activeDropId: dropId, goBack, setView } = useAppStore();
   const t = useT();
   const isLargeGrid = useGridSize();
   const [showRequirements, setShowRequirements] = useState(() => isLargeGrid);
@@ -116,8 +116,7 @@ export function DropDetailView({ walletClient, chainId }: DropDetailViewProps) {
               </button>
               <button
                 onClick={() => {
-                  setEditorEntry("drops", "main");
-                  setView("editor");
+                  setView("drops-manage");
                 }}
                 className="text-xs text-lukso-pink hover:text-lukso-pink/80 transition-colors"
               >
@@ -206,7 +205,7 @@ export function DropDetailView({ walletClient, chainId }: DropDetailViewProps) {
                 ))}
                 {drop.requiredLSP8.map((addr) => (
                   <div key={addr} className="flex items-center gap-2 text-xs text-white/50">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
                     LSP8 <span className="font-mono">{addr.slice(0, 8)}…</span>
                   </div>
                 ))}
@@ -242,7 +241,7 @@ export function DropDetailView({ walletClient, chainId }: DropDetailViewProps) {
               </div>
             )}
             {claimMutation.isSuccess && (
-              <p className="text-xs text-green-400 text-center">{t.dropClaimedOk}</p>
+              <p className="text-xs text-amber-300 text-center">{t.dropClaimedOk}</p>
             )}
             {claimMutation.isError && (
               <p className="text-xs text-red-400 text-center">

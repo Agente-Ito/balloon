@@ -51,7 +51,7 @@ function WishlistItemRow({ item }: { item: WishlistItem }) {
   const typeLabel = { lsp8: "NFT", lsp7: "Token", note: "Note" }[item.type];
   const typeColor = {
     lsp8: "bg-lukso-purple/20 text-lukso-purple",
-    lsp7: "bg-green-500/20 text-green-400",
+    lsp7: "bg-amber-500/20 text-amber-300",
     note: "bg-white/10 text-white/50",
   }[item.type];
 

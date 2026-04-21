@@ -62,35 +62,35 @@ export function QuickCreateFlow({ initialEvent, profileName, onModeChange, isSav
         {createDrop ? t.quickCreateHeaderCelebration : t.quickCreateHeaderReminder}
       </p>
 
-      <div>
-        <label className="block text-xs text-white/50 mb-1">{t.quickCreateDate}</label>
+      <div className="min-w-0">
+        <label className="block text-xs text-[#7b6950] mb-1">{t.quickCreateDate}</label>
         <input
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="input text-sm"
+          className="input text-sm max-w-full"
         />
       </div>
 
-      <div>
-        <label className="block text-xs text-white/50 mb-1">{t.quickCreateName}</label>
+      <div className="min-w-0">
+        <label className="block text-xs text-[#7b6950] mb-1">{t.quickCreateName}</label>
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder={personalizedNamePlaceholder}
-          className="input text-sm"
+          className="input text-sm max-w-full"
           maxLength={72}
         />
       </div>
 
-      <div>
-        <label className="block text-xs text-white/50 mb-1">{t.quickCreateDesc}</label>
+      <div className="min-w-0">
+        <label className="block text-xs text-[#7b6950] mb-1">{t.quickCreateDesc}</label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder={personalizedDescPlaceholder}
-          className="input text-sm min-h-[74px]"
+          className="input text-sm min-h-[74px] max-w-full"
           maxLength={180}
         />
       </div>
@@ -100,11 +100,11 @@ export function QuickCreateFlow({ initialEvent, profileName, onModeChange, isSav
           type="checkbox"
           checked={recurring}
           onChange={(e) => setRecurring(e.target.checked)}
-          className="mt-0.5"
+          className="mt-0.5 h-4 w-4 flex-shrink-0 accent-[#c99a2e]"
         />
         <span className="min-w-0">
           <span className="block text-sm font-medium">{t.quickCreateRecurring}</span>
-          <span className="block text-xs text-white/45 break-words">{t.quickCreateRecurringSub}</span>
+          <span className="block text-xs text-[#7b6950] break-words">{t.quickCreateRecurringSub}</span>
         </span>
       </label>
 
@@ -113,11 +113,11 @@ export function QuickCreateFlow({ initialEvent, profileName, onModeChange, isSav
           type="checkbox"
           checked={createDrop}
           onChange={(e) => setCreateDrop(e.target.checked)}
-          className="mt-0.5"
+          className="mt-0.5 h-4 w-4 flex-shrink-0 accent-[#c99a2e]"
         />
         <span className="min-w-0">
           <span className="block text-sm font-medium">{t.quickCreateToggle}</span>
-          <span className="block text-xs text-white/45 break-words">{t.quickCreateToggleSub}</span>
+          <span className="block text-xs text-[#7b6950] break-words">{t.quickCreateToggleSub}</span>
         </span>
       </label>
 
