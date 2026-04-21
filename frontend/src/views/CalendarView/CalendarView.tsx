@@ -412,7 +412,7 @@ export function CalendarView({ chainId, walletClient }: CalendarViewProps) {
           <img
             src="/calendar-title.png"
             alt={t.calendarTitle}
-            className="h-9 sm:h-10 w-auto mx-auto"
+            className="h-10 sm:h-12 lg:h-16 w-auto mx-auto"
             onError={() => setShowCalendarTitleImage(false)}
           />
         ) : t.calendarTitle}

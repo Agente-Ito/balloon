@@ -23,6 +23,8 @@ export function ViewToolbar({
   right,
   className = "",
 }: ViewToolbarProps) {
+  const isTextTitle = typeof title === "string";
+
   return (
     <div
       className={`flex items-center justify-between px-4 pt-4 pb-3 border-b shrink-0 ${className}`}
@@ -52,7 +54,9 @@ export function ViewToolbar({
       {/* Title */}
       {title && (
         <span
-          className="title-premium text-xs sm:text-sm truncate mx-2 sm:mx-3 text-center flex-1 min-w-0"
+          className={isTextTitle
+            ? "title-premium text-xs sm:text-sm truncate mx-2 sm:mx-3 text-center flex-1 min-w-0"
+            : "mx-2 sm:mx-3 text-center flex-1 min-w-0 flex items-center justify-center"}
           style={{ color: "#2C2C2C" }}
         >
           {title}
