@@ -13,13 +13,13 @@ import { useT } from "@/hooks/useT";
 import { useAppStore } from "@/store/useAppStore";
 import { getMonthNames } from "@/lib/monthNames";
 
-const TEMPLATE_ASSET_PATHS: Partial<Record<string, { en: string; es: string }>> = {
-  anniversary: { en: "/templates/anniversary-en.png", es: "/templates/anniversary-es.png" },
-  milestone: { en: "/templates/milestone-en.png", es: "/templates/milestone-es.png" },
-  celebration: { en: "/templates/celebration-en.png", es: "/templates/celebration-es.png" },
-  graduation: { en: "/templates/graduation-en.png", es: "/templates/graduation-es.png" },
-  holiday: { en: "/templates/holiday-en.png", es: "/templates/holiday-es.png" },
-  birthday: { en: "/templates/birthday-en.png", es: "/templates/birthday-es.png" },
+const TEMPLATE_ASSET_PATHS: Partial<Record<string, string>> = {
+  anniversary: "/templates/anniversary-balloon.png",
+  milestone: "/templates/milestone-balloon.png",
+  celebration: "/templates/celebration-balloon.png",
+  graduation: "/templates/graduation-balloon.png",
+  holiday: "/templates/holiday-balloon.png",
+  birthday: "/templates/birthday-balloon.png",
 };
 
 export interface DropFormPrefill {
@@ -205,9 +205,9 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
   const templateThumbs = useMemo(() => {
     const byId: Record<string, string> = {};
     for (const tpl of HOLIDAY_DROP_TEMPLATES) {
-      const assets = TEMPLATE_ASSET_PATHS[tpl.id];
-      if (assets) {
-        byId[tpl.id] = lang === "es" ? assets.es : assets.en;
+      const assetSrc = TEMPLATE_ASSET_PATHS[tpl.id];
+      if (assetSrc) {
+        byId[tpl.id] = assetSrc;
       } else {
         const svg = generateHolidaySVG(tpl, currentYear, lang);
         byId[tpl.id] = `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
@@ -230,16 +230,21 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
   }, [imageFile, selectedTemplate, lang]);
 
   async function templateAssetToFile(tplId: string): Promise<File | undefined> {
-    const assets = TEMPLATE_ASSET_PATHS[tplId];
-    if (!assets) return undefined;
-    const src = lang === "es" ? assets.es : assets.en;
+    const src = TEMPLATE_ASSET_PATHS[tplId];
+    if (!src) return undefined;
     try {
       const res = await fetch(src, { cache: "no-store" });
       if (!res.ok) return undefined;
       const blob = await res.blob();
-      const type = blob.type || "image/png";
-      const ext = type.includes("jpeg") ? "jpg" : type.includes("webp") ? "webp" : "png";
-      return new File([blob], `${tplId}-${lang}.${ext}`, { type });
+      const type = blob.type || "image/svg+xml";
+      const ext = type.includes("jpeg")
+        ? "jpg"
+        : type.includes("webp")
+          ? "webp"
+          : type.includes("svg")
+            ? "svg"
+            : "png";
+      return new File([blob], `${tplId}.${ext}`, { type });
     } catch {
       return undefined;
     }
@@ -412,8 +417,8 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
           ))}
         </select>
 
-        <div className="mt-2 overflow-x-auto">
-          <div className="flex gap-2" style={{ minWidth: "max-content" }}>
+        <div className="mt-2">
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
             {HOLIDAY_DROP_TEMPLATES.map((tpl) => {
               const active = selectedTplId === tpl.id;
               return (
@@ -421,7 +426,7 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
                   key={tpl.id}
                   type="button"
                   onClick={() => { void applyHolidayTemplate(tpl.id); }}
-                  className={`w-[76px] rounded-xl border p-1.5 transition-colors ${
+                  className={`w-full rounded-xl border p-1.5 transition-colors ${
                     active ? "border-lukso-purple bg-lukso-purple/15" : "border-lukso-border bg-white/5 hover:border-white/30"
                   }`}
                   title={lang === "es" ? tpl.nameEs : tpl.name}

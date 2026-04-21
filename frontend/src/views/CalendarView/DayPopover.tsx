@@ -103,7 +103,9 @@ export function DayPopover({ day, onClose, isOwner, chainId }: DayPopoverProps) 
               onClick={handleCreateDrop}
               className="btn-primary w-full flex items-center justify-center gap-2"
             >
-              <BalloonIcon size={16} foil className="shrink-0" />
+              <span className="w-7 h-7 rounded-lg bg-[#fff4da] border border-[#e1c99c] flex items-center justify-center shrink-0 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]">
+                <BalloonIcon size={14} foil className="shrink-0" />
+              </span>
               <span>{t.calendarCreateDrop}</span>
             </button>
             <p className="text-[11px] text-[#7b6950] text-center mt-2 hidden [@media(min-height:560px)]:block">

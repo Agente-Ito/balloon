@@ -170,6 +170,7 @@ export function CalendarView({ chainId, walletClient }: CalendarViewProps) {
     .filter((p) => (showOnlyActiveReminders ? !!p.reminderDueSoon : true));
 
   const hasExtraSections = isOwner || socialProfilesForMonthRaw.length > 0 || (socialData?.drops ?? []).length > 0;
+  const [showCalendarTitleImage, setShowCalendarTitleImage] = useState(true);
 
   useEffect(() => {
     if (!isOwner || !contextProfile) return;
@@ -406,7 +407,14 @@ export function CalendarView({ chainId, walletClient }: CalendarViewProps) {
       <ViewToolbar
         onBack={() => goBack("grid")}
         backLabel={t.navHome}
-        title={t.calendarTitle}
+        title={showCalendarTitleImage ? (
+          <img
+            src="/calendar-title.png"
+            alt={t.calendarTitle}
+            className="h-8 sm:h-9 w-auto mx-auto"
+            onError={() => setShowCalendarTitleImage(false)}
+          />
+        ) : t.calendarTitle}
         right={<LanguageToggle />}
       />
 

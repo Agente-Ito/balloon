@@ -668,24 +668,24 @@ export function Editor({ walletClient, chainId }: EditorProps) {
           <>
             {/* First-time onboarding: simple, non-modal guidance */}
             {showFirstSteps && (
-              <div className="card border-lukso-purple/30 bg-lukso-purple/10">
-                <p className="title-premium text-sm text-lukso-purple mb-1">{t.firstStepsTitle}</p>
-                <p className="text-xs text-lukso-purple/70 mb-3">{t.firstStepsSub}</p>
-                <div className="space-y-2 mb-3">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-white/80">{t.firstStepsBirthday}</span>
-                    <span className={hasBirthdayConfigured ? "text-amber-300" : "text-[#7b6950]"}>
-                      {hasBirthdayConfigured ? t.firstStepsDone : "•"}
-                    </span>
+              canUseQuickSetup ? (
+                <div className="card border-lukso-purple/30 bg-lukso-purple/10">
+                  <p className="title-premium text-sm text-lukso-purple mb-1">{t.firstStepsTitle}</p>
+                  <p className="text-xs text-lukso-purple/70 mb-3">{t.firstStepsSub}</p>
+                  <div className="space-y-2 mb-3">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-white/80">{t.firstStepsBirthday}</span>
+                      <span className={hasBirthdayConfigured ? "text-amber-300" : "text-[#7b6950]"}>
+                        {hasBirthdayConfigured ? t.firstStepsDone : "•"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-white/80">{t.firstStepsReminder}</span>
+                      <span className={hasCustomEvents ? "text-amber-300" : "text-[#7b6950]"}>
+                        {hasCustomEvents ? t.firstStepsDone : "•"}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-white/80">{t.firstStepsReminder}</span>
-                    <span className={hasCustomEvents ? "text-amber-300" : "text-[#7b6950]"}>
-                      {hasCustomEvents ? t.firstStepsDone : "•"}
-                    </span>
-                  </div>
-                </div>
-                {canUseQuickSetup ? (
                   <div className="space-y-2">
                     {preferredSetupMode && (
                       <div className="flex items-center justify-center gap-2">
@@ -755,66 +755,81 @@ export function Editor({ walletClient, chainId }: EditorProps) {
                       </button>
                     </div>
                   </div>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {!hasBirthdayConfigured && (
-                      <button
-                        onClick={() => setIsBirthdayEditing(true)}
-                        className="btn-primary flex-1 text-xs py-1.5"
-                      >
-                        {t.firstStepsBirthday}
-                      </button>
-                    )}
-                    {!hasCustomEvents && (
-                      <button
-                        onClick={() => setSubView("quickCreate")}
-                        className="btn-ghost flex-1 text-xs py-1.5 border border-lukso-border"
-                      >
-                        {t.firstStepsReminder}
-                      </button>
-                    )}
+                </div>
+              ) : (
+                <div className="card border-lukso-purple/25 bg-lukso-purple/5 py-3">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                      <p className="title-premium text-sm text-lukso-purple">{t.firstStepsTitle}</p>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        <span className={`text-[11px] px-2 py-1 rounded-full border ${hasBirthdayConfigured ? "bg-[#f6e7bf] border-[#c99a2e]/70 text-[#6b4a12]" : "bg-[#fff8ea] border-[#dcc79f] text-[#7b6950]"}`}>
+                          {t.firstStepsBirthday} {hasBirthdayConfigured ? "• " + t.firstStepsDone : ""}
+                        </span>
+                        <span className={`text-[11px] px-2 py-1 rounded-full border ${hasCustomEvents ? "bg-[#f6e7bf] border-[#c99a2e]/70 text-[#6b4a12]" : "bg-[#fff8ea] border-[#dcc79f] text-[#7b6950]"}`}>
+                          {t.firstStepsReminder} {hasCustomEvents ? "• " + t.firstStepsDone : ""}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2 sm:justify-end">
+                      {!hasBirthdayConfigured && (
+                        <button
+                          onClick={() => setIsBirthdayEditing(true)}
+                          className="btn-primary text-xs px-3 py-1.5"
+                        >
+                          {t.firstStepsBirthday}
+                        </button>
+                      )}
+                      {!hasCustomEvents && (
+                        <button
+                          onClick={() => setSubView("quickCreate")}
+                          className="btn-ghost text-xs px-3 py-1.5 border border-lukso-border"
+                        >
+                          {t.firstStepsReminder}
+                        </button>
+                      )}
+                    </div>
                   </div>
-                )}
-              </div>
+                </div>
+              )
             )}
 
             <button
               type="button"
               onClick={() => setActiveTab("wishlist")}
-              className="card w-full flex items-center justify-between gap-3 text-left hover:border-lukso-purple/35 transition-colors"
+              className="w-full rounded-2xl border border-[#E8D9C8] bg-white/60 px-4 py-3 flex items-center justify-between gap-3 text-left hover:border-lukso-purple/35 transition-colors"
             >
               <div>
-                <p className="title-premium text-xs uppercase text-lukso-purple/80 mb-1">
+                <p className="title-premium text-[11px] uppercase text-lukso-purple/80 mb-1">
                   {t.wishlistShortcutTitle}
                 </p>
-                <p className="text-xs text-[#7b6950]">
+                <p className="text-[11px] text-[#7b6950]">
                   {t.wishlistShortcutSub}
                 </p>
               </div>
-              <span className="btn-ghost text-xs px-3 py-1 border border-lukso-border flex-shrink-0">
+              <span className="btn-ghost text-[11px] px-2.5 py-1.5 border border-lukso-border flex-shrink-0">
                 {t.wishlistShortcutCta}
               </span>
             </button>
 
-            <div className="card flex items-center justify-between gap-3">
+            <div className="rounded-2xl border border-[#E8D9C8] bg-white/60 px-4 py-3 flex items-center justify-between gap-3">
               <div>
-                <p className="title-premium text-xs uppercase text-lukso-purple/80 mb-1">
+                <p className="title-premium text-[11px] uppercase text-lukso-purple/80 mb-1">
                   {t.tabDrops}
                 </p>
-                <p className="text-xs text-[#7b6950]">
+                <p className="text-[11px] text-[#7b6950]">
                   {t.dropsManageSubtitle}
                 </p>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
                 <button
                   onClick={() => setView("drops")}
-                  className="btn-ghost text-xs px-3 py-1.5"
+                  className="btn-ghost text-[11px] px-2.5 py-1.5"
                 >
                   {t.dropsExploreCta}
                 </button>
                 <button
                   onClick={() => setView("drops-manage")}
-                  className="btn-primary text-xs px-3 py-1.5"
+                  className="btn-primary text-[11px] px-2.5 py-1.5"
                 >
                   {t.dropsManageCta}
                 </button>
@@ -823,66 +838,71 @@ export function Editor({ walletClient, chainId }: EditorProps) {
 
             {/* Post-event drop prompt */}
             {pendingDropFromEvent && (
-              <div className="card bg-lukso-purple/10 border-lukso-purple/30 animate-bounce-in">
-                <p className="title-premium text-sm text-lukso-purple mb-1">
-                  {t.dropPromptTitle}
-                </p>
-                <p className="text-xs text-lukso-purple/60 mb-3">
-                  {t.dropPromptPersonalSub}
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                  <button
-                    onClick={() => setPendingDropFromEvent(null)}
-                    className="btn-ghost flex-1 text-xs py-1.5 border border-lukso-border"
-                  >
-                    {t.skip}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setActiveCelebrationDate(pendingDropFromEvent.date);
-                      setPendingDropFromEvent(null);
-                      setView("celebration");
-                    }}
-                    className="btn-secondary flex-1 text-xs py-1.5"
-                  >
-                    {t.dropPromptPersonal}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setPendingAnniversaryDrop(false);
-                      setSubView("addDrop");
-                    }}
-                    className="btn-primary flex-1 text-xs py-1.5"
-                  >
-                    {t.dropPromptCreate}
-                  </button>
+              <div className="rounded-2xl border border-lukso-purple/30 bg-lukso-purple/10 px-3 py-3 animate-bounce-in">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <p className="title-premium text-sm text-lukso-purple mb-1">
+                      {t.dropPromptTitle}
+                    </p>
+                    <p className="text-[11px] text-lukso-purple/65">
+                      {t.dropPromptPersonalSub}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2 sm:justify-end">
+                    <button
+                      onClick={() => setPendingDropFromEvent(null)}
+                      className="btn-ghost text-[11px] px-2.5 py-1.5 border border-lukso-border"
+                    >
+                      {t.skip}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setActiveCelebrationDate(pendingDropFromEvent.date);
+                        setPendingDropFromEvent(null);
+                        setView("celebration");
+                      }}
+                      className="btn-secondary text-[11px] px-2.5 py-1.5"
+                    >
+                      {t.dropPromptPersonal}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setPendingAnniversaryDrop(false);
+                        setSubView("addDrop");
+                      }}
+                      className="btn-primary text-[11px] px-2.5 py-1.5"
+                    >
+                      {t.dropPromptCreate}
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
 
             {/* Birthday — display mode when set, edit mode when not set or user clicks Change */}
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <p className="title-premium text-xs uppercase">
-                  {t.birthday}
-                </p>
-                {birthdayDisplay && !isBirthdayEditing && (
+              {birthdayDisplay && !isBirthdayEditing ? (
+                <div className="rounded-2xl border border-[#E8D9C8] bg-white/60 px-3 py-2.5 flex items-center gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="title-premium text-[11px] uppercase text-lukso-purple/80 mb-1">
+                      {t.birthday}
+                    </p>
+                    <p className="text-sm font-medium leading-tight">{birthdayDisplay}</p>
+                  </div>
                   <button
                     onClick={() => setIsBirthdayEditing(true)}
-                    className="text-xs text-lukso-purple hover:text-lukso-purple/80"
+                    className="btn-ghost text-[11px] px-2.5 py-1.5 border border-lukso-border flex-shrink-0"
                   >
                     {t.change}
                   </button>
-                )}
-              </div>
-
-              {birthdayDisplay && !isBirthdayEditing ? (
-                <div className="card flex items-center justify-between">
-                  <p className="text-sm font-medium">{birthdayDisplay}</p>
-                  <span className="text-xs text-white/30">{t.birthday}</span>
                 </div>
               ) : (
                 <div className="card">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="title-premium text-xs uppercase">
+                      {t.birthday}
+                    </p>
+                  </div>
                   {!birthdayDisplay && (
                     <p className="text-xs text-white/50 mb-3">{t.birthdayCurrent} <span className="text-white/40">{t.birthdayNotSet}</span></p>
                   )}
@@ -949,7 +969,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
 
             {/* UP Anniversary hint — compact pill by default, expands on tap */}
             {anniversaryInfo && !pendingDropFromEvent && !anniversaryDismissed && (
-              <div className={`card border ${
+              <div className={`rounded-2xl border px-3 py-2.5 ${
                 anniversaryInfo.isToday
                   ? "bg-lukso-purple/20 border-lukso-purple/50"
                   : "bg-white/5 border-lukso-border"
@@ -960,7 +980,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
                     className="flex items-center gap-2 flex-1 text-left"
                   >
                     <span className="w-2 h-2 rounded-full bg-lukso-purple flex-shrink-0" />
-                    <p className={`text-sm font-semibold ${anniversaryInfo.isToday ? "text-lukso-purple" : ""}`}>
+                    <p className={`text-sm font-semibold leading-tight ${anniversaryInfo.isToday ? "text-lukso-purple" : ""}`}>
                       {anniversaryInfo.isToday ? t.anniversaryToday : t.anniversaryUpcoming}
                     </p>
                     <span className="text-white/25 text-xs ml-auto">
@@ -977,13 +997,13 @@ export function Editor({ walletClient, chainId }: EditorProps) {
                 </div>
 
                 {anniversaryExpanded && (
-                  <div className="mt-3">
+                  <div className="mt-2.5">
                     {anniversaryInfo.isToday ? (
-                      <p className="text-xs mb-3" style={{ color: "rgba(44,44,44,0.55)" }}>
+                      <p className="text-[11px] mb-2.5 leading-tight" style={{ color: "rgba(44,44,44,0.55)" }}>
                         {t.anniversaryTodaySub} <strong style={{ color: "#2C2C2C" }}>{anniversaryInfo.upcomingYears} {anniversaryInfo.upcomingYears !== 1 ? t.anniversaryTodayUnit2 : t.anniversaryTodayUnit}</strong>
                       </p>
                     ) : (
-                      <p className="text-xs mb-3" style={{ color: "rgba(44,44,44,0.55)" }}>
+                      <p className="text-[11px] mb-2.5 leading-tight" style={{ color: "rgba(44,44,44,0.55)" }}>
                         {t.anniversaryUpcomingSub} <strong style={{ color: "#2C2C2C" }}>{anniversaryInfo.upcomingYears}</strong> {t.anniversaryUpcomingOn}{" "}
                         <strong style={{ color: "#2C2C2C" }}>
                           {format(anniversaryInfo.nextDate, "MMMM d, yyyy")}
@@ -996,7 +1016,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
                         setPendingAnniversaryDrop(true);
                         setSubView("addDrop");
                       }}
-                      className="btn-primary w-full text-xs py-1.5"
+                      className="btn-primary w-full text-[11px] py-1.5"
                     >
                       {anniversaryInfo.isToday ? t.anniversaryTodayCta : t.anniversaryUpcomingCta}
                     </button>
@@ -1024,18 +1044,18 @@ export function Editor({ walletClient, chainId }: EditorProps) {
                   <p className="text-sm text-white/30">{t.eventsEmpty}</p>
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   {ownerEvents.map((event) => (
-                    <div key={event.id} className="card flex items-center gap-3">
-                      <span className={`w-3 h-3 rounded-full flex-shrink-0 ${CELEBRATION_COLORS[event.type]}`} />
+                    <div key={event.id} className="rounded-2xl border border-[#E8D9C8] bg-white/60 px-3 py-2.5 flex items-center gap-2.5">
+                      <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${CELEBRATION_COLORS[event.type]}`} />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium">{event.title}</p>
-                        <p className="text-xs text-white/40">
+                        <p className="text-sm font-medium leading-tight truncate">{event.title}</p>
+                        <p className="text-[11px] text-white/40 leading-tight mt-0.5">
                           {event.date} · {event.recurring ? t.eventsRecurring : t.eventsOneTime}
                         </p>
                       </div>
                       {event.storage === "local" && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-lukso-purple/10 border border-lukso-purple/20 text-lukso-purple">
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-lukso-purple/10 border border-lukso-purple/20 text-lukso-purple whitespace-nowrap">
                           {t.eventsLocalBadge}
                         </span>
                       )}
@@ -1043,11 +1063,11 @@ export function Editor({ walletClient, chainId }: EditorProps) {
                   ))}
                   {/* Anniversary shown here once the banner is dismissed */}
                   {anniversaryInfo && anniversaryDismissed && (
-                    <div className="card flex items-center gap-3 border-white/5">
-                      <span className="w-3 h-3 rounded-full flex-shrink-0 bg-purple-500" />
+                    <div className="rounded-2xl border border-[#E8D9C8] bg-white/60 px-3 py-2.5 flex items-center gap-2.5">
+                      <span className="w-2.5 h-2.5 rounded-full flex-shrink-0 bg-purple-500" />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-white/60">{t.anniversaryLabel}</p>
-                        <p className="text-xs text-white/30">
+                        <p className="text-sm font-medium text-white/60 leading-tight">{t.anniversaryLabel}</p>
+                        <p className="text-[11px] text-white/30 leading-tight mt-0.5">
                           {format(anniversaryInfo.nextDate, "MMMM d, yyyy")}
                         </p>
                       </div>
@@ -1057,7 +1077,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
                           setPendingAnniversaryDrop(true);
                           setSubView("addDrop");
                         }}
-                        className="text-xs text-lukso-purple hover:text-lukso-purple/80 flex-shrink-0"
+                        className="text-[11px] text-lukso-purple hover:text-lukso-purple/80 flex-shrink-0"
                       >
                         {t.anniversaryCreateDropShort}
                       </button>

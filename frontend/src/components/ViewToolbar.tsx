@@ -10,7 +10,7 @@ interface ViewToolbarProps {
   onBack: () => void;
   backLabel?: string;
   /** Center */
-  title?: string;
+  title?: ReactNode;
   /** Right slot (e.g. LanguageToggle, action button) */
   right?: ReactNode;
   className?: string;

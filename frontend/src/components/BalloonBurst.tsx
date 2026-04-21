@@ -8,27 +8,28 @@ import { BalloonIcon } from "./BalloonIcon";
 import type { BurstPreset, BurstTheme } from "@/store/useAppStore";
 
 const BALLOON_PALETTES: Record<BurstTheme, string[]> = {
-  mixed: ["#6A1B9A", "#9C4EDB", "#FFD700", "#E91E63", "#00BCD4", "#FF7043", "#A8E6CF"],
-  birthday: ["#E91E63", "#FFD700", "#9C4EDB", "#F472B6", "#FF8A65"],
-  graduation: ["#6A1B9A", "#1D4ED8", "#7C3AED", "#60A5FA", "#E8D9C8"],
-  holiday: ["#6A1B9A", "#16A34A", "#FFD700", "#DC2626", "#9C4EDB"],
-  anniversary: ["#6A1B9A", "#B45309", "#E8D9C8", "#C084FC", "#F59E0B"],
+  // Metallic pastel direction: rose, champagne, silver, lilac and soft gold.
+  mixed: ["#E7B7C7", "#C8CEDA", "#E7CF9A", "#D7C6F5", "#EAC9B9", "#BFD3C8", "#C97A84"],
+  birthday: ["#EAAFC2", "#F3D3DF", "#E8D6A8", "#D9C9F7", "#C8CEDA", "#C97A84"],
+  graduation: ["#C9BAEA", "#C8CEDA", "#E8D6A8", "#C7D8EC", "#E5D6C7"],
+  holiday: ["#D7C6F5", "#C8CEDA", "#E8D6A8", "#C7D7C8", "#C97A84"],
+  anniversary: ["#EAC9B9", "#E7B7C7", "#E8D6A8", "#C8CEDA", "#D7C6F5"],
 };
 
-const CONFETTI_BASE = ["#6A1B9A", "#9C4EDB", "#FFD700", "#E8D9C8", "#F5F0E1"];
+const CONFETTI_BASE = ["#D7C6F5", "#E7B7C7", "#E8D6A8", "#C8CEDA", "#F5F0E1", "#E8D9C8"];
 
 interface BalloonParticle {
-  id: number; left: number; color: string;
+  id: number; color: string;
   delay: number; duration: number; size: number;
-  driftStart: number; driftMid: number; driftEnd: number;
-  rotStart: number; rotMid: number; rotEnd: number;
-  animVariant: "a" | "b" | "c";
+  endX: number; endY: number;
+  rotStart: number; rotEnd: number;
+  animVariant: "a" | "b";
 }
 
 interface ConfettiParticle {
-  id: number; left: number; top: number; color: string;
+  id: number; color: string;
   delay: number; duration: number; size: number; isRect: boolean;
-  drift: number;
+  endX: number; endY: number;
   animVariant: "a" | "b";
 }
 
@@ -69,30 +70,40 @@ function generateParticles(preset: BurstPreset, theme: BurstTheme, isMobile: boo
 
   const balloons: BalloonParticle[] = Array.from({ length: cfg.balloons }, (_, i) => ({
     id: i,
-    left: 4 + Math.random() * 92,
     color: palette[Math.floor(Math.random() * palette.length)],
-    delay: Math.random() * 0.95,
-    duration: cfg.duration - 0.9 + Math.random() * 1.8,
+    delay: Math.random() * 0.22,
+    duration: cfg.duration - 1.2 + Math.random() * 1.2,
     size: (minSize + Math.random() * (maxSize - minSize)) * sizeScale,
-    driftStart: -18 + Math.random() * 36,
-    driftMid: -48 + Math.random() * 96,
-    driftEnd: -90 + Math.random() * 180,
-    rotStart: -22 + Math.random() * 44,
-    rotMid: -18 + Math.random() * 36,
-    rotEnd: -30 + Math.random() * 60,
-    animVariant: (Math.random() < 0.34 ? "a" : Math.random() < 0.67 ? "b" : "c"),
+    ...(() => {
+      // Firework-like spread: mostly upward with different lateral trajectories.
+      const angle = (-155 + Math.random() * 130) * (Math.PI / 180);
+      const distance = (isMobile ? 180 : 220) + Math.random() * (isMobile ? 200 : 320);
+      return {
+        endX: Math.cos(angle) * distance,
+        endY: Math.sin(angle) * distance,
+      };
+    })(),
+    rotStart: -18 + Math.random() * 36,
+    rotEnd: -90 + Math.random() * 180,
+    animVariant: Math.random() > 0.5 ? "a" : "b",
   }));
 
   const confetti: ConfettiParticle[] = Array.from({ length: cfg.confetti }, (_, i) => ({
     id: i,
-    left: Math.random() * 100,
-    top: -10 - Math.random() * 30,
     color: confettiPalette[Math.floor(Math.random() * confettiPalette.length)],
-    delay: Math.random() * 1.2,
-    duration: 2.1 + Math.random() * (preset === "epic" ? 2.6 : 1.6),
+    delay: Math.random() * 0.26,
+    duration: 1.6 + Math.random() * (preset === "epic" ? 1.3 : 0.9),
     size: preset === "epic" ? 7 + Math.random() * 10 : preset === "celebration" ? 6 + Math.random() * 9 : 5 + Math.random() * 8,
     isRect: Math.random() > 0.45,
-    drift: -42 + Math.random() * 84,
+    ...(() => {
+      const angle = Math.random() * Math.PI * 2;
+      const distance = (isMobile ? 80 : 95) + Math.random() * (isMobile ? 140 : 190);
+      // Slight downward bias for confetti while still feeling explosive.
+      return {
+        endX: Math.cos(angle) * distance,
+        endY: Math.sin(angle) * distance + (20 + Math.random() * 90),
+      };
+    })(),
     animVariant: Math.random() > 0.5 ? "a" : "b",
   }));
 
@@ -107,7 +118,7 @@ export function BalloonBurst() {
     if (!burstActive) return;
     const isMobile = typeof window !== "undefined" && window.matchMedia("(max-width: 640px)").matches;
     setParticles(generateParticles(burstPreset, burstTheme, isMobile));
-    const lifetime = burstPreset === "single" ? 2600 : burstPreset === "gentle" ? 3600 : burstPreset === "epic" ? 5600 : 4600;
+    const lifetime = burstPreset === "single" ? 2100 : burstPreset === "gentle" ? 2500 : burstPreset === "epic" ? 3400 : 2900;
     const timer = setTimeout(clearBurst, lifetime);
     return () => clearTimeout(timer);
   }, [burstActive, burstPreset, burstTheme, clearBurst]);
@@ -123,17 +134,14 @@ export function BalloonBurst() {
       {particles.balloons.map((b) => (
         <div
           key={b.id}
-          className={`absolute bottom-0 ${b.animVariant === "a" ? "animate-balloon-rise-a" : b.animVariant === "b" ? "animate-balloon-rise-b" : "animate-balloon-rise-c"}`}
+          className={`absolute left-1/2 top-[70%] ${b.animVariant === "a" ? "animate-balloon-burst-a" : "animate-balloon-burst-b"}`}
           style={{
-            left: `${b.left}%`,
-            "--rise-dur": `${b.duration}s`,
-            "--rise-delay": `${b.delay}s`,
-            "--rise-ease": "cubic-bezier(0.22, 0.78, 0.16, 1)",
-            "--x-start": `${b.driftStart}px`,
-            "--x-mid": `${b.driftMid}px`,
-            "--x-end": `${b.driftEnd}px`,
+            "--burst-dur": `${b.duration}s`,
+            "--burst-delay": `${b.delay}s`,
+            "--burst-ease": "cubic-bezier(0.22, 0.78, 0.18, 1)",
+            "--burst-x": `${b.endX}px`,
+            "--burst-y": `${b.endY}px`,
             "--rot-start": `${b.rotStart}deg`,
-            "--rot-mid": `${b.rotMid}deg`,
             "--rot-end": `${b.rotEnd}deg`,
             willChange: "transform, opacity",
             transform: "translateZ(0)",
@@ -146,14 +154,13 @@ export function BalloonBurst() {
       {particles.confetti.map((c) => (
         <div
           key={c.id}
-          className={`absolute ${c.animVariant === "a" ? "animate-confetti-fall-a" : "animate-confetti-fall-b"}`}
+          className={`absolute left-1/2 top-[70%] ${c.animVariant === "a" ? "animate-confetti-burst-a" : "animate-confetti-burst-b"}`}
           style={{
-            left: `${c.left}%`,
-            top: `${c.top}px`,
             "--fall-dur": `${c.duration}s`,
             "--fall-delay": `${c.delay}s`,
-            "--fall-ease": "cubic-bezier(0.2, 0.7, 0.15, 1)",
-            "--confetti-drift": `${c.drift}px`,
+            "--fall-ease": "cubic-bezier(0.22, 0.8, 0.25, 1)",
+            "--burst-x": `${c.endX}px`,
+            "--burst-y": `${c.endY}px`,
             width: c.size,
             height: c.isRect ? c.size * 0.55 : c.size,
             backgroundColor: c.color,

@@ -48,6 +48,10 @@ export default {
         "float-slow":   "float 4.5s ease-in-out infinite",
         "float-mobile": "floatMobile 4s ease-in-out infinite",
         "float-logo":   "floatLogo 7s ease-in-out infinite",
+        "balloon-burst-a": "balloonBurstA var(--burst-dur, 2.2s) var(--burst-ease, ease-out) var(--burst-delay, 0s) forwards",
+        "balloon-burst-b": "balloonBurstB var(--burst-dur, 2.35s) var(--burst-ease, ease-out) var(--burst-delay, 0s) forwards",
+        "confetti-burst-a":"confettiBurstA var(--fall-dur, 1.9s) var(--fall-ease, ease-out) var(--fall-delay, 0s) forwards",
+        "confetti-burst-b":"confettiBurstB var(--fall-dur, 2s) var(--fall-ease, ease-out) var(--fall-delay, 0s) forwards",
         "balloon-rise-a": "balloonRiseA var(--rise-dur, 2.8s) var(--rise-ease, ease-out) var(--rise-delay, 0s) forwards",
         "balloon-rise-b": "balloonRiseB var(--rise-dur, 2.9s) var(--rise-ease, ease-out) var(--rise-delay, 0s) forwards",
         "balloon-rise-c": "balloonRiseC var(--rise-dur, 3.1s) var(--rise-ease, ease-out) var(--rise-delay, 0s) forwards",
@@ -78,6 +82,24 @@ export default {
         floatLogo: {
           "0%, 100%": { transform: "translateY(3px)" },
           "50%":      { transform: "translateY(-3px)" },
+        },
+        balloonBurstA: {
+          "0%":   { transform: "translate3d(-50%, -50%, 0) scale(0.3) rotate(var(--rot-start, 0deg))", opacity: "0" },
+          "12%":  { opacity: "1" },
+          "100%": { transform: "translate3d(calc(-50% + var(--burst-x, 0px)), calc(-50% + var(--burst-y, 0px)), 0) scale(1) rotate(var(--rot-end, 0deg))", opacity: "0" },
+        },
+        balloonBurstB: {
+          "0%":   { transform: "translate3d(-50%, -50%, 0) scale(0.24) rotate(var(--rot-start, 0deg))", opacity: "0" },
+          "10%":  { opacity: "1" },
+          "100%": { transform: "translate3d(calc(-50% + var(--burst-x, 0px)), calc(-50% + var(--burst-y, 0px)), 0) scale(0.92) rotate(var(--rot-end, 0deg))", opacity: "0" },
+        },
+        confettiBurstA: {
+          "0%":   { transform: "translate3d(-50%, -50%, 0) scale(0.2) rotate(0deg)", opacity: "1" },
+          "100%": { transform: "translate3d(calc(-50% + var(--burst-x, 0px)), calc(-50% + var(--burst-y, 0px)), 0) scale(1) rotate(720deg)", opacity: "0" },
+        },
+        confettiBurstB: {
+          "0%":   { transform: "translate3d(-50%, -50%, 0) scale(0.2) rotate(0deg)", opacity: "1" },
+          "100%": { transform: "translate3d(calc(-50% + var(--burst-x, 0px)), calc(-50% + var(--burst-y, 0px)), 0) scale(0.95) rotate(-620deg)", opacity: "0" },
         },
         balloonRiseA: {
           "0%":   { transform: "translate3d(var(--x-start, 0px), 0, 0) rotate(var(--rot-start, 0deg))", opacity: "0" },
