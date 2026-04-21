@@ -373,7 +373,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
                 }
 
                 if (createDrop) {
-                  triggerBurst("gentle");
+                  triggerBurst("celebration", "mixed");
                   setPendingDropFromEvent({ ...event, storage: "local" });
                   setPendingAnniversaryDrop(false);
                   setPendingEventDraft(null);
@@ -383,7 +383,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
 
                 saveReminder({ ...event, storage: "local" });
                 toast.success(t.toastLocalReminderSaved);
-                triggerBurst("single");
+                triggerBurst("celebration", "mixed");
                 setPendingEventDraft(null);
                 setSubView("main");
               } catch (err) {
@@ -420,7 +420,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
               try {
                 await quickSetupMutation.mutateAsync({ birthday, event, settings });
                 toast.success(t.toastQuickSetupSaved);
-                triggerBurst("gentle");
+                triggerBurst("celebration", "mixed");
                 setPendingDropFromEvent(event);
                 setSubView("main");
               } catch (err) {

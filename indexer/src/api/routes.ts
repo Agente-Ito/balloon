@@ -19,6 +19,12 @@ import {
   saveSyncedReminders,
   validateReminderSyncSession,
 } from "../resolvers/reminderSync";
+import {
+  getPushPublicKey,
+  savePushSubscription,
+  deletePushSubscription,
+  sendPushToProfile,
+} from "../resolvers/pushNotifications";
 import { getDb } from "../storage/db";
 
 const router = Router();
@@ -371,6 +377,91 @@ router.put("/reminder-sync/reminders", (req: Request, res: Response) => {
   }
 
   return res.json(saveSyncedReminders(normalizedProfile, reminders, session.signer_address));
+});
+
+// ── Push notifications (Web Push) ───────────────────────────────────────────
+
+/** GET /push/public-key */
+router.get("/push/public-key", (_req: Request, res: Response) => {
+  const key = getPushPublicKey();
+  if (!key) return res.status(503).json({ error: "PushNotConfigured" });
+  return res.json({ publicKey: key });
+});
+
+/** POST /push/subscribe { profileAddress, subscription } */
+router.post("/push/subscribe", (req: Request, res: Response) => {
+  const { profileAddress, subscription } = req.body as Record<string, unknown>;
+  if (!profileAddress || !subscription || typeof profileAddress !== "string") {
+    return res.status(400).json({ error: "profileAddress and subscription are required" });
+  }
+
+  try {
+    const result = savePushSubscription(
+      profileAddress.toLowerCase() as `0x${string}`,
+      subscription as Parameters<typeof savePushSubscription>[1],
+      req.get("user-agent") ?? undefined,
+    );
+    return res.status(201).json(result);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return res.status(400).json({ error: msg });
+  }
+});
+
+/** DELETE /push/subscribe { profileAddress, endpoint } */
+router.delete("/push/subscribe", (req: Request, res: Response) => {
+  const { profileAddress, endpoint } = req.body as Record<string, unknown>;
+  if (!profileAddress || !endpoint || typeof profileAddress !== "string" || typeof endpoint !== "string") {
+    return res.status(400).json({ error: "profileAddress and endpoint are required" });
+  }
+  return res.json(deletePushSubscription(profileAddress.toLowerCase() as `0x${string}`, endpoint));
+});
+
+/**
+ * POST /push/reminder { profileAddress, title, body?, tag?, url? }
+ * Sends Web Push to all active subscriptions linked to a profile.
+ */
+router.post("/push/reminder", async (req: Request, res: Response) => {
+  const { profileAddress, title, body, tag, url } = req.body as Record<string, unknown>;
+  if (!profileAddress || !title || typeof profileAddress !== "string" || typeof title !== "string") {
+    return res.status(400).json({ error: "profileAddress and title are required" });
+  }
+
+  try {
+    const result = await sendPushToProfile(profileAddress.toLowerCase() as `0x${string}`, {
+      title,
+      body: typeof body === "string" ? body : undefined,
+      tag: typeof tag === "string" ? tag : undefined,
+      url: typeof url === "string" ? url : undefined,
+    });
+    return res.json(result);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    const code = msg === "PushNotConfigured" ? 503 : 500;
+    return res.status(code).json({ error: msg });
+  }
+});
+
+/** POST /push/send-test { profileAddress } */
+router.post("/push/send-test", async (req: Request, res: Response) => {
+  const { profileAddress } = req.body as Record<string, unknown>;
+  if (!profileAddress || typeof profileAddress !== "string") {
+    return res.status(400).json({ error: "profileAddress is required" });
+  }
+
+  try {
+    const result = await sendPushToProfile(profileAddress.toLowerCase() as `0x${string}`, {
+      title: "Celebrations push enabled",
+      body: "You will now receive celebration reminders on this device.",
+      tag: "celebrations-push-test",
+      url: "/",
+    });
+    return res.json(result);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    const code = msg === "PushNotConfigured" ? 503 : 500;
+    return res.status(code).json({ error: msg });
+  }
 });
 
 // ── Drop series ───────────────────────────────────────────────────────────────

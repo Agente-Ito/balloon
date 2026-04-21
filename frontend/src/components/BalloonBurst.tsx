@@ -31,10 +31,10 @@ interface ConfettiParticle {
 
 function generateParticles(preset: BurstPreset, theme: BurstTheme, isMobile: boolean) {
   const config: Record<BurstPreset, { balloons: number; confetti: number; duration: number }> = {
-    single: { balloons: 1, confetti: 0, duration: 2.4 },
-    gentle: { balloons: 4, confetti: 8, duration: 3.0 },
-    celebration: { balloons: 8, confetti: 16, duration: 3.8 },
-    epic: { balloons: 13, confetti: 40, duration: 4.8 },
+    single: { balloons: 2, confetti: 8, duration: 2.8 },
+    gentle: { balloons: 7, confetti: 22, duration: 3.3 },
+    celebration: { balloons: 13, confetti: 46, duration: 4.1 },
+    epic: { balloons: 20, confetti: 86, duration: 5.2 },
   };
   const balloonSizeRanges: Record<BurstPreset, [number, number]> = {
     single: [44, 58],
@@ -45,8 +45,13 @@ function generateParticles(preset: BurstPreset, theme: BurstTheme, isMobile: boo
   const baseCfg = config[preset];
   const cfg = {
     ...baseCfg,
-    // On mobile we tone down only the standard celebration confetti.
-    confetti: preset === "celebration" && isMobile ? 9 : baseCfg.confetti,
+    // On mobile we tone down heavy presets, while keeping them clearly celebratory.
+    confetti:
+      preset === "epic" && isMobile
+        ? 44
+        : preset === "celebration" && isMobile
+          ? 24
+          : baseCfg.confetti,
   };
   const palette = BALLOON_PALETTES[theme];
   const confettiPalette = [...CONFETTI_BASE, ...palette.slice(0, 3)];
@@ -75,7 +80,7 @@ function generateParticles(preset: BurstPreset, theme: BurstTheme, isMobile: boo
     color: confettiPalette[Math.floor(Math.random() * confettiPalette.length)],
     delay: Math.random() * 1.2,
     duration: 2.1 + Math.random() * (preset === "epic" ? 2.6 : 1.6),
-    size: 5 + Math.random() * 8,
+    size: preset === "epic" ? 7 + Math.random() * 10 : preset === "celebration" ? 6 + Math.random() * 9 : 5 + Math.random() * 8,
     isRect: Math.random() > 0.45,
   }));
 
@@ -90,7 +95,7 @@ export function BalloonBurst() {
     if (!burstActive) return;
     const isMobile = typeof window !== "undefined" && window.matchMedia("(max-width: 640px)").matches;
     setParticles(generateParticles(burstPreset, burstTheme, isMobile));
-    const lifetime = burstPreset === "single" ? 2200 : burstPreset === "gentle" ? 3200 : burstPreset === "epic" ? 5200 : 4300;
+    const lifetime = burstPreset === "single" ? 2600 : burstPreset === "gentle" ? 3600 : burstPreset === "epic" ? 5600 : 4600;
     const timer = setTimeout(clearBurst, lifetime);
     return () => clearTimeout(timer);
   }, [burstActive, burstPreset, burstTheme, clearBurst]);

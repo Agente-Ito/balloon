@@ -167,6 +167,18 @@ export function createSchema(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_sync_sessions_profile ON reminder_sync_sessions(profile_address, expires_at);
     CREATE INDEX IF NOT EXISTS idx_sync_challenges_profile ON reminder_sync_challenges(profile_address, expires_at);
 
+    -- ── Web Push subscriptions ───────────────────────────────────────────────
+    CREATE TABLE IF NOT EXISTS push_subscriptions (
+      endpoint        TEXT PRIMARY KEY,
+      profile_address TEXT NOT NULL,
+      subscription_json TEXT NOT NULL,
+      user_agent      TEXT,
+      created_at      INTEGER NOT NULL DEFAULT (unixepoch()),
+      updated_at      INTEGER NOT NULL DEFAULT (unixepoch())
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_push_subscriptions_profile ON push_subscriptions(profile_address);
+
     -- ── Drop series (community-curated recurring drops) ──────────────────────
     -- A series is a recurring event (e.g. "New Year Drop") where a different
     -- artist submits the badge image each cycle. The curator picks the winner.

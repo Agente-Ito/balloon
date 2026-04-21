@@ -57,11 +57,11 @@ export function CalendarGrid({ month, celebrationDays, onDayClick, selectedDate 
           const isTodayDate = isToday(day);
           const isSelected = selectedDate === dateStr;
 
-          const baseClasses = "relative aspect-square flex flex-col items-center justify-center rounded-lg text-sm transition-colors cursor-pointer border";
-          const selectedClasses = "bg-lukso-purple/30 border-lukso-purple/70 text-lukso-purple font-semibold shadow-[inset_0_0_0_1px_rgba(156,78,219,0.4)]";
-          const todayClasses = "bg-lukso-pink/20 border-lukso-pink/45 text-lukso-pink font-semibold";
-          const hasEventsClasses = "bg-white/10 border-white/20 hover:bg-white/15 hover:border-lukso-purple/35";
-          const emptyClasses = "text-white/45 border-transparent hover:bg-white/10 hover:border-white/15 hover:text-white/70";
+          const baseClasses = "relative aspect-square min-h-[44px] select-none flex flex-col items-center justify-center rounded-lg text-sm border cursor-pointer transition-[background-color,border-color,color,transform,box-shadow] duration-150 outline-none focus-visible:ring-2 focus-visible:ring-lukso-purple/55 focus-visible:ring-offset-1 focus-visible:ring-offset-[#f5f0e1] active:scale-[0.98]";
+          const selectedClasses = "bg-lukso-purple/30 border-lukso-purple/70 text-lukso-purple font-semibold shadow-[inset_0_0_0_1px_rgba(156,78,219,0.4)] active:bg-lukso-purple/35";
+          const todayClasses = "bg-lukso-pink/20 border-lukso-pink/45 text-lukso-pink font-semibold active:bg-lukso-pink/25";
+          const hasEventsClasses = "bg-white/10 border-white/20 hover:bg-white/15 hover:border-lukso-purple/35 active:bg-white/20";
+          const emptyClasses = "text-white/45 border-transparent hover:bg-white/10 hover:border-white/15 hover:text-white/70 active:bg-white/15 active:text-white/80";
 
           const stateClasses = isSelected
             ? selectedClasses
@@ -76,6 +76,7 @@ export function CalendarGrid({ month, celebrationDays, onDayClick, selectedDate 
               key={dateStr}
               onClick={() => onDayClick(dateStr)}
               className={`${baseClasses} ${stateClasses}`}
+              aria-pressed={isSelected}
             >
               <span className="text-xs leading-none">{format(day, "d")}</span>
 

@@ -19,6 +19,7 @@ import { SendGreetingModal } from "@/components/SendGreetingModal";
 import { QuickGreetingModal } from "@/components/QuickGreetingModal";
 import { useLSP3Name } from "@/hooks/useLSP3Name";
 import { useLocalReminders } from "@/hooks/useLocalReminders";
+import { useWebPush } from "@/hooks/useWebPush";
 import { useT } from "@/hooks/useT";
 import { CelebrationType } from "@/types";
 import type { CelebrationDay, Address } from "@/types";
@@ -49,11 +50,13 @@ function ProfileNameLine({ address, chainId }: { address: Address; chainId: numb
 }
 
 export function CalendarView({ chainId, walletClient }: CalendarViewProps) {
+  const INDEXER_URL = (import.meta.env.VITE_INDEXER_URL as string | undefined)?.replace(/\/$/, "") ?? "http://localhost:3001/api";
   const {
     contextProfile,
     connectedAccount,
     setView,
     setActiveDropId,
+    triggerBurst,
     goBack,
     setEditorEntry,
     setPendingEventDraft,
@@ -83,7 +86,8 @@ export function CalendarView({ chainId, walletClient }: CalendarViewProps) {
   const mergedProfileData = isOwner && profileData
     ? { ...profileData, events: [...profileData.events, ...localReminders] }
     : profileData;
-  const { celebrationDays } = useCalendar({ profileData: mergedProfileData, month });
+  useWebPush(isOwner ? (contextProfile as Address | null) : null, true);
+  const { celebrationDays, todayCelebrations } = useCalendar({ profileData: mergedProfileData, month });
   const replaceEventsMutation = useReplaceEvents({
     walletClient: walletClient as WalletClient,
     upAddress: contextProfile as Address,
@@ -147,6 +151,77 @@ export function CalendarView({ chainId, walletClient }: CalendarViewProps) {
 
   const socialProfilesForMonth = socialProfilesForMonthRaw
     .filter((p) => (showOnlyActiveReminders ? !!p.reminderDueSoon : true));
+
+  useEffect(() => {
+    if (!isOwner || !contextProfile) return;
+
+    const ownDueToday = todayCelebrations
+      .filter((c) => !c.profileAddress && c.type === CelebrationType.CustomEvent)
+      .sort((a, b) => a.id.localeCompare(b.id));
+
+    if (ownDueToday.length === 0) return;
+
+    const todayKey = format(new Date(), "yyyy-MM-dd");
+    const signature = ownDueToday.map((c) => c.id).join(",");
+    const storageKey = `celebrations:reminder-toast:${contextProfile.toLowerCase()}:${todayKey}`;
+
+    try {
+      if (localStorage.getItem(storageKey) === signature) return;
+      localStorage.setItem(storageKey, signature);
+    } catch {
+      // If storage is unavailable (private mode), still show notification once per render.
+    }
+
+    const firstTitle = ownDueToday[0]?.title ?? (lang === "es" ? "Recordatorio" : "Reminder");
+    const extra = ownDueToday.length - 1;
+    const body = extra > 0
+      ? (lang === "es"
+          ? `${firstTitle} y ${extra} más para hoy`
+          : `${firstTitle} and ${extra} more for today`)
+      : firstTitle;
+
+    toast.success(body, { duration: 6000 });
+    triggerBurst("celebration", "mixed");
+
+    void fetch(`${INDEXER_URL}/push/reminder`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        profileAddress: contextProfile,
+        title: lang === "es" ? "Recordatorio de celebración" : "Celebration reminder",
+        body,
+        tag: `celebrations-reminder-${todayKey}`,
+        url: "/",
+      }),
+    }).catch(() => {
+      // Ignore server push errors and keep local notification flow.
+    });
+
+    if (typeof window !== "undefined" && "Notification" in window) {
+      const title = lang === "es" ? "Recordatorio de celebración" : "Celebration reminder";
+      const showBrowserNotification = () => {
+        try {
+          new Notification(title, {
+            body,
+            icon: "/favicon.svg",
+            tag: `celebrations-reminder-${todayKey}`,
+          });
+        } catch {
+          // Ignore browser notification failures in embedded/webview contexts.
+        }
+      };
+
+      if (Notification.permission === "granted") {
+        showBrowserNotification();
+      } else if (Notification.permission === "default") {
+        void Notification.requestPermission().then((permission) => {
+          if (permission === "granted") showBrowserNotification();
+        }).catch(() => {
+          // Permission prompt may be unavailable in some environments.
+        });
+      }
+    }
+  }, [INDEXER_URL, contextProfile, isOwner, lang, todayCelebrations, triggerBurst]);
 
   const activeFilterLabel = isLargeGrid
     ? t.calendarFilterActiveReminders

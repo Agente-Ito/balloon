@@ -47,13 +47,13 @@ export function SendGreetingModal({
       await sendGreeting({ to: recipientAddress, celebrationType, message: message.trim() });
       toast.success(t.toastGreetingSent);
       if (celebrationType === CelebrationType.Birthday) {
-        triggerBurst("celebration", "birthday");
+        triggerBurst("epic", "birthday");
       } else if (celebrationType === CelebrationType.GlobalHoliday) {
-        triggerBurst("gentle", "holiday");
+        triggerBurst("celebration", "holiday");
       } else if (celebrationType === CelebrationType.UPAnniversary) {
-        triggerBurst("gentle", "anniversary");
+        triggerBurst("celebration", "anniversary");
       } else {
-        triggerBurst("gentle", "mixed");
+        triggerBurst("celebration", "mixed");
       }
       onClose();
     } catch (err) {

@@ -216,6 +216,19 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
     return byId;
   }, [currentYear, lang]);
 
+  const selectedTemplate = useMemo(() => {
+    if (!selectedTplId) return null;
+    return HOLIDAY_DROP_TEMPLATES.find((tpl) => tpl.id === selectedTplId) ?? null;
+  }, [selectedTplId]);
+
+  const imageDisplayName = useMemo(() => {
+    if (!imageFile) return "";
+    if (!selectedTemplate) return imageFile.name;
+
+    const templateName = lang === "es" ? selectedTemplate.nameEs : selectedTemplate.name;
+    return lang === "es" ? `Balloon ${templateName}` : `${templateName} Balloon`;
+  }, [imageFile, selectedTemplate, lang]);
+
   async function templateAssetToFile(tplId: string): Promise<File | undefined> {
     const assets = TEMPLATE_ASSET_PATHS[tplId];
     if (!assets) return undefined;
@@ -364,7 +377,7 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
           </button>
           <div className="flex-1 text-xs text-white/40">
             {imageFile
-              ? <><span className="text-white/60">{imageFile.name}</span><button type="button" onClick={() => { setImageFile(undefined); setSelectedTplId(null); }} className="block text-white/30 hover:text-white/60 mt-1">{t.dropImageRemove}</button></>
+              ? <><span className="text-white/60">{imageDisplayName}</span><button type="button" onClick={() => { setImageFile(undefined); setSelectedTplId(null); }} className="block text-white/30 hover:text-white/60 mt-1">{t.dropImageRemove}</button></>
               : selectedTplId
                 ? <span className="text-white/60">{t.dropFormTemplateApplied}</span>
                 : t.dropFormBadgeHint ?? "Upload your own or pick a template above"}
@@ -422,9 +435,6 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
                       e.currentTarget.src = `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
                     }}
                   />
-                  <span className="mt-1 block text-[10px] leading-tight text-white/70 truncate">
-                    {lang === "es" ? tpl.nameEs : tpl.name}
-                  </span>
                 </button>
               );
             })}
