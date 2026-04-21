@@ -52,6 +52,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
     editorEntrySubView,
     clearEditorEntry,
     triggerBurst,
+    setPostCreateDropNotice,
   } = useAppStore();
   const t = useT();
   const monthNames = useMemo(() => getMonthNames(t), [t]);
@@ -564,7 +565,15 @@ export function Editor({ walletClient, chainId }: EditorProps) {
                 setSubView("main");
                 setPendingDropFromEvent(null);
                 setPendingDropDate(null);
-                  setPendingAnniversaryDrop(false);
+                setPendingAnniversaryDrop(false);
+                setPostCreateDropNotice({
+                  name: params.name,
+                  month: params.month,
+                  day: params.day,
+                  year: params.year,
+                  createdAt: Date.now(),
+                });
+                setView("drops-manage");
               } catch (err) {
                 const msg = err instanceof Error ? err.message : String(err);
                 toast.error(msg.slice(0, 120) || "Failed to create drop");

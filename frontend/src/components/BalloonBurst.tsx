@@ -22,11 +22,14 @@ interface BalloonParticle {
   delay: number; duration: number; size: number;
   driftStart: number; driftMid: number; driftEnd: number;
   rotStart: number; rotMid: number; rotEnd: number;
+  animVariant: "a" | "b" | "c";
 }
 
 interface ConfettiParticle {
   id: number; left: number; top: number; color: string;
   delay: number; duration: number; size: number; isRect: boolean;
+  drift: number;
+  animVariant: "a" | "b";
 }
 
 function generateParticles(preset: BurstPreset, theme: BurstTheme, isMobile: boolean) {
@@ -45,12 +48,18 @@ function generateParticles(preset: BurstPreset, theme: BurstTheme, isMobile: boo
   const baseCfg = config[preset];
   const cfg = {
     ...baseCfg,
-    // On mobile we tone down heavy presets, while keeping them clearly celebratory.
+    // Mobile: reduce particle count to keep animation fluid on mid/low-end devices.
+    balloons:
+      preset === "epic" && isMobile
+        ? 11
+        : preset === "celebration" && isMobile
+          ? 8
+          : baseCfg.balloons,
     confetti:
       preset === "epic" && isMobile
-        ? 44
+        ? 30
         : preset === "celebration" && isMobile
-          ? 24
+          ? 18
           : baseCfg.confetti,
   };
   const palette = BALLOON_PALETTES[theme];
@@ -62,15 +71,16 @@ function generateParticles(preset: BurstPreset, theme: BurstTheme, isMobile: boo
     id: i,
     left: 4 + Math.random() * 92,
     color: palette[Math.floor(Math.random() * palette.length)],
-    delay: Math.random() * 0.9,
-    duration: cfg.duration - 1 + Math.random() * 1.4,
+    delay: Math.random() * 0.95,
+    duration: cfg.duration - 0.9 + Math.random() * 1.8,
     size: (minSize + Math.random() * (maxSize - minSize)) * sizeScale,
-    driftStart: -10 + Math.random() * 20,
-    driftMid: -28 + Math.random() * 56,
-    driftEnd: -48 + Math.random() * 96,
-    rotStart: -10 + Math.random() * 20,
-    rotMid: -8 + Math.random() * 16,
-    rotEnd: -12 + Math.random() * 24,
+    driftStart: -18 + Math.random() * 36,
+    driftMid: -48 + Math.random() * 96,
+    driftEnd: -90 + Math.random() * 180,
+    rotStart: -22 + Math.random() * 44,
+    rotMid: -18 + Math.random() * 36,
+    rotEnd: -30 + Math.random() * 60,
+    animVariant: (Math.random() < 0.34 ? "a" : Math.random() < 0.67 ? "b" : "c"),
   }));
 
   const confetti: ConfettiParticle[] = Array.from({ length: cfg.confetti }, (_, i) => ({
@@ -82,6 +92,8 @@ function generateParticles(preset: BurstPreset, theme: BurstTheme, isMobile: boo
     duration: 2.1 + Math.random() * (preset === "epic" ? 2.6 : 1.6),
     size: preset === "epic" ? 7 + Math.random() * 10 : preset === "celebration" ? 6 + Math.random() * 9 : 5 + Math.random() * 8,
     isRect: Math.random() > 0.45,
+    drift: -42 + Math.random() * 84,
+    animVariant: Math.random() > 0.5 ? "a" : "b",
   }));
 
   return { balloons, confetti };
@@ -111,17 +123,20 @@ export function BalloonBurst() {
       {particles.balloons.map((b) => (
         <div
           key={b.id}
-          className="absolute bottom-0 animate-balloon-rise"
+          className={`absolute bottom-0 ${b.animVariant === "a" ? "animate-balloon-rise-a" : b.animVariant === "b" ? "animate-balloon-rise-b" : "animate-balloon-rise-c"}`}
           style={{
             left: `${b.left}%`,
             "--rise-dur": `${b.duration}s`,
             "--rise-delay": `${b.delay}s`,
+            "--rise-ease": "cubic-bezier(0.22, 0.78, 0.16, 1)",
             "--x-start": `${b.driftStart}px`,
             "--x-mid": `${b.driftMid}px`,
             "--x-end": `${b.driftEnd}px`,
             "--rot-start": `${b.rotStart}deg`,
             "--rot-mid": `${b.rotMid}deg`,
             "--rot-end": `${b.rotEnd}deg`,
+            willChange: "transform, opacity",
+            transform: "translateZ(0)",
           } as React.CSSProperties}
         >
           <BalloonIcon size={b.size} color={b.color} foil />
@@ -131,17 +146,21 @@ export function BalloonBurst() {
       {particles.confetti.map((c) => (
         <div
           key={c.id}
-          className="absolute animate-confetti-fall"
+          className={`absolute ${c.animVariant === "a" ? "animate-confetti-fall-a" : "animate-confetti-fall-b"}`}
           style={{
             left: `${c.left}%`,
             top: `${c.top}px`,
             "--fall-dur": `${c.duration}s`,
             "--fall-delay": `${c.delay}s`,
+            "--fall-ease": "cubic-bezier(0.2, 0.7, 0.15, 1)",
+            "--confetti-drift": `${c.drift}px`,
             width: c.size,
             height: c.isRect ? c.size * 0.55 : c.size,
             backgroundColor: c.color,
             borderRadius: c.isRect ? "2px" : "50%",
             opacity: 0.85,
+            willChange: "transform, opacity",
+            transform: "translateZ(0)",
           } as React.CSSProperties}
         />
       ))}

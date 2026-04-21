@@ -33,6 +33,23 @@ interface AppStore {
   activeDropId: string | null;
   setActiveDropId: (dropId: string | null) => void;
 
+  // UX: temporary notice after creating a drop to guide next actions
+  postCreateDropNotice: {
+    name: string;
+    month: number;
+    day: number;
+    year: number;
+    createdAt: number;
+  } | null;
+  setPostCreateDropNotice: (notice: {
+    name: string;
+    month: number;
+    day: number;
+    year: number;
+    createdAt: number;
+  } | null) => void;
+  clearPostCreateDropNotice: () => void;
+
   // Optional editor entry intent (used to land in a specific tab/subview)
   editorEntryTab: "dates" | "drops" | "wishlist" | "settings" | null;
   editorEntrySubView: "main" | "addEvent" | "addWishlist" | "addDrop" | "quickCreate" | null;
@@ -124,6 +141,10 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   activeDropId: null,
   setActiveDropId: (dropId) => set({ activeDropId: dropId }),
+
+  postCreateDropNotice: null,
+  setPostCreateDropNotice: (notice) => set({ postCreateDropNotice: notice }),
+  clearPostCreateDropNotice: () => set({ postCreateDropNotice: null }),
 
   editorEntryTab: null,
   editorEntrySubView: null,

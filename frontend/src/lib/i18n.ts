@@ -403,6 +403,13 @@ const translations = {
     dropsManageNotOwner:     "Connect your UP to manage drops",
     uiShowDetails:           "Show details",
     uiHideDetails:           "Hide details",
+    uiCreateAnother:         "Create another",
+    uiDismiss:               "Dismiss",
+    dropsNewBadge:           "New",
+    dropCreatedBannerTitle:  "Celebration created",
+    dropCreatedBannerReady:  "Your celebration is ready. You can open details now.",
+    dropCreatedBannerIndexing: "Publishing your celebration. This can take a few seconds.",
+    dropCreatedBannerPublishing: "Publishing...",
 
     // ── Toasts / errors ───────────────────────────────────────────────────────
     toastBirthdaySaved:   "Birthday saved! 🎂",
@@ -595,7 +602,7 @@ const translations = {
     calendarNone:        "No hay celebraciones programadas para este día.",
     calendarCelebrate:   "Celebrar",
     calendarCreateDrop:  "Crear una celebración para este día",
-    calendarDropHint:    "Permite que tus seguidores reclamen un badge el",
+    calendarDropHint:    "Permite que tus seguidores reclamen una insignia el",
 
     // ── Editor ────────────────────────────────────────────────────────────────
     editorTitle:     "Editar perfil",
@@ -641,7 +648,7 @@ const translations = {
 
     dropsTitle:      "Mis celebraciones",
     dropsEmpty:      "Sin celebraciones aún",
-    dropsEmptySub:   "Crea una celebración para que otros puedan reclamar un badge tuyo",
+    dropsEmptySub:   "Crea una celebración para que otros puedan reclamar una insignia tuya",
     dropsFirstDrop:  "Crear primera celebración",
     dropsClaimed:    "reclamados",
     dropsCloses:     "Cierra",
@@ -682,7 +689,7 @@ const translations = {
 
     dropForEvent:         "Celebración para",
     dropPromptTitle:      "¿Agregar algo más para esta fecha?",
-    dropPromptSub:        "Permite que seguidores reclamen un badge para",
+    dropPromptSub:        "Permite que seguidores reclamen una insignia para",
     dropPromptSkip:       "Omitir",
     dropPromptCreate:     "Crear celebración",
     dropPromptPersonal:   "Crear recuerdo personal",
@@ -723,19 +730,19 @@ const translations = {
     anniversaryUpcomingSub: "Tu UP cumple",
     anniversaryUpcomingOn: "el",
     anniversaryUpcomingCta: "Preparar celebración de aniversario",
-    anniversaryDesc:      "en LUKSO! Reclama este badge para celebrar conmigo.",
+    anniversaryDesc:      "en LUKSO! Reclama esta insignia para celebrar conmigo.",
 
     // ── Formulario de drop ────────────────────────────────────────────────────
     dropFormTemplates:    "Usar plantilla festiva",
     dropFormTemplateApplied: "aplicada",
     dropFormTemplateBrowse: "▼ explorar",
     dropFormTemplateHide: "▲ ocultar",
-    dropFormBadgePreview: "Imagen del badge",
+    dropFormBadgePreview: "Imagen de la insignia",
     dropFormBadgeHint:    "Sube tu propia imagen o elige una plantilla",
     dropFormName:         "Nombre de la celebración *",
     dropFormNamePlaceholder: "Mi celebración de cumpleaños 2026",
     dropFormDescription:  "Descripción",
-    dropFormDescPlaceholder: "¡Reclama este badge para celebrar conmigo!",
+    dropFormDescPlaceholder: "¡Reclama esta insignia para celebrar conmigo!",
     dropFormType:         "Tipo de celebración *",
     dropFormDate:         "Fecha de la celebración *",
     dropFormClosesOn:     "Cierra el",
@@ -780,10 +787,10 @@ const translations = {
     dropsDiscoverSubtitle: "Reclama celebraciones activas de la comunidad",
     dropsDiscoverActive: "Celebraciones activas",
     dropsDiscoverAll:    "Todas las celebraciones",
-    dropDetailClaim:     "Reclamar badge",
+    dropDetailClaim:     "Reclamar insignia",
     dropDetailClaiming:  "Reclamando…",
-    dropDetailClaimed:   "¡Badge reclamado!",
-    dropDetailEligible:  "Puedes reclamar este badge",
+    dropDetailClaimed:   "¡Insignia reclamada!",
+    dropDetailEligible:  "Puedes reclamar esta insignia",
     dropDetailIneligible: "No cumples los requisitos de elegibilidad",
     dropDetailSupply:    "Suministro",
     dropDetailUnlimited: "Ilimitado",
@@ -875,8 +882,8 @@ const translations = {
     wishlistAddBtn:          "Agregar a wishlist",
 
     // ── Formulario de ajustes ─────────────────────────────────────────────────
-    settingsAutoMint:        "Auto-mintear badge anual",
-    settingsAutoMintSub:     "Mintear un badge automáticamente en tu cumpleaños y aniversario de UP",
+    settingsAutoMint:        "Crear insignia anual automáticamente",
+    settingsAutoMintSub:     "Crear una insignia automáticamente en tu cumpleaños y aniversario de UP",
     settingsBirthdayVis:     "Cumpleaños visible",
     settingsBirthdayVisSub:  "Mostrar tu cumpleaños a seguidores con la app Celebrations",
     settingsEventsVis:       "Eventos visibles",
@@ -898,9 +905,9 @@ const translations = {
     dropsDiscover:           "Descubrir",
     dropsDiscoverEmpty:      "Sin celebraciones activas en este momento.",
     dropDetails:             "Detalles",
-    dropClaimBadge:          "Reclamar badge",
+    dropClaimBadge:          "Reclamar insignia",
     dropClaiming:            "Reclamando…",
-    dropClaimedOk:           "¡Badge reclamado con éxito!",
+    dropClaimedOk:           "¡Insignia reclamada con éxito!",
     dropClaimFailed:         "Error al reclamar",
     dropNotEligible:         "No elegible",
     dropFollowRequired:      "Seguimiento requerido",
@@ -947,10 +954,17 @@ const translations = {
     dropsManageNotOwner:     "Conecta tu UP para gestionar celebraciones",
     uiShowDetails:           "Ver detalles",
     uiHideDetails:           "Ocultar detalles",
+    uiCreateAnother:         "Crear otra",
+    uiDismiss:               "Cerrar",
+    dropsNewBadge:           "Nueva",
+    dropCreatedBannerTitle:  "Celebración creada",
+    dropCreatedBannerReady:  "Tu celebración ya está lista. Puedes abrir sus detalles.",
+    dropCreatedBannerIndexing: "Estamos publicando tu celebración. Puede tardar unos segundos.",
+    dropCreatedBannerPublishing: "Publicando...",
 
     // ── Grid card extra ───────────────────────────────────────────────────────
-    gridBadge:            "badge",
-    gridBadges:           "badges",
+    gridBadge:            "insignia",
+    gridBadges:           "insignias",
     gridDaysAway:         "días",
     gridCalendar:         "Calendario",
     gridDropsBtn:         "Celebraciones",
@@ -973,16 +987,16 @@ const translations = {
 
     // ── Vista de celebración ──────────────────────────────────────────────────
     celebrationBack:         "← Calendario",
-    celebrationMintBadge:    "Crear badge",
+    celebrationMintBadge:    "Crear insignia",
     celebrationSendGreeting: "Enviar saludo",
     celebrationSentToday:    "Enviado hoy",
     celebrationGiftAsset:    "Regalar activo",
     celebrationWishlistBtn:  "Lista de deseos",
-    celebrationTabBadges:    "Badges",
+    celebrationTabBadges:    "Insignias",
     celebrationTabCards:     "Tarjetas",
 
-    // ── Listas de badges y tarjetas ───────────────────────────────────────────
-    badgeListEmpty:       "Sin badges aún",
+    // ── Listas de insignias y tarjetas ────────────────────────────────────────
+    badgeListEmpty:       "Sin insignias aún",
     cardListEmpty:        "Sin tarjetas de saludo recibidas",
     cardFrom:             "De",
     cardTo:               "Para",
@@ -1017,7 +1031,7 @@ const translations = {
     wishlistItemToken:    "Token",
     wishlistItemNote:     "Nota",
 
-    // ── Modal de crear badge ──────────────────────────────────────────────────
+    // ── Modal de crear insignia ───────────────────────────────────────────────
     badgeUploadHint:      "Subir imagen",
     badgeSoulbound:       "No transferible",
     badgeSoulboundDesc:   "No se puede transferir después de crear",
@@ -1025,9 +1039,9 @@ const translations = {
     badgeTemplate:        "Plantilla:",
     badgeNoImage:         "Sin imagen",
     badgeOnePerYear:      "1 por año",
-    badgeMinting:         "Creando badge…",
-    badgeMint:            "Crear badge",
-    badgePickTemplate:    "Elige una plantilla para el badge",
+    badgeMinting:         "Creando insignia…",
+    badgeMint:            "Crear insignia",
+    badgePickTemplate:    "Elige una plantilla para la insignia",
 
     // ── Aniversario (estado descartado) ───────────────────────────────────────
     anniversaryLabel:     "Aniversario de UP",
@@ -1036,11 +1050,11 @@ const translations = {
     // ── Plantillas de prefill para drops ──────────────────────────────────────
     anniversaryDropNameProfile:  "Aniversario de {n} años de {name} en LUKSO",
     anniversaryDropNameNoProfile: "Mi aniversario de {n} años en LUKSO",
-    anniversaryDropDesc:         "¡{name} está celebrando {n} {unit} en LUKSO! Reclama este badge para celebrar.",
+    anniversaryDropDesc:         "¡{name} está celebrando {n} {unit} en LUKSO! Reclama esta insignia para celebrar.",
     anniversaryDropDescUnit:     "año",
     anniversaryDropDescUnitPlural: "años",
     birthdayDropName:            "Cumpleaños de {name}",
-    birthdayDropDesc:            "¡Celebra el cumpleaños de {name} con este badge globo! 🎈 Reclámalo y comparte la alegría.",
+    birthdayDropDesc:            "¡Celebra el cumpleaños de {name} con esta insignia de globo! 🎈 Reclámala y comparte la alegría.",
     dropFormYearAny:             "Cualquier año",
 
     // ── Mensajes de validación y contexto ──────────────────────────────────

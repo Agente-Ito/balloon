@@ -48,11 +48,15 @@ export default {
         "float-slow":   "float 4.5s ease-in-out infinite",
         "float-mobile": "floatMobile 4s ease-in-out infinite",
         "float-logo":   "floatLogo 7s ease-in-out infinite",
-        "balloon-rise": "balloonRise var(--rise-dur, 2.8s) ease-out var(--rise-delay, 0s) forwards",
-        "confetti-fall":"confettiFall var(--fall-dur, 3s) ease-in var(--fall-delay, 0s) forwards",
+        "balloon-rise-a": "balloonRiseA var(--rise-dur, 2.8s) var(--rise-ease, ease-out) var(--rise-delay, 0s) forwards",
+        "balloon-rise-b": "balloonRiseB var(--rise-dur, 2.9s) var(--rise-ease, ease-out) var(--rise-delay, 0s) forwards",
+        "balloon-rise-c": "balloonRiseC var(--rise-dur, 3.1s) var(--rise-ease, ease-out) var(--rise-delay, 0s) forwards",
+        "confetti-fall-a":"confettiFallA var(--fall-dur, 3s) var(--fall-ease, ease-in) var(--fall-delay, 0s) forwards",
+        "confetti-fall-b":"confettiFallB var(--fall-dur, 3.2s) var(--fall-ease, ease-in) var(--fall-delay, 0s) forwards",
         "pop":          "pop 0.35s cubic-bezier(0.36,0.07,0.19,0.97) both",
         "bounce-in":    "bounceIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both",
         "foil-sweep":   "foilSweep 2s ease-in-out infinite",
+        "banner-in":    "bannerIn 0.32s cubic-bezier(0.22,0.78,0.16,1) both",
       },
       keyframes: {
         fadeIn: {
@@ -75,16 +79,40 @@ export default {
           "0%, 100%": { transform: "translateY(3px)" },
           "50%":      { transform: "translateY(-3px)" },
         },
-        balloonRise: {
+        balloonRiseA: {
           "0%":   { transform: "translate3d(var(--x-start, 0px), 0, 0) rotate(var(--rot-start, 0deg))", opacity: "0" },
           "8%":   { opacity: "1" },
-          "50%":  { transform: "translate3d(var(--x-mid, 0px), -58vh, 0) rotate(var(--rot-mid, 0deg))" },
+          "35%":  { transform: "translate3d(calc(var(--x-mid, 0px) * 0.55), -35vh, 0) rotate(calc(var(--rot-mid, 0deg) * 0.75))" },
+          "62%":  { transform: "translate3d(var(--x-mid, 0px), -70vh, 0) rotate(var(--rot-mid, 0deg))" },
           "88%":  { opacity: "1" },
           "100%": { transform: "translate3d(var(--x-end, 0px), -115vh, 0) rotate(var(--rot-end, 0deg))", opacity: "0" },
         },
-        confettiFall: {
+        balloonRiseB: {
+          "0%":   { transform: "translate3d(var(--x-start, 0px), 0, 0) rotate(var(--rot-start, 0deg))", opacity: "0" },
+          "8%":   { opacity: "1" },
+          "25%":  { transform: "translate3d(calc(var(--x-mid, 0px) * 0.4), -28vh, 0) rotate(calc(var(--rot-mid, 0deg) * 0.6))" },
+          "55%":  { transform: "translate3d(calc(var(--x-mid, 0px) * 1.1), -64vh, 0) rotate(var(--rot-mid, 0deg))" },
+          "78%":  { transform: "translate3d(calc(var(--x-end, 0px) * 0.85), -89vh, 0) rotate(calc(var(--rot-end, 0deg) * 0.8))" },
+          "100%": { transform: "translate3d(var(--x-end, 0px), -115vh, 0) rotate(var(--rot-end, 0deg))", opacity: "0" },
+        },
+        balloonRiseC: {
+          "0%":   { transform: "translate3d(var(--x-start, 0px), 0, 0) rotate(var(--rot-start, 0deg))", opacity: "0" },
+          "8%":   { opacity: "1" },
+          "30%":  { transform: "translate3d(calc(var(--x-mid, 0px) * -0.35), -34vh, 0) rotate(calc(var(--rot-mid, 0deg) * -0.55))" },
+          "60%":  { transform: "translate3d(calc(var(--x-mid, 0px) * 0.9), -69vh, 0) rotate(var(--rot-mid, 0deg))" },
+          "86%":  { opacity: "1" },
+          "100%": { transform: "translate3d(var(--x-end, 0px), -115vh, 0) rotate(var(--rot-end, 0deg))", opacity: "0" },
+        },
+        confettiFallA: {
           "0%":   { transform: "translateY(0) rotate(0deg)",    opacity: "1" },
-          "100%": { transform: "translateY(110vh) rotate(720deg)", opacity: "0" },
+          "45%":  { transform: "translate3d(var(--confetti-drift, 0px), 48vh, 0) rotate(360deg)", opacity: "0.95" },
+          "100%": { transform: "translate3d(calc(var(--confetti-drift, 0px) * 1.4), 110vh, 0) rotate(720deg)", opacity: "0" },
+        },
+        confettiFallB: {
+          "0%":   { transform: "translateY(0) rotate(0deg)",    opacity: "1" },
+          "35%":  { transform: "translate3d(calc(var(--confetti-drift, 0px) * -0.7), 36vh, 0) rotate(260deg)", opacity: "0.95" },
+          "72%":  { transform: "translate3d(var(--confetti-drift, 0px), 78vh, 0) rotate(560deg)", opacity: "0.75" },
+          "100%": { transform: "translate3d(calc(var(--confetti-drift, 0px) * 1.15), 110vh, 0) rotate(780deg)", opacity: "0" },
         },
         pop: {
           "0%":   { transform: "scale(1)" },
@@ -98,6 +126,10 @@ export default {
         foilSweep: {
           "0%":   { backgroundPosition: "-200% center" },
           "100%": { backgroundPosition: "200% center" },
+        },
+        bannerIn: {
+          "0%":   { opacity: "0", transform: "translateY(-10px) scale(0.98)" },
+          "100%": { opacity: "1", transform: "translateY(0) scale(1)" },
         },
       },
     },

@@ -5,7 +5,7 @@
  * the DropDetailView for each, and provides direct access to create a new drop.
  * Shares the same tab header as DropsDiscoverView for consistent context.
  */
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { format, fromUnixTime } from "date-fns";
 import { useAppStore } from "@/store/useAppStore";
 import { useDrops } from "@/hooks/useDrops";
@@ -34,19 +34,21 @@ function DropRow({
   hostName,
   chainId,
   onViewDetail,
+  isRecentlyCreated = false,
 }: {
   drop: IndexedDrop;
   host: Address;
   hostName?: string;
   chainId: number;
   onViewDetail: (dropId: string) => void;
+  isRecentlyCreated?: boolean;
 }) {
   const t = useT();
 
   const dateLabel = `${String(drop.month).padStart(2, "0")}-${String(drop.day).padStart(2, "0")}${drop.year > 0 ? `-${drop.year}` : ""}`;
 
   return (
-    <div className="card flex flex-col gap-1.5">
+    <div className={`card flex flex-col gap-1.5 transition-shadow ${isRecentlyCreated ? "ring-2 ring-lukso-purple/40 shadow-foil-hover" : ""}`}>
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           {drop.imageIPFS ? (
@@ -72,15 +74,22 @@ function DropRow({
             </div>
           </div>
         </div>
-        <span
-          className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${
-            drop.isActive
-              ? "bg-green-500/20 text-green-400"
-              : "bg-white/10 text-white/40"
-          }`}
-        >
-          {drop.isActive ? t.dropsActive : t.dropsClosed}
-        </span>
+        <div className="flex items-center gap-1.5">
+          {isRecentlyCreated && (
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-lukso-purple/15 text-lukso-purple border border-lukso-purple/30">
+              {t.dropsNewBadge}
+            </span>
+          )}
+          <span
+            className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${
+              drop.isActive
+                ? "bg-green-500/20 text-green-400"
+                : "bg-white/10 text-white/40"
+            }`}
+          >
+            {drop.isActive ? t.dropsActive : t.dropsClosed}
+          </span>
+        </div>
       </div>
 
       <p className="text-xs text-white/40">
@@ -107,7 +116,16 @@ function DropRow({
 }
 
 export function DropsManageView({ walletClient, chainId }: DropsManageViewProps) {
-  const { connectedAccount, setView, setActiveDropId, goBack, triggerBurst } = useAppStore();
+  const {
+    connectedAccount,
+    setView,
+    setActiveDropId,
+    goBack,
+    triggerBurst,
+    postCreateDropNotice,
+    setPostCreateDropNotice,
+    clearPostCreateDropNotice,
+  } = useAppStore();
   const t = useT();
 
   const [addingDrop, setAddingDrop] = useState(false);
@@ -133,6 +151,13 @@ export function DropsManageView({ walletClient, chainId }: DropsManageViewProps)
               ? "holiday"
               : "mixed";
       triggerBurst("celebration", dropTheme);
+      setPostCreateDropNotice({
+        name: params.name,
+        month: params.month,
+        day: params.day,
+        year: params.year,
+        createdAt: Date.now(),
+      });
       setAddingDrop(false);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : t.toastFailedDrop);
@@ -143,6 +168,59 @@ export function DropsManageView({ walletClient, chainId }: DropsManageViewProps)
     setActiveDropId(dropId);
     setView("drop-detail");
   };
+
+  const [noticeVisible, setNoticeVisible] = useState(false);
+  const noticeClearTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Keep notice visible while the drop is still being indexed; auto-dismiss after ready+3s
+  useEffect(() => {
+    if (!postCreateDropNotice) {
+      setNoticeVisible(false);
+      return;
+    }
+    setNoticeVisible(true);
+    // Clear any previous timer
+    if (noticeClearTimer.current) clearTimeout(noticeClearTimer.current);
+    // Schedule auto-dismiss
+    noticeClearTimer.current = setTimeout(() => {
+      clearPostCreateDropNotice();
+      setNoticeVisible(false);
+    }, 45_000);
+    return () => { if (noticeClearTimer.current) clearTimeout(noticeClearTimer.current); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [postCreateDropNotice]);
+
+  const recentNoticeActive = noticeVisible && !!postCreateDropNotice;
+  const matchedRecentDrop = recentNoticeActive
+    ? (myDrops ?? []).find((drop) =>
+        drop.name === postCreateDropNotice!.name
+        && drop.month === postCreateDropNotice!.month
+        && drop.day === postCreateDropNotice!.day
+        && drop.year === postCreateDropNotice!.year
+      )
+    : null;
+  const matchedDropReady = !!matchedRecentDrop && !matchedRecentDrop.dropId.startsWith("pending-");
+
+  // Auto-dismiss 3s after the drop is confirmed ready
+  const prevReadyRef = useRef(false);
+  useEffect(() => {
+    if (matchedDropReady && !prevReadyRef.current) {
+      prevReadyRef.current = true;
+      if (noticeClearTimer.current) clearTimeout(noticeClearTimer.current);
+      noticeClearTimer.current = setTimeout(() => {
+        clearPostCreateDropNotice();
+        setNoticeVisible(false);
+      }, 6_000);
+    }
+    if (!recentNoticeActive) prevReadyRef.current = false;
+  }, [matchedDropReady, recentNoticeActive, clearPostCreateDropNotice]);
+
+  // Scroll newly confirmed drop row into view
+  const recentDropRowRef = useCallback((node: HTMLDivElement | null) => {
+    if (node && matchedDropReady) {
+      node.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }, [matchedDropReady]);
 
   // ── Create drop form ────────────────────────────────────────────────────────
   if (addingDrop && connectedAccount) {
@@ -205,6 +283,52 @@ export function DropsManageView({ walletClient, chainId }: DropsManageViewProps)
       />
 
       <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-4">
+        {recentNoticeActive && (
+          <div className="card border-lukso-purple/30 bg-lukso-purple/10 animate-banner-in">
+            <p className="title-premium text-sm text-lukso-purple mb-1">{t.dropCreatedBannerTitle}</p>
+            <p className="text-xs text-lukso-purple/75 mb-3">
+              {matchedDropReady ? t.dropCreatedBannerReady : t.dropCreatedBannerIndexing}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {matchedDropReady ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleViewDetail(matchedRecentDrop!.dropId);
+                    clearPostCreateDropNotice();
+                  }}
+                  className="btn-secondary text-xs px-3 py-1.5"
+                >
+                  {t.uiShowDetails}
+                </button>
+              ) : (
+                <span className="text-xs px-3 py-1.5 rounded-full border border-lukso-purple/25 text-lukso-purple/80 bg-white/50">
+                  {t.dropCreatedBannerPublishing}
+                </span>
+              )}
+
+              <button
+                type="button"
+                onClick={() => {
+                  clearPostCreateDropNotice();
+                  setAddingDrop(true);
+                }}
+                className="btn-primary text-xs px-3 py-1.5"
+              >
+                {t.uiCreateAnother}
+              </button>
+
+              <button
+                type="button"
+                onClick={clearPostCreateDropNotice}
+                className="btn-ghost text-xs px-3 py-1.5 border border-lukso-border"
+              >
+                {t.uiDismiss}
+              </button>
+            </div>
+          </div>
+        )}
+
         {!connectedAccount ? (
           <div className="card text-center py-8">
             <p className="text-sm text-white/30">{t.dropsManageNotOwner}</p>
@@ -235,16 +359,25 @@ export function DropsManageView({ walletClient, chainId }: DropsManageViewProps)
                 <div className="flex flex-col gap-3">
                   {myDrops
                     .filter((d) => d.isActive)
-                    .map((drop) => (
-                      <DropRow
-                        key={drop.dropId}
-                        drop={drop}
-                        host={connectedAccount}
-                        hostName={hostName}
-                        chainId={chainId}
-                        onViewDetail={handleViewDetail}
-                      />
-                    ))}
+                    .map((drop) => {
+                      const isRecent = recentNoticeActive && !!postCreateDropNotice
+                        && drop.name === postCreateDropNotice.name
+                        && drop.month === postCreateDropNotice.month
+                        && drop.day === postCreateDropNotice.day
+                        && drop.year === postCreateDropNotice.year;
+                      return (
+                        <div key={drop.dropId} ref={isRecent ? recentDropRowRef : undefined}>
+                          <DropRow
+                            drop={drop}
+                            host={connectedAccount}
+                            hostName={hostName}
+                            chainId={chainId}
+                            onViewDetail={handleViewDetail}
+                            isRecentlyCreated={isRecent}
+                          />
+                        </div>
+                      );
+                    })}
                 </div>
               </section>
             )}
@@ -266,6 +399,7 @@ export function DropsManageView({ walletClient, chainId }: DropsManageViewProps)
                         hostName={hostName}
                         chainId={chainId}
                         onViewDetail={handleViewDetail}
+                        isRecentlyCreated={recentNoticeActive && !!postCreateDropNotice && drop.name === postCreateDropNotice.name && drop.month === postCreateDropNotice.month && drop.day === postCreateDropNotice.day && drop.year === postCreateDropNotice.year}
                       />
                     ))}
                 </div>
