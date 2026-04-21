@@ -418,7 +418,7 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
         </select>
 
         <div className="mt-2">
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+          <div className="flex gap-2.5 overflow-x-auto pb-2 px-1 -mx-1 snap-x snap-mandatory scroll-px-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
             {HOLIDAY_DROP_TEMPLATES.map((tpl) => {
               const active = selectedTplId === tpl.id;
               return (
@@ -426,20 +426,23 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
                   key={tpl.id}
                   type="button"
                   onClick={() => { void applyHolidayTemplate(tpl.id); }}
-                  className={`w-full rounded-xl border p-1.5 transition-colors ${
-                    active ? "border-lukso-purple bg-lukso-purple/15" : "border-lukso-border bg-white/5 hover:border-white/30"
+                  className={`w-[102px] shrink-0 rounded-xl border p-1.5 transition-all snap-center ${
+                    active ? "border-lukso-purple bg-lukso-purple/15 shadow-[0_4px_16px_rgba(106,27,154,0.18)]" : "border-lukso-border bg-white/5 hover:border-white/30"
                   }`}
                   title={lang === "es" ? tpl.nameEs : tpl.name}
                 >
                   <img
                     src={templateThumbs[tpl.id]}
                     alt={lang === "es" ? tpl.nameEs : tpl.name}
-                    className="w-full h-10 rounded-md object-cover"
+                    className="w-full aspect-square rounded-md object-cover"
                     onError={(e) => {
                       const svg = generateHolidaySVG(tpl, currentYear, lang);
                       e.currentTarget.src = `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
                     }}
                   />
+                  <span className="block mt-1.5 text-[11px] leading-tight text-center text-[#6f5c3f] truncate">
+                    {lang === "es" ? tpl.nameEs : tpl.name}
+                  </span>
                 </button>
               );
             })}

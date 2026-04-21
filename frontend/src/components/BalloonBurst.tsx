@@ -35,10 +35,10 @@ interface ConfettiParticle {
 
 function generateParticles(preset: BurstPreset, theme: BurstTheme, isMobile: boolean) {
   const config: Record<BurstPreset, { balloons: number; confetti: number; duration: number }> = {
-    single: { balloons: 2, confetti: 8, duration: 2.8 },
-    gentle: { balloons: 7, confetti: 22, duration: 3.3 },
-    celebration: { balloons: 13, confetti: 46, duration: 4.1 },
-    epic: { balloons: 20, confetti: 86, duration: 5.2 },
+    single: { balloons: 3, confetti: 12, duration: 2.9 },
+    gentle: { balloons: 11, confetti: 36, duration: 3.4 },
+    celebration: { balloons: 21, confetti: 92, duration: 4.2 },
+    epic: { balloons: 32, confetti: 150, duration: 5.3 },
   };
   const balloonSizeRanges: Record<BurstPreset, [number, number]> = {
     single: [44, 58],
@@ -52,15 +52,15 @@ function generateParticles(preset: BurstPreset, theme: BurstTheme, isMobile: boo
     // Mobile: reduce particle count to keep animation fluid on mid/low-end devices.
     balloons:
       preset === "epic" && isMobile
-        ? 11
+        ? 17
         : preset === "celebration" && isMobile
-          ? 8
+          ? 12
           : baseCfg.balloons,
     confetti:
       preset === "epic" && isMobile
-        ? 30
+        ? 52
         : preset === "celebration" && isMobile
-          ? 18
+          ? 34
           : baseCfg.confetti,
   };
   const palette = BALLOON_PALETTES[theme];
@@ -118,7 +118,7 @@ export function BalloonBurst() {
     if (!burstActive) return;
     const isMobile = typeof window !== "undefined" && window.matchMedia("(max-width: 640px)").matches;
     setParticles(generateParticles(burstPreset, burstTheme, isMobile));
-    const lifetime = burstPreset === "single" ? 2100 : burstPreset === "gentle" ? 2500 : burstPreset === "epic" ? 3400 : 2900;
+    const lifetime = burstPreset === "single" ? 2200 : burstPreset === "gentle" ? 2700 : burstPreset === "epic" ? 3600 : 3100;
     const timer = setTimeout(clearBurst, lifetime);
     return () => clearTimeout(timer);
   }, [burstActive, burstPreset, burstTheme, clearBurst]);

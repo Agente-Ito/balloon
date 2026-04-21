@@ -1,4 +1,5 @@
 import { useLSP3Avatar } from "@/hooks/useLSP3Avatar";
+import { useLSP3Name } from "@/hooks/useLSP3Name";
 import { useEffect, useState } from "react";
 import type { Address } from "@/types";
 
@@ -14,9 +15,12 @@ interface AvatarProps {
 }
 
 export function Avatar({ address, size = 40, className = "", chainId, imageUrl, name }: AvatarProps) {
+  const effectiveChainId = chainId ?? 4201;
   // Only run the internal fetch when a pre-resolved imageUrl is NOT provided
-  const { data: fetchedUrl } = useLSP3Avatar(imageUrl ? null : address, chainId);
+  const { data: fetchedUrl } = useLSP3Avatar(imageUrl ? null : address, effectiveChainId);
+  const { data: fetchedName } = useLSP3Name(name ? null : address, effectiveChainId);
   const resolvedUrl = imageUrl ?? fetchedUrl;
+  const resolvedName = name?.trim() || fetchedName?.trim();
   const [imageFailed, setImageFailed] = useState(false);
 
   useEffect(() => {
@@ -31,7 +35,7 @@ export function Avatar({ address, size = 40, className = "", chainId, imageUrl, 
     return (
       <img
         src={resolvedUrl}
-        alt={name ?? ""}
+        alt={resolvedName ?? ""}
         style={{ width: size, height: size }}
         className={`rounded-full object-cover flex-shrink-0 ${className}`}
         onError={() => setImageFailed(true)}
@@ -44,7 +48,7 @@ export function Avatar({ address, size = 40, className = "", chainId, imageUrl, 
       address={address ?? "0x0000"}
       size={size}
       className={className}
-      name={name}
+      name={resolvedName}
     />
   );
 }
@@ -65,7 +69,7 @@ function GradientAvatar({
 
   const initials = name
     ? name.trim().charAt(0).toUpperCase()
-    : address.slice(2, 4).toUpperCase();
+    : (address.startsWith("0x") ? address.slice(2, 4).toUpperCase() : "??");
 
   return (
     <div

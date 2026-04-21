@@ -189,6 +189,17 @@
     box-shadow: 0 0 0 3px rgba(156,78,219,0.14);
   }
 
+  /* Keep date input text left-aligned in mobile webviews to avoid centered overflow. */
+  .input[type="date"] {
+    text-align: left;
+  }
+  .input[type="date"]::-webkit-date-and-time-value {
+    text-align: left;
+  }
+  .input[type="date"]::-webkit-datetime-edit {
+    text-align: left;
+  }
+
   /* Badge pill */
   .badge {
     @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium;

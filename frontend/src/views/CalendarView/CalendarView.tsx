@@ -249,17 +249,18 @@ export function CalendarView({ chainId, walletClient }: CalendarViewProps) {
 
   const formatRowDate = (rawDate: string) => {
     const locale = lang === "es" ? esLocale : undefined;
+    const yearPattern = isLargeGrid ? "yyyy" : "yy";
 
     if (/^\d{2}-\d{2}$/.test(rawDate)) {
       const [mm, dd] = rawDate.split("-").map(Number);
       const pseudo = new Date(Date.UTC(2000, mm - 1, dd));
-      return format(pseudo, "MMM d", { locale });
+      return format(pseudo, "d MMM", { locale });
     }
 
     if (/^\d{4}-\d{2}-\d{2}$/.test(rawDate)) {
       const [yyyy, mm, dd] = rawDate.split("-").map(Number);
       const parsed = new Date(Date.UTC(yyyy, mm - 1, dd));
-      return format(parsed, "PPP", { locale });
+      return format(parsed, `d MMM ${yearPattern}`, { locale });
     }
 
     return rawDate;
@@ -411,7 +412,7 @@ export function CalendarView({ chainId, walletClient }: CalendarViewProps) {
           <img
             src="/calendar-title.png"
             alt={t.calendarTitle}
-            className="h-8 sm:h-9 w-auto mx-auto"
+            className="h-9 sm:h-10 w-auto mx-auto"
             onError={() => setShowCalendarTitleImage(false)}
           />
         ) : t.calendarTitle}
@@ -478,7 +479,7 @@ export function CalendarView({ chainId, walletClient }: CalendarViewProps) {
                 {ownCalendarRows.map((row) => (
                   <div key={row.id} className="card flex items-center gap-2.5">
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs text-[#7b6950]">{formatRowDate(row.rawDate)}</p>
+                      <p className="text-xs text-[#7b6950] whitespace-nowrap">{formatRowDate(row.rawDate)}</p>
                       <p className="text-sm font-medium truncate">{row.title}</p>
                     </div>
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#fff5dc] border border-[#d7bf90] text-[#6b4a12]">

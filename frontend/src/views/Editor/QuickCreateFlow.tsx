@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CelebrationType, type Celebration } from "@/types";
 import { useT } from "@/hooks/useT";
+import { getMonthNames } from "@/lib/monthNames";
 
 interface QuickCreateFlowProps {
   initialEvent?: Celebration;
@@ -13,8 +14,25 @@ interface QuickCreateFlowProps {
 
 export function QuickCreateFlow({ initialEvent, profileName, onModeChange, isSaving, onCancel, onSubmit }: QuickCreateFlowProps) {
   const t = useT();
-  const today = new Date().toISOString().slice(0, 10);
-  const [date, setDate] = useState(initialEvent?.date ?? today);
+  const now = new Date();
+  const monthNames = useMemo(() => getMonthNames(t), [t]);
+
+  const parseDateParts = (value?: string) => {
+    if (value && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      const [yy, mm, dd] = value.split("-").map(Number);
+      return { year: yy, month: mm, day: dd };
+    }
+    return {
+      year: now.getFullYear(),
+      month: now.getMonth() + 1,
+      day: now.getDate(),
+    };
+  };
+
+  const initialParts = parseDateParts(initialEvent?.date);
+  const [year, setYear] = useState(initialParts.year);
+  const [month, setMonth] = useState(initialParts.month);
+  const [day, setDay] = useState(initialParts.day);
   const [title, setTitle] = useState(initialEvent?.title ?? "");
   const [description, setDescription] = useState(initialEvent?.description ?? "");
   const [createDrop, setCreateDrop] = useState(false);
@@ -28,15 +46,24 @@ export function QuickCreateFlow({ initialEvent, profileName, onModeChange, isSav
 
   useEffect(() => {
     if (!initialEvent) return;
-    setDate(initialEvent.date);
+    const parts = parseDateParts(initialEvent.date);
+    setYear(parts.year);
+    setMonth(parts.month);
+    setDay(parts.day);
     setTitle(initialEvent.title);
     setDescription(initialEvent.description ?? "");
   }, [initialEvent]);
+
+  const maxDayForMonth = new Date(year, month, 0).getDate();
+  useEffect(() => {
+    if (day > maxDayForMonth) setDay(maxDayForMonth);
+  }, [day, maxDayForMonth]);
 
   useEffect(() => {
     onModeChange?.(createDrop);
   }, [createDrop, onModeChange]);
 
+  const date = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
   const canSubmit = title.trim().length > 1 && !!date;
 
   const handleSubmit = async () => {
@@ -64,12 +91,34 @@ export function QuickCreateFlow({ initialEvent, profileName, onModeChange, isSav
 
       <div className="min-w-0">
         <label className="block text-xs text-[#7b6950] mb-1">{t.quickCreateDate}</label>
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className="input text-sm max-w-full"
-        />
+        <div className="grid grid-cols-3 gap-2">
+          <select
+            value={month}
+            onChange={(e) => setMonth(Number(e.target.value))}
+            className="input text-sm"
+          >
+            {monthNames.map((m, i) => (
+              <option key={m} value={i + 1}>{m}</option>
+            ))}
+          </select>
+          <select
+            value={day}
+            onChange={(e) => setDay(Number(e.target.value))}
+            className="input text-sm"
+          >
+            {Array.from({ length: maxDayForMonth }, (_, i) => i + 1).map((d) => (
+              <option key={d} value={d}>{d}</option>
+            ))}
+          </select>
+          <input
+            type="number"
+            value={year}
+            onChange={(e) => setYear(Number(e.target.value) || now.getFullYear())}
+            min={1900}
+            max={2100}
+            className="input text-sm"
+          />
+        </div>
       </div>
 
       <div className="min-w-0">
