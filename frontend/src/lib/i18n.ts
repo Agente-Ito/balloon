@@ -552,6 +552,60 @@ const translations = {
     birthdayDropName:            "{name}'s Birthday",
     birthdayDropDesc:            "Celebrate {name}'s birthday with this balloon badge! 🎈 Claim it and share the joy.",
     dropFormYearAny:             "Any year",
+
+    // ── Global celebrations section ────────────────────────────────────────
+    dropsGlobal:             "Global Celebrations",
+    dropsGlobalEmpty:        "No global celebrations this month.",
+    dropsGlobalNoInsignia:   "No official badge yet — be the first to create one.",
+    dropsGlobalCreateCta:    "Create celebration",
+    dropsGlobalGreetCta:     "Greet my network",
+
+    // ── Relationship labels ─────────────────────────────────────────────────
+    dropRelFollowing:        "Following",
+    dropRelFollower:         "Follower",
+    dropRelMutual:           "Mutual",
+    dropRelGlobal:           "Global",
+    dropRelCommunity:        "Community",
+    dropRelOwn:              "Yours",
+
+    // ── Admin section ───────────────────────────────────────────────────────
+    dropsAdminSection:       "Admin",
+    dropsAdminAddFestivity:  "Add festivity",
+    dropsAdminFestName:      "Festivity name",
+    dropsAdminCreateGlobal:  "Create global celebration",
+
+    // ── Bulk greeting wizard ────────────────────────────────────────────────
+    bulkGreetTitle:          "Greet your network",
+    bulkGreetStep1:          "Choose recipients",
+    bulkGreetStep2:          "Choose message",
+    bulkGreetStep3:          "Confirm & send",
+    bulkGreetNext:           "Next",
+    bulkGreetSelectAll:      "Select all",
+    bulkGreetDeselectAll:    "Deselect all",
+    bulkGreetNoEligible:     "No contacts available to greet right now.",
+    bulkGreetPreset1:        "🎉 Happy celebration!",
+    bulkGreetPreset2:        "🎈 Wishing you the best today!",
+    bulkGreetPreset3:        "🌟 Sending good vibes your way!",
+    bulkGreetPreset4:        "🥳 Congrats on another great year!",
+    bulkGreetPreset5:        "💜 Happy holidays!",
+    bulkGreetCustom:         "Or write your own message",
+    bulkGreetConfirmBtn:     "Send cards",
+    bulkGreetSending:        "Sending…",
+    bulkGreetProgress:       "Sent {n} of {total}",
+    bulkGreetDone:           "Done! Sent {ok}, {failed} failed.",
+    bulkGreetGasWarning:     "Each card is a separate on-chain transaction. You will sign once per recipient.",
+
+    // ── Anniversary badge claim ─────────────────────────────────────────────
+    anniversaryMintBadge:    "Mint Anniversary Badge",
+    anniversaryMinting:      "Minting…",
+    anniversaryMinted:       "Badge minted! 🎉",
+    anniversaryAlreadyMinted: "Badge already claimed for this year",
+
+    // ── Push notification prompt ────────────────────────────────────────────
+    pushEnableTitle:         "Enable reminders",
+    pushEnableSub:           "Get notified on your celebration days.",
+    pushEnableBtn:           "Enable notifications",
+    pushDenied:              "Notifications blocked. Enable them in browser settings.",
   },
 
   es: {
@@ -1098,6 +1152,60 @@ const translations = {
     validateSelectDate:       "Elige una fecha",
     validateDropName:        "Dale un nombre a la campaña",
     validateDropImage:       "Sube una imagen o elige una plantilla",
+
+    // ── Sección global de celebraciones ────────────────────────────────────
+    dropsGlobal:             "Celebraciones globales",
+    dropsGlobalEmpty:        "Sin celebraciones globales este mes.",
+    dropsGlobalNoInsignia:   "Sin insignia oficial aún — sé el primero en crear una.",
+    dropsGlobalCreateCta:    "Crear celebración",
+    dropsGlobalGreetCta:     "Felicitar a mi red",
+
+    // ── Etiquetas de relación ───────────────────────────────────────────────
+    dropRelFollowing:        "Siguiendo",
+    dropRelFollower:         "Seguidor",
+    dropRelMutual:           "Mutuo",
+    dropRelGlobal:           "Global",
+    dropRelCommunity:        "Comunidad",
+    dropRelOwn:              "Tuya",
+
+    // ── Sección admin ───────────────────────────────────────────────────────
+    dropsAdminSection:       "Admin",
+    dropsAdminAddFestivity:  "Agregar festividad",
+    dropsAdminFestName:      "Nombre de la festividad",
+    dropsAdminCreateGlobal:  "Crear celebración global",
+
+    // ── Wizard de mensajes en lote ──────────────────────────────────────────
+    bulkGreetTitle:          "Felicitar a tu red",
+    bulkGreetStep1:          "Elige destinatarios",
+    bulkGreetStep2:          "Elige mensaje",
+    bulkGreetStep3:          "Confirmar y enviar",
+    bulkGreetNext:           "Siguiente",
+    bulkGreetSelectAll:      "Seleccionar todos",
+    bulkGreetDeselectAll:    "Deseleccionar todos",
+    bulkGreetNoEligible:     "No hay contactos disponibles para felicitar ahora.",
+    bulkGreetPreset1:        "🎉 ¡Feliz celebración!",
+    bulkGreetPreset2:        "🎈 ¡Te deseo lo mejor hoy!",
+    bulkGreetPreset3:        "🌟 ¡Te mando buena energía!",
+    bulkGreetPreset4:        "🥳 ¡Felicidades por otro gran año!",
+    bulkGreetPreset5:        "💜 ¡Felices fiestas!",
+    bulkGreetCustom:         "O escribe tu propio mensaje",
+    bulkGreetConfirmBtn:     "Enviar tarjetas",
+    bulkGreetSending:        "Enviando…",
+    bulkGreetProgress:       "Enviados {n} de {total}",
+    bulkGreetDone:           "¡Listo! Enviadas {ok}, {failed} fallidas.",
+    bulkGreetGasWarning:     "Cada tarjeta es una transacción on-chain separada. Firmarás una vez por destinatario.",
+
+    // ── Reclamar insignia de aniversario ────────────────────────────────────
+    anniversaryMintBadge:    "Crear insignia de aniversario",
+    anniversaryMinting:      "Creando…",
+    anniversaryMinted:       "¡Insignia creada! 🎉",
+    anniversaryAlreadyMinted: "Insignia ya reclamada este año",
+
+    // ── Notificaciones push ─────────────────────────────────────────────────
+    pushEnableTitle:         "Activar recordatorios",
+    pushEnableSub:           "Recibe notificaciones en tus días de celebración.",
+    pushEnableBtn:           "Activar notificaciones",
+    pushDenied:              "Notificaciones bloqueadas. Actívalas en los ajustes del navegador.",
   },
 } as const;
 

@@ -9,6 +9,7 @@ interface NetworkAddresses {
   celebrationsDelegate: Address;
   dropBadge: Address;
   celebrationsDrop: Address;
+  celebrationRegistry: Address;
 }
 
 const TESTNET_ADDRESSES: NetworkAddresses = {
@@ -17,6 +18,7 @@ const TESTNET_ADDRESSES: NetworkAddresses = {
   celebrationsDelegate: (import.meta.env.VITE_CELEBRATIONS_DELEGATE_ADDRESS ?? "0x0000000000000000000000000000000000000000") as Address,
   dropBadge: (import.meta.env.VITE_DROP_BADGE_ADDRESS ?? "0x0000000000000000000000000000000000000000") as Address,
   celebrationsDrop: (import.meta.env.VITE_CELEBRATIONS_DROP_ADDRESS ?? "0x0000000000000000000000000000000000000000") as Address,
+  celebrationRegistry: (import.meta.env.VITE_CELEBRATION_REGISTRY_ADDRESS ?? "0x0000000000000000000000000000000000000000") as Address,
 };
 
 // Mainnet addresses (populated after mainnet deploy)
@@ -26,6 +28,7 @@ const MAINNET_ADDRESSES: NetworkAddresses = {
   celebrationsDelegate: "0x0000000000000000000000000000000000000000",
   dropBadge: "0x0000000000000000000000000000000000000000",
   celebrationsDrop: "0x0000000000000000000000000000000000000000",
+  celebrationRegistry: "0x0000000000000000000000000000000000000000",
 };
 
 export function getAddresses(chainId: number): NetworkAddresses {

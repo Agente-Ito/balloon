@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useUpProvider } from "@/hooks/useUpProvider";
 import { useAppStore } from "@/store/useAppStore";
+import { useWebPush } from "@/hooks/useWebPush";
 import { GridCard } from "@/views/GridCard/GridCard";
 import { CalendarView } from "@/views/CalendarView/CalendarView";
 import { CelebrationView } from "@/views/CelebrationView/CelebrationView";
@@ -17,7 +18,10 @@ import { ContractsProvider } from "@/app/providers/ContractsProvider";
 export default function App() {
   const { account, contextProfile, chainId, walletClient, publicClient, isLoading, error } =
     useUpProvider();
-  const { currentView, setConnectedAccount, setContextProfile, setChainId } = useAppStore();
+  const { currentView, setConnectedAccount, setContextProfile, setChainId, connectedAccount } = useAppStore();
+
+  // Register push subscription globally so notifications work from any view
+  useWebPush(connectedAccount ?? null, !!connectedAccount);
 
   // Sync UP Provider state into the app store
   useEffect(() => {
