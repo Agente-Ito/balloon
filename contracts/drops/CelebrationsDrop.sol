@@ -3,7 +3,7 @@ pragma solidity ^0.8.17;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ICelebrationsDrop} from "../interfaces/ICelebrationsDrop.sol";
-import {IDropBadge} from "../interfaces/IDropBadge.sol";
+import {ICelebrationPassport} from "../interfaces/ICelebrationPassport.sol";
 import {IFollowRegistry} from "../interfaces/IFollowRegistry.sol";
 
 /// @title CelebrationsDrop
@@ -12,7 +12,8 @@ import {IFollowRegistry} from "../interfaces/IFollowRegistry.sol";
 ///         Anyone with a Universal Profile can create a drop campaign with
 ///         an optional time window, supply cap, and social eligibility gates
 ///         (follow, follower count, LSP7 token holdings, LSP8 NFT holdings).
-///         Eligible users claim a DropBadge LSP8 token that proves participation.
+///         Eligible users claim a stamp on their CelebrationPassport instead of
+///         receiving a new NFT, keeping profiles clean regardless of participation count.
 ///
 ///         Drop lifecycle:
 ///           createDrop → [startAt] → claim window open → [endAt | sold out] → closed
@@ -29,8 +30,8 @@ contract CelebrationsDrop is ICelebrationsDrop, Ownable {
     // State
     // ─────────────────────────────────────────────────────────────────────
 
-    IDropBadge     public immutable dropBadge;
-    IFollowRegistry public immutable followRegistry;
+    ICelebrationPassport public passport;
+    IFollowRegistry      public immutable followRegistry;
 
     mapping(bytes32 => DropConfig)                      private _drops;
     mapping(bytes32 => uint32)                          private _claimed;
@@ -42,11 +43,19 @@ contract CelebrationsDrop is ICelebrationsDrop, Ownable {
     // Constructor
     // ─────────────────────────────────────────────────────────────────────
 
-    constructor(address _dropBadge, address _followRegistry) {
-        require(_dropBadge      != address(0), "CelebrationsDrop: dropBadge zero");
+    constructor(address _passport, address _followRegistry) {
         require(_followRegistry != address(0), "CelebrationsDrop: followRegistry zero");
-        dropBadge      = IDropBadge(_dropBadge);
+        passport       = ICelebrationPassport(_passport);
         followRegistry = IFollowRegistry(_followRegistry);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Admin
+    // ─────────────────────────────────────────────────────────────────────
+
+    /// @notice Update the passport contract address (only owner)
+    function setPassport(address _passport) external onlyOwner {
+        passport = ICelebrationPassport(_passport);
     }
 
     // ─────────────────────────────────────────────────────────────────────
@@ -115,8 +124,22 @@ contract CelebrationsDrop is ICelebrationsDrop, Ownable {
         _hasClaimed[dropId][msg.sender] = true;
         _claimed[dropId] += 1;
 
-        // Mint — force=false so it works with Universal Profiles (LSP1 receiver check)
-        bytes32 tokenId = dropBadge.mintForDrop(msg.sender, dropId, cfg.host, cfg.metadataBytes, force);
+        // Add a stamp to the claimer's passport instead of minting a new token
+        ICelebrationPassport.StampRecord memory stamp = ICelebrationPassport.StampRecord({
+            celebrationType: cfg.celebrationType,
+            year:            cfg.year,
+            month:           cfg.month,
+            day:             cfg.day,
+            dropId:          dropId,
+            timestamp:       uint64(block.timestamp)
+        });
+
+        bytes32 tokenId = address(passport) != address(0)
+            ? passport.addStamp(msg.sender, stamp)
+            : bytes32(0);
+
+        // `force` kept in signature for API compatibility; passport ignores it (always mints to UP)
+        (force);
 
         emit DropClaimed(dropId, msg.sender, tokenId);
     }
@@ -219,9 +242,7 @@ contract CelebrationsDrop is ICelebrationsDrop, Ownable {
     }
 
     /// @dev Low-level check: does `holder` have LSP7 balance > 0 at `token`?
-    ///      Uses staticcall so it never reverts on a bad address (e.g. EOA passed as token).
     function _hasLSP7Balance(address token, address holder) private view returns (bool) {
-        // balanceOf(address) → uint256
         (bool success, bytes memory data) = token.staticcall(
             abi.encodeWithSelector(0x70a08231, holder)
         );
@@ -230,9 +251,7 @@ contract CelebrationsDrop is ICelebrationsDrop, Ownable {
     }
 
     /// @dev Low-level check: does `holder` have LSP8 tokenCount > 0 at `collection`?
-    ///      Uses staticcall for the same safety reasons.
     function _hasLSP8Token(address collection, address holder) private view returns (bool) {
-        // balanceOf(address) → uint256  (LSP8 returns the token count)
         (bool success, bytes memory data) = collection.staticcall(
             abi.encodeWithSelector(0x70a08231, holder)
         );

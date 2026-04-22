@@ -29,7 +29,8 @@ const BADGE_ABI = [
 
 
 export function useBadges(ownerAddress: Address | null, chainId: number) {
-  const { celebrationsBadge } = getAddresses(chainId);
+  const { celebrationPassport } = getAddresses(chainId);
+  const celebrationsBadge = celebrationPassport; // migrated: passport replaces badge contract
   const publicClient = getPublicClient(chainId);
 
   return useQuery({
@@ -75,7 +76,7 @@ export function useBadges(ownerAddress: Address | null, chainId: number) {
 
       return badges;
     },
-    enabled: !!ownerAddress && celebrationsBadge !== "0x0000000000000000000000000000000000000000",
+    enabled: !!ownerAddress && celebrationPassport !== "0x0000000000000000000000000000000000000000",
     staleTime: 120_000,
   });
 }

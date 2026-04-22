@@ -1,6 +1,6 @@
 # Celebrations — LUKSO Social Celebration dApp
 
-A decentralized social calendar built on LUKSO. Celebrations lets Universal Profile users mark special dates, send on-chain greeting cards, mint commemorative badges, and run social badge-drop campaigns — all from inside the LUKSO Grid.
+A decentralized social calendar built on LUKSO. Celebrations lets Universal Profile users mark special dates, send on-chain greeting cards, earn passport stamps from drop campaigns, and run social badge-drop campaigns — all from inside the LUKSO Grid.
 
 ---
 
@@ -16,40 +16,51 @@ Store personal dates directly on your Universal Profile (ERC725Y on-chain storag
 
 ---
 
-### 2. Auto-mint birthday & anniversary badges (LSP1 Delegate)
+### 2. Celebration Passport (`CelebrationPassport`)
+
+Instead of minting a new NFT for every celebration, every user has a single **soulbound passport** that accumulates stamps over time. This keeps Universal Profiles clean regardless of participation count.
+
+- **One token per user** — `tokenId = keccak256(owner)`, deterministic and unique.
+- **Always soulbound** — the passport cannot be transferred.
+- **Auto-minted** on the first stamp received (no separate mint step needed).
+- **Stamps stored fully on-chain** — readable without an indexer via `getStamps(owner)`.
+
+Each stamp records:
+
+| Field | Type | Description |
+|---|---|---|
+| `celebrationType` | `uint8` | Birthday (0), UP Anniversary (1), Global Holiday (2), Custom Event (3) |
+| `year` | `uint16` | Calendar year |
+| `month` | `uint8` | Calendar month (0 = unknown, set by delegate stamps) |
+| `day` | `uint8` | Calendar day (0 = unknown) |
+| `dropId` | `bytes32` | Source drop; `bytes32(0)` for personal/auto stamps |
+| `timestamp` | `uint64` | Block timestamp when the stamp was added |
+
+**Key functions:**
+
+```
+CelebrationPassport.addStamp(address to, StampRecord stamp) → bytes32 tokenId
+CelebrationPassport.getStamps(address owner) → StampRecord[]
+CelebrationPassport.hasPassport(address owner) → bool
+CelebrationPassport.stampCount(address owner) → uint256
+CelebrationPassport.computeTokenId(address owner) → bytes32
+```
+
+Only authorized callers can add stamps (`CelebrationsDrop`, `CelebrationsDelegate`, contract owner).
+
+---
+
+### 3. Auto-stamp on birthday & anniversary (LSP1 Delegate)
 
 By registering `CelebrationsDelegate` as your Universal Profile's LSP1 receiver delegate, the system automatically detects celebration dates whenever your UP receives a token:
 
 - Reads your birthday from ERC725Y (`app:celebrations:birthday` key).
 - Reads your UP creation date from ERC725Y (`app:celebrations:profileCreatedAt`).
-- If today matches, and no badge has been minted yet this year, it auto-mints a **soulbound** LSP8 badge to your profile.
+- If today matches, and no stamp has been added yet this year, it auto-adds a stamp to your passport.
 - Emits `BirthdayDetected` or `UPAnniversaryDetected` events (indexer picks these up).
-- Detection is safe: works whether the triggering token is LSP7 or LSP8, and never reverts your UP if the badge contract is unavailable.
+- Detection is safe: never reverts your UP if the passport contract is unavailable.
 
-> Auto-minting is opt-in via delegate registration. You can skip it and mint manually at any time.
-
----
-
-### 3. Mint commemorative badges (`CelebrationsBadge`)
-
-Anyone can mint a **CelebrationsBadge** LSP8 NFT for a celebration:
-
-- **TokenId** is deterministic: `keccak256(owner, celebrationType, year)` — one badge per person per celebration type per year.
-- **Soulbound option** — badge can be locked to the recipient and made non-transferable.
-- **Celebration types:** Birthday (0), UP Anniversary (1), Global Holiday (2), Custom Event (3).
-- Prevents duplicate minting for the same owner/type/year combination.
-- LSP4 metadata (image, name, description) stored on IPFS via Pinata.
-
-```
-CelebrationsBadge.mintBadge(
-  address to,
-  CelebrationType celebrationType,
-  uint16 year,
-  bool soulbound,
-  bytes metadataBytes,
-  bool force
-) → bytes32 tokenId
-```
+> Auto-stamping is opt-in via delegate registration.
 
 ---
 
@@ -74,9 +85,9 @@ GreetingCard.mintCard(
 
 ---
 
-### 5. Create social badge-drop campaigns (`CelebrationsDrop` + `DropBadge`)
+### 5. Create social badge-drop campaigns (`CelebrationsDrop`)
 
-Run a public badge-drop campaign tied to a celebration date. Anyone can claim if they meet your eligibility conditions.
+Run a public drop campaign tied to a celebration date. Eligible claimers receive a stamp on their passport instead of a new NFT token.
 
 **Create a drop:**
 
@@ -97,7 +108,7 @@ CelebrationsDrop.createDrop(DropConfig config) → bytes32 dropId
 | `requiredLSP7[]` | Claimer must hold balance of each listed LSP7 token (max 5) |
 | `requiredLSP8[]` | Claimer must hold a token from each listed LSP8 collection (max 5) |
 | `name` | Display name of the drop |
-| `imageIPFS` | IPFS CID of the badge artwork |
+| `imageIPFS` | IPFS CID of the drop artwork |
 
 **Claim a drop:**
 
@@ -106,16 +117,13 @@ CelebrationsDrop.claim(bytes32 dropId, bool force)
 ```
 
 - Checks all eligibility gates (follow, followers, token holdings).
-- Mints a `DropBadge` LSP8 NFT to the claimer.
-- Drop badge TokenId = `keccak256(claimer, dropId)` — one per person per drop.
+- Calls `CelebrationPassport.addStamp()` — no new NFT is minted to the claimer's wallet.
 - `checkEligibility(dropId, claimer)` — safe off-chain check that returns a reason on failure.
 
 **Host controls:**
-- `cancelDrop(bytes32 dropId)` — immediately closes the drop (sets `endAt = now`).
+- `cancelDrop(bytes32 dropId)` — immediately closes the drop.
 - `getDropsByHost(address host)` — list all drops created by an address.
 - `hasClaimed(dropId, claimer)` — check if an address already claimed.
-- Drop host can update metadata of any claimed `DropBadge` token that came from their drop (on-chain, even outside the dApp).
-- Each claimed drop token stores the original drop creator (host), so indexers/UIs can display who created it.
 
 ---
 
@@ -137,9 +145,8 @@ Curators can run community artwork voting for celebration themes:
 - **Artists** submit badge artwork (IPFS image + optional statement).
 - **Community** votes on submissions (off-chain, stored in indexer).
 - Curator **selects a winner** and can link it to a drop campaign.
-- Curator can reopen submissions for a new cycle.
 
-This is currently managed via the indexer REST API — the winning artwork can then become the image for a `CelebrationsDrop`.
+This is managed via the indexer REST API — the winning artwork becomes the image for a `CelebrationsDrop`.
 
 ---
 
@@ -149,7 +156,7 @@ Store a wishlist of desired assets directly on your Universal Profile:
 
 - Items can be: **LSP8 NFT**, **LSP7 token**, or a free-text **Note**.
 - Optional fields: contract address, token ID (for specific LSP8 tokens), description.
-- Wishlist is visible to followers who visit your profile in the Celebrations Grid app.
+- Visible to followers who visit your profile in the Grid app.
 - Controlled by the `wishlistVisible` setting in your profile settings.
 
 ---
@@ -158,11 +165,10 @@ Store a wishlist of desired assets directly on your Universal Profile:
 
 | Contract | Standard | Purpose |
 |---|---|---|
-| `CelebrationsBadge` | LSP8 | Commemorative badge NFTs. One per person/type/year. Optional soulbound. |
+| `CelebrationPassport` | LSP8 (soulbound) | One passport per user. Accumulates stamps instead of minting new tokens per celebration. |
 | `GreetingCard` | LSP8 | Greeting card NFTs. Sequential IDs. 24-hour rate limit per pair. |
-| `CelebrationsDelegate` | LSP1 URD | Auto-detects birthdays/anniversaries on token receive. Auto-mints badges. |
-| `CelebrationsDrop` | Ownable | Social drop campaigns with eligibility gates (follow, tokens, followers). |
-| `DropBadge` | LSP8 | Badge NFTs minted through drop claims. One per claimer per drop. |
+| `CelebrationsDelegate` | LSP1 URD | Auto-detects birthdays/anniversaries on token receive. Adds stamps to passport. |
+| `CelebrationsDrop` | Ownable | Social drop campaigns with eligibility gates. Claims add stamps to passport. |
 | `CelebrationRegistry` | Ownable | Registry of global holidays/festivities. Owner-managed. |
 | `FollowRegistry` | — | Wrapper around LSP26 for follower/following queries. |
 
@@ -183,13 +189,13 @@ Store a wishlist of desired assets directly on your Universal Profile:
 
 | Event | Contract | When |
 |---|---|---|
-| `BadgeMinted(recipient, tokenId, celebrationType, year)` | CelebrationsBadge | Badge minted (manual or auto) |
+| `StampAdded(tokenId, owner, celebrationType, year, month, day, dropId, timestamp)` | CelebrationPassport | A stamp is added to a passport |
 | `GreetingCardSent(from, to, tokenId, celebrationType)` | GreetingCard | Greeting card sent |
 | `BirthdayDetected(profile, year)` | CelebrationsDelegate | Birthday match detected on token receive |
 | `UPAnniversaryDetected(profile, year, yearsOld)` | CelebrationsDelegate | Anniversary match detected |
 | `CelebrationGiftReceived(profile, sender, asset, celebrationType)` | CelebrationsDelegate | LSP7/LSP8 gift received on a celebration day |
 | `DropCreated(dropId, host, celebrationType, startAt, endAt, maxSupply)` | CelebrationsDrop | New drop campaign created |
-| `DropClaimed(dropId, claimer, tokenId)` | CelebrationsDrop | Drop badge claimed |
+| `DropClaimed(dropId, claimer, tokenId)` | CelebrationsDrop | Drop claimed — stamp added to claimer's passport |
 
 ---
 
@@ -205,13 +211,26 @@ Store a wishlist of desired assets directly on your Universal Profile:
 
 ---
 
+## Testnet contract addresses (Chain ID 4201)
+
+| Contract | Address |
+|---|---|
+| `CelebrationPassport` | `0xC1Aa1ACe36C73c40a9f03C0B08c1d506A35920F5` |
+| `CelebrationsDelegate` | `0x6AA8B294bB18Bc87CA4925c8bE8273D431F4B5AE` |
+| `CelebrationsDrop` | `0xD268fD3a966171A610FeF06a0cC582770A730b94` |
+| `GreetingCard` | `0x6e941f2Dd56286F8c8839985DCfc6D279f6a2Cc5` |
+| `CelebrationRegistry` | `0xbE5c5441b18D3455E2958ffa0C475ba7D509f7C2` |
+| `FollowRegistry` | `0x3B512E1522a37f99C2d8820D1Ab73EeF8305483B` |
+
+---
+
 ## Indexer REST API
 
 The indexer (`indexer/`) listens for on-chain events and exposes a REST API for the frontend.
 
 | Endpoint | Description |
 |---|---|
-| `GET /badges?owner=0x...` | Badges owned by an address |
+| `GET /badges?owner=0x...` | Stamps on a passport (via `StampAdded` events) |
 | `GET /cards?recipient=0x...` | Greeting cards received |
 | `GET /cards?sender=0x...` | Greeting cards sent |
 | `GET /drops?host=0x...` | Drops created by host |
@@ -264,8 +283,8 @@ The frontend uses a light-mode balloon-foil aesthetic — warm cream backgrounds
 
 | Component | Description |
 |---|---|
-| `BalloonLogo` | Shows `balloon-wordmark.jpeg` asset; SVG fallback with violet palette |
-| `BalloonIcon` | SVG balloon mark. `foil` prop enables radial gradient metallic look |
+| `BalloonLogo` | Renders `balloon-logo.png` (RGBA, transparent background) with a gentle float animation |
+| `BalloonIcon` | Renders `balloon-b.png` — a purple foil "B" balloon. `color` prop applies hue rotation for tinting |
 | `BalloonName` | Renders a name as metallic balloon letters using the `balloon-alphabet.jpeg` sprite sheet |
 | `BalloonBurst` | Full-screen celebration overlay — rising balloons + confetti |
 
@@ -278,16 +297,16 @@ import { BalloonName } from "@/components/BalloonName";
 <BalloonName name="MARIA" letterHeight={56} />
 ```
 
-Supports A–Z (uppercase/lowercase). Spaces render as gaps. Useful as a decorative detail on celebration cards or badge headers.
+Supports A–Z (uppercase/lowercase). Spaces render as gaps.
 
 ### Assets (`frontend/public/`)
 
 | File | Use |
 |---|---|
-| `balloon-wordmark.jpeg` | "BALLOON" foil word logo — used by `BalloonLogo` |
-| `balloon-b.jpeg` | Single "B" balloon — OG image for social previews |
+| `balloon-logo.png` | "BALLOON" foil wordmark — RGBA PNG, used by `BalloonLogo` |
+| `balloon-b.png` | Single "B" balloon — RGBA PNG, used by `BalloonIcon` |
 | `balloon-alphabet.jpeg` | A–Z foil letter sprite sheet — used by `BalloonName` |
-| `favicon.svg` | SVG balloon favicon (shown in browser tabs and block explorer tx pages) |
+| `favicon.svg` | SVG balloon favicon |
 
 ---
 
@@ -314,11 +333,14 @@ cp .env.example .env
 # Fill in: PRIVATE_KEY, PINATA_JWT, RPC_URL
 
 # 3. Deploy contracts
-npm run deploy:all
+npx hardhat ignition deploy ignition/modules/Celebrations.ts \
+  --network luksoTestnet \
+  --parameters ignition/parameters/luksoTestnet.json
+
 # Copy printed addresses into .env as VITE_* vars
 
 # 4. Register the LSP1 delegate on your Universal Profile
-UP_ADDRESS=0x... npm run register-delegate
+npx hardhat run scripts/registerDelegate.ts --network luksoTestnet
 
 # 5. Start the indexer
 npm run indexer:dev
@@ -331,8 +353,9 @@ npm run frontend:dev
 
 ## Known limitations
 
-- The `CelebrationsDelegate` auto-mint only triggers when the UP **receives** a token. If no token is received on a birthday, the badge is not automatically minted — the user can mint manually from the Celebrations app.
+- The `CelebrationsDelegate` auto-stamp only triggers when the UP **receives** a token. If no token is received on a birthday, no stamp is added automatically — but drops and manual flows still work.
 - Custom events and wishlist items are stored on IPFS; the indexer does not track them (they are read directly from the UP's ERC725Y).
 - The community series voting system is currently off-chain (indexer-only). Votes are not recorded on-chain.
 - Drop eligibility gates are stacked with AND logic — all conditions must be met simultaneously.
-- Drop badge artwork (`imageIPFS`) must be uploaded to IPFS before creating the drop.
+- Drop artwork (`imageIPFS`) must be uploaded to IPFS before creating the drop.
+- Stamps from the delegate have `month=0` and `day=0` — the actual birthday date is on the UP's ERC725Y, not repeated in the stamp.

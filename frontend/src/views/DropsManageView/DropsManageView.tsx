@@ -278,21 +278,24 @@ export function DropsManageView({ walletClient, chainId }: DropsManageViewProps)
                 {t.dropsManageTabManage}
               </button>
             </div>
-            {connectedAccount && (
-              <button
-                onClick={() => setAddingDrop(true)}
-                className="title-premium text-xs transition-colors"
-                style={{ color: "#6A1B9A" }}
-              >
-                {t.subAddDrop}
-              </button>
-            )}
             <LanguageToggle />
           </div>
         }
       />
 
       <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-4">
+        {/* ── Create new drop inline CTA ─────────────────────────────────── */}
+        {connectedAccount && (
+          <button
+            onClick={() => setAddingDrop(true)}
+            className="w-full flex items-center justify-center gap-2 rounded-2xl border border-dashed border-lukso-purple/40 py-2.5 text-sm font-medium transition-colors hover:bg-lukso-purple/5 active:bg-lukso-purple/10"
+            style={{ color: "#6A1B9A" }}
+          >
+            <span className="text-base leading-none">+</span>
+            <span className="title-premium text-xs">{t.subAddDrop}</span>
+          </button>
+        )}
+
         {recentNoticeActive && (
           <div className="card border-lukso-purple/30 bg-lukso-purple/10 animate-banner-in">
             <p className="title-premium text-sm text-lukso-purple mb-1">{t.dropCreatedBannerTitle}</p>

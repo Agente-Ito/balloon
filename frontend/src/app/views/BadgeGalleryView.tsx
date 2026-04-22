@@ -1,11 +1,9 @@
-/**
- * BadgeGalleryView — shows all celebration badges owned by the viewed profile.
- */
 import type { Address } from "@/app/types";
 import { useBadgeGallery } from "@/app/hooks/useBadgeGallery";
 import { CelebrationBadge } from "@/app/components/CelebrationBadge";
 import { EmptyState } from "@/app/components/EmptyState";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { BalloonIcon } from "@/components/BalloonIcon";
 
 interface BadgeGalleryViewProps {
   profileAddress: Address | null;
@@ -13,7 +11,7 @@ interface BadgeGalleryViewProps {
 }
 
 export function BadgeGalleryView({ profileAddress, chainId }: BadgeGalleryViewProps) {
-  const { data: badges, isLoading, error } = useBadgeGallery(profileAddress, chainId);
+  const { data: stamps, isLoading, error } = useBadgeGallery(profileAddress, chainId);
 
   if (isLoading) {
     return (
@@ -27,30 +25,39 @@ export function BadgeGalleryView({ profileAddress, chainId }: BadgeGalleryViewPr
     return (
       <EmptyState
         emoji="⚠️"
-        title="Could not load badges"
+        title="Could not load passport"
         description={error instanceof Error ? error.message : "Unknown error"}
       />
     );
   }
 
-  if (!badges || badges.length === 0) {
+  if (!stamps || stamps.length === 0) {
     return (
-      <EmptyState
-        emoji="🏅"
-        title="No badges yet"
-        description="Celebration badges appear here when minted for this profile."
-      />
+      <div className="flex flex-col items-center gap-4 py-12 text-center px-6">
+        <BalloonIcon size={56} className="animate-float-slow opacity-70" />
+        <div>
+          <p className="text-sm font-semibold text-cel-text/70">Pasaporte sin sellos</p>
+          <p className="text-xs text-cel-muted mt-1">
+            Los sellos se acumulan aquí cada vez que participes en una celebración o drops.
+          </p>
+        </div>
+      </div>
     );
   }
 
   return (
     <div className="p-4">
-      <h2 className="text-sm font-semibold text-white/60 uppercase tracking-wider mb-4">
-        Badges · {badges.length}
-      </h2>
+      {/* Passport header */}
+      <div className="flex items-center gap-2 mb-4">
+        <BalloonIcon size={22} />
+        <h2 className="text-sm font-semibold text-cel-text/70 uppercase tracking-wider">
+          Pasaporte · {stamps.length} {stamps.length === 1 ? "sello" : "sellos"}
+        </h2>
+      </div>
+
       <div className="grid grid-cols-2 gap-3">
-        {badges.map((badge) => (
-          <CelebrationBadge key={badge.tokenId} badge={badge} />
+        {stamps.map((stamp) => (
+          <CelebrationBadge key={stamp.tokenId} badge={stamp} />
         ))}
       </div>
     </div>

@@ -486,6 +486,15 @@ export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewPr
                   {t.dropsManageTabManage}
                 </button>
               )}
+              {openSeries.length > 0 && (
+                <button
+                  onClick={() => { setActiveSeriesId(openSeries[0].id); setView("series"); }}
+                  className="title-premium text-[11px] sm:text-xs px-2 sm:px-3 py-1 rounded-md transition-colors"
+                  style={{ color: "#c99a2e" }}
+                >
+                  ✦ {t.dropsManageTabSeries}
+                </button>
+              )}
             </div>
             <LanguageToggle />
           </div>

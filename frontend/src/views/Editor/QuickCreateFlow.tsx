@@ -52,6 +52,7 @@ export function QuickCreateFlow({ initialEvent, profileName, onModeChange, isSav
   const [notifyDaysBefore, setNotifyDaysBefore] = useState<number>(1);
   const [notifyTime, setNotifyTime] = useState("09:00");
   const [showTemplates, setShowTemplates] = useState(!initialEvent);
+  const [showValidation, setShowValidation] = useState(false);
 
   const personalizedNamePlaceholder = profileName
     ? (mode === "reminder"
@@ -106,7 +107,14 @@ export function QuickCreateFlow({ initialEvent, profileName, onModeChange, isSav
   const resolvedTitle = title.trim() || suggestedTitle || personalizedNamePlaceholder;
   const canSubmit = resolvedTitle.trim().length > 1 && !!date;
 
+  // For a new reminder with no profile context the user must type a name
+  const requiresUserTitle = mode === "reminder" && !profileName && !isEditing;
+
   const handleSubmit = async (createDrop: boolean) => {
+    if (requiresUserTitle && !title.trim()) {
+      setShowValidation(true);
+      return;
+    }
     if (!canSubmit) return;
 
     const event: Celebration = {
@@ -147,7 +155,11 @@ export function QuickCreateFlow({ initialEvent, profileName, onModeChange, isSav
       )}
 
       {showTemplates && (
-        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 snap-x snap-mandatory">
+        <>
+          <p className="text-xs text-[#7b6950] -mb-1">
+            {mode === "reminder" ? t.quickCreateReminderCategoryLabel : t.quickCreateCelebrationCategoryLabel}
+          </p>
+          <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 snap-x snap-mandatory">
           {templates.map((template) => {
             const active = template.id === selectedTemplateId;
             const label = lang === "es" ? template.nameEs : template.name;
@@ -192,10 +204,12 @@ export function QuickCreateFlow({ initialEvent, profileName, onModeChange, isSav
               </button>
             );
           })}
-        </div>
+          </div>
+        </>
       )}
 
       <div className="rounded-2xl border border-lukso-border bg-[#fffaf1] p-2.5 sm:p-3">
+        <p className="text-xs text-[#7b6950] mb-1.5">{t.quickCreateDateLabel}</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           <select value={month} onChange={(e) => setMonth(Number(e.target.value))} className="input text-sm">
             {monthNames.map((m, i) => (
@@ -235,15 +249,25 @@ export function QuickCreateFlow({ initialEvent, profileName, onModeChange, isSav
       )}
 
       <div className="min-w-0">
-        <label className="block text-xs text-[#7b6950] mb-1">{t.quickCreateNameOptional}</label>
+        <label className="block text-xs text-[#7b6950] mb-1">
+          {mode === "reminder" ? t.quickCreateReminderNameLabel : t.quickCreateNameOptional}
+        </label>
         <input
           type="text"
           value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          onChange={(e) => { setTitle(e.target.value); if (showValidation) setShowValidation(false); }}
           placeholder={suggestedTitle}
-          className="input text-sm max-w-full"
+          className={`input text-sm max-w-full ${showValidation && !title.trim() ? "border-red-400 focus:border-red-400" : ""}`}
           maxLength={72}
         />
+        {showValidation && !title.trim() && (
+          <p className="text-xs text-red-500 mt-1">{t.quickCreateTitleRequired}</p>
+        )}
+        {!title.trim() && !showValidation && (mode === "celebration" || !!profileName) && (
+          <p className="text-[11px] text-[#9b8a6a] mt-0.5 truncate">
+            {t.quickCreateTitlePreview.replace("{title}", suggestedTitle)}
+          </p>
+        )}
       </div>
     </>
   );

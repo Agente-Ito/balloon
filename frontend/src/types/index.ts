@@ -47,6 +47,25 @@ export interface Badge {
   soulbound: boolean;
 }
 
+// ─── Passport / Stamps ───────────────────────────────────────────────────────
+
+/** A single stamp on the passport — mirrors CelebrationPassport.StampRecord */
+export interface Stamp {
+  celebrationType: CelebrationType;
+  year: number;
+  month: number;    // 0 = unknown (delegate auto-stamps)
+  day: number;      // 0 = unknown
+  dropId: string;   // bytes32 hex; "0x00...00" for personal stamps
+  timestamp: number; // unix seconds
+}
+
+/** The on-chain passport token + all accumulated stamps */
+export interface Passport {
+  tokenId: string;  // bytes32 hex = keccak256(owner)
+  owner: Address;
+  stamps: Stamp[];
+}
+
 export interface GreetingCardMetadata {
   title: string;
   from: Address;

@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {ICelebrationsBadge} from "../interfaces/ICelebrationsBadge.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {ICelebrationPassport} from "../interfaces/ICelebrationPassport.sol";
 import {ICelebrationsDelegate} from "../interfaces/ICelebrationsDelegate.sol";
 import {ProfileUtils} from "../libraries/ProfileUtils.sol";
 import {ERC725Keys} from "../libraries/ERC725Keys.sol";
@@ -26,6 +27,7 @@ import {CelebrationEvents} from "./CelebrationEvents.sol";
 ///   - app:celebrations:profileCreatedAt → unix timestamp (uint256)
 ///   - app:celebrations:settings         → IPFS CID JSON (includes autoMintBadge flag)
 contract CelebrationsDelegate is
+    Ownable,
     ICelebrationsDelegate,
     CelebrationEligibility,
     CelebrationEvents
@@ -34,8 +36,8 @@ contract CelebrationsDelegate is
     // State
     // ─────────────────────────────────────────────────────────────────────
 
-    /// @notice The CelebrationsBadge contract address
-    address public immutable badgeContract;
+    /// @notice The CelebrationPassport contract address
+    address public passportContract;
 
     /// @notice Auto-mint cooldown per UP: tracks last auto-mint year to prevent replays
     mapping(address => mapping(uint8 => uint256)) public lastAutoMintYear;
@@ -51,8 +53,13 @@ contract CelebrationsDelegate is
     // Constructor
     // ─────────────────────────────────────────────────────────────────────
 
-    constructor(address _badgeContract) {
-        badgeContract = _badgeContract;
+    constructor(address _passportContract) {
+        passportContract = _passportContract;
+    }
+
+    /// @notice Update the passport contract address (only contract owner)
+    function setPassport(address _passportContract) external onlyOwner {
+        passportContract = _passportContract;
     }
 
     // ─────────────────────────────────────────────────────────────────────
@@ -100,14 +107,17 @@ contract CelebrationsDelegate is
                 lastAutoMintYear[profile][birthdayType] = birthYear;
                 emit BirthdayDetected(profile, birthYear);
 
-                if (badgeContract != address(0)) {
-                    try ICelebrationsBadge(badgeContract).mintBadge(
+                if (passportContract != address(0)) {
+                    try ICelebrationPassport(passportContract).addStamp(
                         profile,
-                        CelebrationType.Birthday,
-                        birthYear,
-                        true,  // soulbound
-                        "",    // metadata set separately by profile owner
-                        false  // force=false: profile is always a UP in this context
+                        ICelebrationPassport.StampRecord({
+                            celebrationType: birthdayType,
+                            year:            birthYear,
+                            month:           0,  // delegate doesn't parse birthday date
+                            day:             0,
+                            dropId:          bytes32(0),
+                            timestamp:       uint64(block.timestamp)
+                        })
                     ) {} catch {}
                 }
             }
@@ -124,14 +134,17 @@ contract CelebrationsDelegate is
                 lastAutoMintYear[profile][annivType] = annivYear;
                 emit UPAnniversaryDetected(profile, annivYear, yearsOld);
 
-                if (badgeContract != address(0)) {
-                    try ICelebrationsBadge(badgeContract).mintBadge(
+                if (passportContract != address(0)) {
+                    try ICelebrationPassport(passportContract).addStamp(
                         profile,
-                        CelebrationType.UPAnniversary,
-                        annivYear,
-                        true,  // soulbound
-                        "",    // metadata set separately by profile owner
-                        false  // force=false: profile is always a UP in this context
+                        ICelebrationPassport.StampRecord({
+                            celebrationType: annivType,
+                            year:            annivYear,
+                            month:           0,
+                            day:             0,
+                            dropId:          bytes32(0),
+                            timestamp:       uint64(block.timestamp)
+                        })
                     ) {} catch {}
                 }
             }

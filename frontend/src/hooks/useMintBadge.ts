@@ -46,7 +46,8 @@ export function useMintBadge(
   chainId: number
 ) {
   const queryClient = useQueryClient();
-  const { celebrationsBadge } = getAddresses(chainId);
+  const { celebrationPassport } = getAddresses(chainId);
+  const celebrationsBadge = celebrationPassport; // manual minting deprecated — stamps added via drops/delegate
 
   return useMutation({
     mutationFn: async (params: MintBadgeParams) => {

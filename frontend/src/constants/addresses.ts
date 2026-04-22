@@ -4,31 +4,28 @@ export const LUKSO_MAINNET_CHAIN_ID = 42;
 export const LUKSO_TESTNET_CHAIN_ID = 4201;
 
 interface NetworkAddresses {
-  celebrationsBadge: Address;
+  celebrationPassport: Address;
   greetingCard: Address;
   celebrationsDelegate: Address;
-  dropBadge: Address;
   celebrationsDrop: Address;
   celebrationRegistry: Address;
 }
 
 const TESTNET_ADDRESSES: NetworkAddresses = {
-  celebrationsBadge: (import.meta.env.VITE_CELEBRATIONS_BADGE_ADDRESS ?? "0x0000000000000000000000000000000000000000") as Address,
-  greetingCard: (import.meta.env.VITE_GREETING_CARD_ADDRESS ?? "0x0000000000000000000000000000000000000000") as Address,
-  celebrationsDelegate: (import.meta.env.VITE_CELEBRATIONS_DELEGATE_ADDRESS ?? "0x0000000000000000000000000000000000000000") as Address,
-  dropBadge: (import.meta.env.VITE_DROP_BADGE_ADDRESS ?? "0x0000000000000000000000000000000000000000") as Address,
-  celebrationsDrop: (import.meta.env.VITE_CELEBRATIONS_DROP_ADDRESS ?? "0x0000000000000000000000000000000000000000") as Address,
-  celebrationRegistry: (import.meta.env.VITE_CELEBRATION_REGISTRY_ADDRESS ?? "0x0000000000000000000000000000000000000000") as Address,
+  celebrationPassport:  (import.meta.env.VITE_CELEBRATION_PASSPORT_ADDRESS  ?? "0x0000000000000000000000000000000000000000") as Address,
+  greetingCard:         (import.meta.env.VITE_GREETING_CARD_ADDRESS          ?? "0x0000000000000000000000000000000000000000") as Address,
+  celebrationsDelegate: (import.meta.env.VITE_CELEBRATIONS_DELEGATE_ADDRESS  ?? "0x0000000000000000000000000000000000000000") as Address,
+  celebrationsDrop:     (import.meta.env.VITE_CELEBRATIONS_DROP_ADDRESS      ?? "0x0000000000000000000000000000000000000000") as Address,
+  celebrationRegistry:  (import.meta.env.VITE_CELEBRATION_REGISTRY_ADDRESS   ?? "0x0000000000000000000000000000000000000000") as Address,
 };
 
 // Mainnet addresses (populated after mainnet deploy)
 const MAINNET_ADDRESSES: NetworkAddresses = {
-  celebrationsBadge: "0x0000000000000000000000000000000000000000",
-  greetingCard: "0x0000000000000000000000000000000000000000",
+  celebrationPassport:  "0x0000000000000000000000000000000000000000",
+  greetingCard:         "0x0000000000000000000000000000000000000000",
   celebrationsDelegate: "0x0000000000000000000000000000000000000000",
-  dropBadge: "0x0000000000000000000000000000000000000000",
-  celebrationsDrop: "0x0000000000000000000000000000000000000000",
-  celebrationRegistry: "0x0000000000000000000000000000000000000000",
+  celebrationsDrop:     "0x0000000000000000000000000000000000000000",
+  celebrationRegistry:  "0x0000000000000000000000000000000000000000",
 };
 
 export function getAddresses(chainId: number): NetworkAddresses {
