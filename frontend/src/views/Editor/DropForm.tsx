@@ -33,6 +33,18 @@ export interface DropFormPrefill {
   imageFile?: File;
 }
 
+export interface DropSourceOption {
+  id: string;
+  label: string;
+  suggestedName?: string;
+  suggestedDescription?: string;
+  celebrationType: CelebrationType;
+  month: number;
+  day: number;
+  year?: number;
+  templateId?: string | null;
+}
+
 interface DropFormProps {
   host: Address;
   chainId?: number;
@@ -40,6 +52,8 @@ interface DropFormProps {
   onCancel: () => void;
   isSaving: boolean;
   prefill?: DropFormPrefill;
+  sourceOptions?: DropSourceOption[];
+  initialSourceId?: string | null;
 }
 
 function CoHostRow({
@@ -122,7 +136,7 @@ function AddressListField({
   );
 }
 
-export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, prefill }: DropFormProps) {
+export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, prefill, sourceOptions = [], initialSourceId = null }: DropFormProps) {
   const t = useT();
   const lang = useAppStore((s) => s.lang);
   const currentYear = new Date().getFullYear();
@@ -183,6 +197,7 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
   const { data: socialContacts = [] } = useSocialContacts(host);
 
   const [selectedTplId, setSelectedTplId] = useState<string | null>(initialTemplate?.id ?? null);
+  const [selectedSourceId, setSelectedSourceId] = useState<string | null>(initialSourceId ?? sourceOptions[0]?.id ?? null);
 
   const typeMenuOptions = useMemo(() => {
     const templateOptions = HOLIDAY_DROP_TEMPLATES.map((tpl) => ({
@@ -220,6 +235,10 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
     if (!selectedTplId) return null;
     return HOLIDAY_DROP_TEMPLATES.find((tpl) => tpl.id === selectedTplId) ?? null;
   }, [selectedTplId]);
+  const selectedSource = useMemo(
+    () => sourceOptions.find((option) => option.id === selectedSourceId) ?? null,
+    [selectedSourceId, sourceOptions]
+  );
 
   const imageDisplayName = useMemo(() => {
     if (!imageFile) return "";
@@ -312,6 +331,32 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
   }, [coHostSearch, socialContacts]);
 
   const canAddManualCoHost = manualCoHost.trim().startsWith("0x") && manualCoHost.trim().length === 42;
+  const participationMode = lsp7List.length > 0 || lsp8List.length > 0 || !!minFollowers
+    ? "tokens"
+    : requireFollow
+      ? "followers"
+      : "anyone";
+
+  const applySimpleParticipation = (nextMode: "anyone" | "followers" | "tokens") => {
+    if (nextMode === "anyone") {
+      setRequireFollow(false);
+      setMinFollowers("");
+      setLsp7List([]);
+      setLsp8List([]);
+      setShowEligibility(false);
+      return;
+    }
+    if (nextMode === "followers") {
+      setRequireFollow(true);
+      setMinFollowers("");
+      setLsp7List([]);
+      setLsp8List([]);
+      setShowEligibility(false);
+      return;
+    }
+    setRequireFollow(true);
+    setShowEligibility(true);
+  };
 
   async function applyHolidayTemplate(tplId: string) {
     const tpl = HOLIDAY_DROP_TEMPLATES.find((t) => t.id === tplId);
@@ -336,6 +381,25 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
       return;
     }
     await applyHolidayTemplate(value.replace("tpl:", ""));
+  }
+
+  async function applySourceOption(sourceId: string) {
+    const nextSource = sourceOptions.find((option) => option.id === sourceId);
+    setSelectedSourceId(sourceId);
+    if (!nextSource) return;
+
+    setName(nextSource.suggestedName ?? "");
+    setDesc(nextSource.suggestedDescription ?? "");
+    setCelebType(nextSource.celebrationType);
+    setMonth(nextSource.month);
+    setDay(nextSource.day);
+    setYear(nextSource.year ? String(nextSource.year) : "");
+
+    if (nextSource.templateId) {
+      await applyHolidayTemplate(nextSource.templateId);
+      if (nextSource.suggestedName) setName(nextSource.suggestedName);
+      if (nextSource.suggestedDescription) setDesc(nextSource.suggestedDescription);
+    }
   }
 
   const handleSubmit = () => {
@@ -366,6 +430,21 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
 
   return (
     <div className="flex flex-col gap-5">
+
+      {sourceOptions.length > 0 && (
+        <div>
+          <label className="block text-xs text-[#7b6950] mb-1">{t.dropFormBasedOn}</label>
+          <select
+            value={selectedSource?.id ?? ""}
+            onChange={(e) => { void applySourceOption(e.target.value); }}
+            className="input w-full"
+          >
+            {sourceOptions.map((option) => (
+              <option key={option.id} value={option.id}>{option.label}</option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* ── Badge image ────────────────────────────────────────────── */}
       <div>
@@ -450,6 +529,33 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
         </div>
       </div>
 
+      <div>
+        <label className="block text-xs text-[#7b6950] mb-1">{t.dropFormParticipation}</label>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          {[
+            { id: "followers", label: t.dropFormAudienceFollowers },
+            { id: "anyone", label: t.dropFormAudienceAnyone },
+            { id: "tokens", label: t.dropFormAudienceTokens },
+          ].map((option) => {
+            const active = participationMode === option.id;
+            return (
+              <button
+                key={option.id}
+                type="button"
+                onClick={() => applySimpleParticipation(option.id as "anyone" | "followers" | "tokens")}
+                className={`rounded-2xl border px-3 py-2 text-sm text-left transition-colors ${
+                  active
+                    ? "border-lukso-purple bg-lukso-purple/10 text-[#4d206f]"
+                    : "border-lukso-border bg-white/60 text-[#6f5c3f]"
+                }`}
+              >
+                {option.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* ── Date ───────────────────────────────────────────────────── */}
       <div>
         <label className="block text-xs text-[#7b6950] mb-1">{t.dropFormDate}</label>
@@ -482,7 +588,7 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
         </div>
         <div>
           <label className="block text-xs text-[#7b6950] mb-1">
-            {t.dropFormMaxClaims} <span className="text-[#9b8a6a]">{t.dropFormOptional}</span>
+            {t.dropFormBalloons} <span className="text-[#9b8a6a]">{t.dropFormOptional}</span>
           </label>
           <input type="number" value={maxSupply} onChange={(e) => setMaxSupply(e.target.value)}
             placeholder={t.dropFormUnlimited} min={1} className="input w-full text-sm" />

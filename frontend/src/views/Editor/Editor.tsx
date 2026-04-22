@@ -11,7 +11,7 @@ import { QuickSetupForm } from "./QuickSetupForm";
 import { QuickCreateFlow } from "./QuickCreateFlow";
 import { WishlistForm } from "./WishlistForm";
 import { SettingsForm } from "./SettingsForm";
-import { DropForm } from "./DropForm";
+import { DropForm, type DropSourceOption } from "./DropForm";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { ViewToolbar } from "@/components/ViewToolbar";
@@ -247,6 +247,146 @@ export function Editor({ walletClient, chainId }: EditorProps) {
     const [yyyy, mm, dd] = currentBirthday.split("-");
     return `${monthNames[parseInt(mm) - 1]} ${dd}, ${yyyy}`;
   })();
+
+  const formatSourceDate = (month: number, day: number, year?: number) => {
+    const monthLabel = monthNames[month - 1] ?? String(month);
+    return year ? `${monthLabel} ${day}, ${year}` : `${monthLabel} ${day}`;
+  };
+
+  const getNextOccurrenceYear = (month: number, day: number) => {
+    const today = new Date();
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const candidate = new Date(today.getFullYear(), month - 1, day);
+    return candidate < todayStart ? today.getFullYear() + 1 : today.getFullYear();
+  };
+
+  const birthdaySourceOption = useMemo<DropSourceOption | null>(() => {
+    if (!currentBirthday) return null;
+
+    let birthYear: number | undefined;
+    let month: number;
+    let day: number;
+
+    if (currentBirthday.startsWith("--")) {
+      month = Number(currentBirthday.slice(2, 4));
+      day = Number(currentBirthday.slice(5, 7));
+    } else {
+      const [yyyy, mm, dd] = currentBirthday.split("-").map(Number);
+      birthYear = yyyy;
+      month = mm;
+      day = dd;
+    }
+
+    const celebrationYear = getNextOccurrenceYear(month, day);
+    const suggestedName = birthYear
+      ? `${t.typeBirthday} ${celebrationYear - birthYear}`
+      : t.typeBirthday;
+    const suggestedDescription = profileName
+      ? t.birthdayDropDesc.replace("{name}", profileName)
+      : undefined;
+
+    return {
+      id: "birthday",
+      label: `${t.typeBirthday} · ${formatSourceDate(month, day, birthYear)}`,
+      suggestedName,
+      suggestedDescription,
+      celebrationType: CelebrationType.Birthday,
+      month,
+      day,
+      year: celebrationYear,
+      templateId: "birthday",
+    };
+  }, [currentBirthday, monthNames, profileName, t]);
+
+  const anniversarySourceOption = useMemo<DropSourceOption | null>(() => {
+    if (!anniversaryInfo) return null;
+    const unit = anniversaryInfo.upcomingYears !== 1
+      ? t.anniversaryDropDescUnitPlural
+      : t.anniversaryDropDescUnit;
+    return {
+      id: "anniversary",
+      label: `${t.typeAnniversary} · ${format(anniversaryInfo.nextDate, "MMM d, yyyy")}`,
+      suggestedName: `${t.typeAnniversary} ${anniversaryInfo.upcomingYears}`,
+      suggestedDescription: t.anniversaryDropDesc
+        .replace("{name}", profileName ?? contextProfile?.slice(0, 8) ?? "")
+        .replace("{n}", String(anniversaryInfo.upcomingYears))
+        .replace("{unit}", unit),
+      celebrationType: CelebrationType.UPAnniversary,
+      month: anniversaryInfo.nextDate.getMonth() + 1,
+      day: anniversaryInfo.nextDate.getDate(),
+      year: anniversaryInfo.nextDate.getFullYear(),
+      templateId: "anniversary",
+    };
+  }, [anniversaryInfo, contextProfile, profileName, t]);
+
+  const dropSourceOptions = useMemo<DropSourceOption[]>(() => {
+    const sources: DropSourceOption[] = [];
+
+    if (birthdaySourceOption) sources.push(birthdaySourceOption);
+
+    ownerEvents.forEach((event) => {
+      const parts = event.date.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (!parts) return;
+      const [, yyyy, mm, dd] = parts;
+      sources.push({
+        id: `event:${event.id}`,
+        label: `${event.title} · ${formatSourceDate(Number(mm), Number(dd), Number(yyyy))}`,
+        suggestedName: event.title,
+        suggestedDescription: event.description,
+        celebrationType: event.type,
+        month: Number(mm),
+        day: Number(dd),
+        year: Number(yyyy),
+        templateId:
+          event.type === CelebrationType.Birthday
+            ? "birthday"
+            : event.type === CelebrationType.UPAnniversary
+              ? "anniversary"
+              : event.type === CelebrationType.GlobalHoliday
+                ? "holiday"
+                : "celebration",
+      });
+    });
+
+    if (anniversarySourceOption) sources.push(anniversarySourceOption);
+
+    if (pendingDropDate) {
+      const [yyyy, mm, dd] = pendingDropDate.split("-").map(Number);
+      const alreadyPresent = sources.some((source) => (
+        source.month === mm && source.day === dd && (source.year ?? yyyy) === yyyy
+      ));
+
+      if (!alreadyPresent) {
+        sources.unshift({
+          id: `context:${pendingDropDate}`,
+          label: `${t.quickCreateDate} · ${formatSourceDate(mm, dd, yyyy)}`,
+          suggestedName: t.addDrop,
+          celebrationType: CelebrationType.CustomEvent,
+          month: mm,
+          day: dd,
+          year: yyyy,
+          templateId: "celebration",
+        });
+      }
+    }
+
+    return sources;
+  }, [anniversarySourceOption, birthdaySourceOption, ownerEvents, pendingDropDate, t]);
+
+  const initialDropSourceId = useMemo(() => {
+    if (pendingDropFromEvent) return `event:${pendingDropFromEvent.id}`;
+    if (pendingAnniversaryDrop && anniversarySourceOption) return anniversarySourceOption.id;
+    if (pendingDropDate) {
+      const [, mm, dd] = pendingDropDate.split("-").map(Number);
+      if (birthdaySourceOption && birthdaySourceOption.month === mm && birthdaySourceOption.day === dd) {
+        return birthdaySourceOption.id;
+      }
+      const eventMatch = ownerEvents.find((event) => event.date === pendingDropDate);
+      if (eventMatch) return `event:${eventMatch.id}`;
+      return `context:${pendingDropDate}`;
+    }
+    return dropSourceOptions[0]?.id ?? null;
+  }, [anniversarySourceOption, birthdaySourceOption, dropSourceOptions, ownerEvents, pendingAnniversaryDrop, pendingDropDate, pendingDropFromEvent]);
 
   // Anniversary dismiss — persisted per year so it re-shows next anniversary
   const anniversaryDismissKey = anniversaryInfo
@@ -528,12 +668,12 @@ export function Editor({ walletClient, chainId }: EditorProps) {
       }
       if (pendingDropDate) {
         const [yy, mm, dd] = pendingDropDate.split("-");
-        const name = profileName
+        const name = birthdaySourceOption?.suggestedName ?? (profileName
           ? t.birthdayDropName.replace("{name}", profileName)
-          : "";
-        const desc = profileName
+          : "");
+        const desc = birthdaySourceOption?.suggestedDescription ?? (profileName
           ? t.birthdayDropDesc.replace("{name}", profileName)
-          : "";
+          : "");
         return {
           name,
           description: desc,
@@ -594,6 +734,8 @@ export function Editor({ walletClient, chainId }: EditorProps) {
             chainId={chainId}
             isSaving={createDropMutation.isPending}
             prefill={prefill}
+            sourceOptions={dropSourceOptions}
+            initialSourceId={initialDropSourceId}
             onCancel={() => {
               setSubView("main");
               setPendingDropFromEvent(null);
