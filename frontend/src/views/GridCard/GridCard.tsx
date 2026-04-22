@@ -51,18 +51,12 @@ export function GridCard({ chainId }: GridCardProps) {
         setView("editor");
       },
     });
-  } else {
-    actions.push({
-      key: "drops",
-      label: t.gridDropsBtn,
-      onClick: () => setView("drops"),
-    });
   }
 
   actions.push({
-    key: "calendar",
+    key: "drops",
     label: t.gridViewActiveBalloonsCta,
-    onClick: () => setView("calendar"),
+    onClick: () => setView("drops"),
   });
 
   if (isLoading) {
