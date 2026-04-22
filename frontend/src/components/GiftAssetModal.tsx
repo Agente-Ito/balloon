@@ -3,6 +3,7 @@
  * and navigate directly to transfer it. Does not perform the transfer itself
  * (the user is redirected to the asset's page or the LSP7/LSP8 transfer UI).
  */
+import { useT } from "@/hooks/useT";
 import type { Address, WishlistItem } from "@/types";
 
 interface GiftAssetModalProps {
@@ -12,24 +13,27 @@ interface GiftAssetModalProps {
 }
 
 export function GiftAssetModal({ onClose, wishlist }: GiftAssetModalProps) {
+  const t = useT();
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm">
       <div className="w-full max-w-md bg-lukso-card border-t border-lukso-border rounded-t-3xl p-6 animate-slide-up">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="title-premium text-lg">Gift an Asset 🎁</h2>
+          <h2 className="title-premium text-lg">{t.celebrationGiftAsset}</h2>
           <button onClick={onClose} className="text-white/40 hover:text-white text-xl leading-none">
-            ×
+            {t.close}
           </button>
         </div>
 
         <p className="text-sm text-white/50 mb-4">
-          Pick something from their wishlist or send any asset directly.
+          {t.wishlistShortcutSub}
         </p>
 
         {wishlist.length === 0 ? (
           <div className="card text-center py-8 mb-4">
-            <p className="text-2xl mb-2">📭</p>
-            <p className="text-sm text-white/40">No wishlist items yet</p>
+            <div className="w-12 h-12 rounded-2xl bg-lukso-purple/10 border border-lukso-border mx-auto mb-3 flex items-center justify-center">
+              <span className="w-6 h-6 rounded-full bg-lukso-purple/25" />
+            </div>
+            <p className="text-sm text-white/40">{t.giftModalEmpty}</p>
           </div>
         ) : (
           <div className="space-y-2 max-h-64 overflow-y-auto mb-4">
@@ -51,7 +55,7 @@ function WishlistItemRow({ item }: { item: WishlistItem }) {
   const typeLabel = { lsp8: "NFT", lsp7: "Token", note: "Note" }[item.type];
   const typeColor = {
     lsp8: "bg-lukso-purple/20 text-lukso-purple",
-    lsp7: "bg-amber-500/20 text-amber-300",
+    lsp7: "bg-amber-500/15 text-amber-700",
     note: "bg-white/10 text-white/50",
   }[item.type];
 
@@ -61,7 +65,7 @@ function WishlistItemRow({ item }: { item: WishlistItem }) {
         {item.image ? (
           <img src={item.image} alt={item.name} className="w-full h-full object-cover rounded-lg" />
         ) : (
-          "🎁"
+          <span className="w-6 h-6 rounded-full bg-lukso-purple/30" />
         )}
       </div>
 

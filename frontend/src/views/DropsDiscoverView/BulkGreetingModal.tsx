@@ -47,8 +47,8 @@ function ContactRow({
       disabled={status === "ok" || status === "pending"}
       className="flex items-center gap-3 w-full text-left px-3 py-2 rounded-xl transition-colors disabled:opacity-50"
       style={{
-        background: selected ? "rgba(106,27,154,0.18)" : "rgba(255,255,255,0.04)",
-        border: selected ? "1px solid rgba(106,27,154,0.4)" : "1px solid rgba(255,255,255,0.06)",
+        background: selected ? "rgba(106,27,154,0.10)" : "transparent",
+        border: selected ? "1px solid rgba(106,27,154,0.35)" : "1px solid #E8D9C8",
       }}
     >
       <Avatar address={address} size={28} chainId={chainId} />
@@ -136,14 +136,8 @@ export function BulkGreetingModal({
   const stepLabel = step === 1 ? t.bulkGreetStep1 : step === 2 ? t.bulkGreetStep2 : t.bulkGreetStep3;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
-      style={{ background: "rgba(0,0,0,0.6)" }}
-    >
-      <div
-        className="w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl flex flex-col max-h-[88vh]"
-        style={{ background: "#1A0A2E", border: "1px solid rgba(255,255,255,0.08)" }}
-      >
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm">
+      <div className="w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl flex flex-col max-h-[88vh] bg-lukso-card border border-lukso-border">
         {/* Header */}
         <div className="flex items-center justify-between px-4 pt-4 pb-2 shrink-0">
           <div>
@@ -165,7 +159,7 @@ export function BulkGreetingModal({
               key={s}
               className="flex-1 h-1 rounded-full transition-colors"
               style={{
-                background: s <= step ? "#6A1B9A" : "rgba(255,255,255,0.08)",
+                background: s <= step ? "#6A1B9A" : "rgba(106,27,154,0.12)",
               }}
             />
           ))}
@@ -224,12 +218,12 @@ export function BulkGreetingModal({
                     style={{
                       background:
                         presetIndex === i && !customMessage.trim()
-                          ? "rgba(106,27,154,0.22)"
-                          : "rgba(255,255,255,0.04)",
+                          ? "rgba(106,27,154,0.10)"
+                          : "transparent",
                       border:
                         presetIndex === i && !customMessage.trim()
-                          ? "1px solid rgba(106,27,154,0.45)"
-                          : "1px solid rgba(255,255,255,0.06)",
+                          ? "1px solid rgba(106,27,154,0.40)"
+                          : "1px solid #E8D9C8",
                     }}
                   >
                     {t[key]}
@@ -252,8 +246,8 @@ export function BulkGreetingModal({
             <>
               {!done && !sending && (
                 <div
-                  className="rounded-xl px-3 py-2.5 text-xs text-amber-300/80"
-                  style={{ background: "rgba(251,191,36,0.08)" }}
+                  className="rounded-xl px-3 py-2.5 text-xs text-amber-700"
+                  style={{ background: "rgba(217,119,6,0.08)" }}
                 >
                   {t.bulkGreetGasWarning}
                 </div>
@@ -274,7 +268,7 @@ export function BulkGreetingModal({
 
               <div
                 className="rounded-xl px-3 py-2 text-xs italic text-white/40"
-                style={{ background: "rgba(255,255,255,0.03)" }}
+                style={{ background: "rgba(106,27,154,0.05)" }}
               >
                 "{message}"
               </div>
@@ -289,7 +283,7 @@ export function BulkGreetingModal({
               )}
 
               {done && (
-                <p className="text-xs text-center text-green-400">
+                <p className="text-xs text-center text-green-700">
                   {t.bulkGreetDone
                     .replace("{ok}", String(okCount))
                     .replace("{failed}", String(errCount))}
@@ -323,10 +317,16 @@ export function BulkGreetingModal({
           )}
 
           {done && (
-            <button onClick={onClose} className="btn-ghost w-full">
-              ✓ {t.bulkGreetDone
+            <button onClick={onClose} className="btn-secondary w-full">
+              {t.bulkGreetDone
                 .replace("{ok}", String(okCount))
                 .replace("{failed}", String(errCount))}
+            </button>
+          )}
+
+          {step === 1 && !done && (
+            <button onClick={onClose} className="btn-ghost w-full">
+              {t.cancel}
             </button>
           )}
 

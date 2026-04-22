@@ -141,13 +141,22 @@ export function QuickGreetingModal({
         <p className="text-[11px] text-white/35 mt-2">{t.quickGreetingNoTxHint}</p>
 
         <div className="flex gap-2 mt-4">
-          {onOpenOnchain && (
+          {onOpenOnchain ? (
             <button
               type="button"
               onClick={onOpenOnchain}
               className="btn-ghost flex-1 text-xs py-2 border border-lukso-border"
             >
               {t.quickGreetingOnchainOption}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={isSending}
+              className="btn-secondary flex-1 text-xs py-2"
+            >
+              {t.cancel}
             </button>
           )}
           <button

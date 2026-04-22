@@ -195,7 +195,7 @@ function AnniversarySection({
   return (
     <>
       <section>
-        <h2 className="title-premium text-xs uppercase mb-3">🎂 UP Anniversary</h2>
+        <h2 className="title-premium text-xs uppercase mb-3">{t.upAnniversaryTitle}</h2>
         <div
           className="rounded-2xl p-4 flex items-center gap-4"
           style={{
@@ -204,12 +204,14 @@ function AnniversarySection({
             border: "1px solid rgba(106,27,154,0.35)",
           }}
         >
-          <div className="text-4xl leading-none shrink-0">🎉</div>
+          <div className="w-10 h-10 rounded-2xl bg-lukso-purple/30 flex items-center justify-center shrink-0">
+            <span className="w-5 h-5 rounded-full bg-lukso-purple/60" />
+          </div>
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-sm">
               {anniversaryNumber > 0
-                ? `${anniversaryNumber} ${anniversaryNumber === 1 ? "year" : "years"} on LUKSO!`
-                : "Your UP is live today!"}
+                ? `${anniversaryNumber} ${anniversaryNumber === 1 ? t.anniversaryTodayUnit : t.anniversaryTodayUnit2} ${t.upAnniversaryOnLukso}`
+                : t.upAnniversaryLive}
             </p>
             <p className="text-xs text-white/40 mt-0.5">
               {t.anniversaryMintBadge} — {year}
@@ -271,7 +273,7 @@ function GlobalSection({
   if (isLoading) {
     return (
       <section>
-        <h2 className="title-premium text-xs uppercase mb-3">🌍 {t.dropsGlobal}</h2>
+        <h2 className="title-premium text-xs uppercase mb-3">{t.dropsGlobal}</h2>
         <div className="flex justify-center py-4">
           <LoadingSpinner />
         </div>
@@ -283,7 +285,7 @@ function GlobalSection({
 
   return (
     <section>
-      <h2 className="title-premium text-xs uppercase mb-3">🌍 {t.dropsGlobal}</h2>
+      <h2 className="title-premium text-xs uppercase mb-3">{t.dropsGlobal}</h2>
       <div className="flex flex-col gap-3">
         {thisMonthFests.map((fest) => {
           const matchingDrops = allDrops.filter(
@@ -336,13 +338,13 @@ function GlobalSection({
                     onClick={onGreetNetwork}
                     className="btn-ghost text-[11px] py-1 px-2.5"
                   >
-                    💌 {t.dropsGlobalGreetCta}
+                    {t.dropsGlobalGreetCta}
                   </button>
                   <button
                     onClick={onCreateGlobal}
                     className="btn-primary text-[11px] py-1 px-2.5"
                   >
-                    ✨ {t.dropsGlobalCreateCta}
+                    {t.dropsGlobalCreateCta}
                   </button>
                 </div>
               )}
@@ -363,7 +365,7 @@ function AdminSection() {
 
   return (
     <section>
-      <h2 className="title-premium text-xs uppercase mb-3">🔧 {t.dropsAdminSection}</h2>
+      <h2 className="title-premium text-xs uppercase mb-3">{t.dropsAdminSection}</h2>
       <div className="flex flex-col gap-2">
         <button
           onClick={() => setShowForm((v) => !v)}
@@ -381,7 +383,7 @@ function AdminSection() {
           >
             <p className="mb-2 text-white/50">{t.dropsAdminAddFestivity}</p>
             <p className="italic">
-              Coming soon — use the contract directly for now.
+              {t.adminComingSoon}
             </p>
           </div>
         )}
@@ -389,7 +391,7 @@ function AdminSection() {
           onClick={() => setView("drops-manage")}
           className="btn-primary text-xs"
         >
-          ✨ {t.dropsAdminCreateGlobal}
+          {t.dropsAdminCreateGlobal}
         </button>
       </div>
     </section>
@@ -515,13 +517,13 @@ export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewPr
         {connectedAccount && (
           <section>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="title-premium text-xs uppercase">👥 {t.dropsFromFollows}</h2>
+              <h2 className="title-premium text-xs uppercase">{t.dropsFromFollows}</h2>
               {contacts.length > 0 && walletClient && (
                 <button
                   onClick={() => setShowBulkGreet(true)}
                   className="text-[11px] text-lukso-purple/70 hover:text-lukso-purple transition-colors"
                 >
-                  💌 {t.dropsGlobalGreetCta}
+                  {t.dropsGlobalGreetCta}
                 </button>
               )}
             </div>
@@ -551,7 +553,7 @@ export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewPr
         {/* ── My campaigns ─────────────────────────────────────────────── */}
         {connectedAccount && ownDrops.length > 0 && (
           <section>
-            <h2 className="title-premium text-xs uppercase mb-3">📋 {t.dropsMyCampaigns}</h2>
+            <h2 className="title-premium text-xs uppercase mb-3">{t.dropsMyCampaigns}</h2>
             <div className="flex flex-col gap-3">
               {ownDrops.map((drop) => (
                 <DropCard
@@ -569,7 +571,7 @@ export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewPr
 
         {/* ── Community discover ────────────────────────────────────────── */}
         <section>
-          <h2 className="title-premium text-xs uppercase mb-3">🔍 {t.dropsDiscover}</h2>
+          <h2 className="title-premium text-xs uppercase mb-3">{t.dropsDiscover}</h2>
           {allDropsLoading ? (
             <div className="flex justify-center py-6">
               <LoadingSpinner />
@@ -595,9 +597,9 @@ export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewPr
         {/* ── Community art series ─────────────────────────────────────── */}
         {openSeries.length > 0 && (
           <section>
-            <h2 className="title-premium text-xs uppercase mb-1">Community Badge Art</h2>
+            <h2 className="title-premium text-xs uppercase mb-1">{t.communityBadgeArtTitle}</h2>
             <p className="text-xs text-white/25 mb-3">
-              Vote for the official badge image for these upcoming holidays.
+              {t.communityBadgeArtSub}
             </p>
             <div className="flex flex-col gap-2">
               {openSeries.map((s) => (
@@ -615,7 +617,7 @@ export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewPr
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium">{s.name}</p>
                     <p className="text-xs text-white/40">
-                      {monthNames[(s.month ?? 1) - 1]} {s.day} · Vote for the official badge
+                      {monthNames[(s.month ?? 1) - 1]} {s.day} · {t.seriesVoteLabel}
                     </p>
                   </div>
                   <span className="text-white/20 text-sm flex-shrink-0">›</span>

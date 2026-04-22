@@ -940,11 +940,11 @@ export function Editor({ walletClient, chainId }: EditorProps) {
               onClick={() => setActiveTab("wishlist")}
               className="w-full rounded-2xl border border-[#E8D9C8] bg-white/60 px-4 py-3 flex items-center justify-between gap-3 text-left hover:border-lukso-purple/35 transition-colors"
             >
-              <div>
+              <div className="min-w-0">
                 <p className="title-premium text-[11px] uppercase text-lukso-purple/80 mb-1">
                   {t.wishlistShortcutTitle}
                 </p>
-                <p className="text-[11px] text-[#7b6950]">
+                <p className="text-[11px] text-[#7b6950] truncate">
                   {t.wishlistShortcutSub}
                 </p>
               </div>
@@ -953,8 +953,8 @@ export function Editor({ walletClient, chainId }: EditorProps) {
               </span>
             </button>
 
-            <div className="rounded-2xl border border-[#E8D9C8] bg-white/60 px-4 py-3 flex items-center justify-between gap-3">
-              <div>
+            <div className="rounded-2xl border border-[#E8D9C8] bg-white/60 px-4 py-3 flex flex-col gap-2">
+              <div className="min-w-0">
                 <p className="title-premium text-[11px] uppercase text-lukso-purple/80 mb-1">
                   {t.tabDrops}
                 </p>
@@ -962,16 +962,16 @@ export function Editor({ walletClient, chainId }: EditorProps) {
                   {t.dropsManageSubtitle}
                 </p>
               </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="flex gap-2">
                 <button
                   onClick={() => setView("drops")}
-                  className="btn-ghost text-[11px] px-2.5 py-1.5"
+                  className="btn-ghost text-[11px] px-2.5 py-1.5 flex-1"
                 >
                   {t.dropsExploreCta}
                 </button>
                 <button
                   onClick={() => setView("drops-manage")}
-                  className="btn-primary text-[11px] px-2.5 py-1.5"
+                  className="btn-primary text-[11px] px-2.5 py-1.5 flex-1"
                 >
                   {t.dropsManageCta}
                 </button>

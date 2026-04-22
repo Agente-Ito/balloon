@@ -598,8 +598,24 @@ const translations = {
     // ── Anniversary badge claim ─────────────────────────────────────────────
     anniversaryMintBadge:    "Mint Anniversary Badge",
     anniversaryMinting:      "Minting…",
-    anniversaryMinted:       "Badge minted! 🎉",
+    anniversaryMinted:       "Badge minted!",
     anniversaryAlreadyMinted: "Badge already claimed for this year",
+
+    // ── Anniversary discover section ────────────────────────────────────────
+    upAnniversaryTitle:      "UP Anniversary",
+    upAnniversaryLive:       "Your UP is live today!",
+    upAnniversaryOnLukso:    "on LUKSO!",
+
+    // ── Community badge art / series ────────────────────────────────────────
+    communityBadgeArtTitle:  "Community Badge Art",
+    communityBadgeArtSub:    "Vote for the official badge image for these upcoming holidays.",
+    seriesVoteLabel:         "Vote for the official badge",
+
+    // ── Admin section ───────────────────────────────────────────────────────
+    adminComingSoon:         "Coming soon — use the contract directly for now.",
+
+    // ── Gift modal ──────────────────────────────────────────────────────────
+    giftModalEmpty:          "No wishlist items yet",
 
     // ── Push notification prompt ────────────────────────────────────────────
     pushEnableTitle:         "Enable reminders",
@@ -1198,8 +1214,24 @@ const translations = {
     // ── Reclamar insignia de aniversario ────────────────────────────────────
     anniversaryMintBadge:    "Crear insignia de aniversario",
     anniversaryMinting:      "Creando…",
-    anniversaryMinted:       "¡Insignia creada! 🎉",
+    anniversaryMinted:       "¡Insignia creada!",
     anniversaryAlreadyMinted: "Insignia ya reclamada este año",
+
+    // ── Sección aniversario en explorar ─────────────────────────────────────
+    upAnniversaryTitle:      "Aniversario UP",
+    upAnniversaryLive:       "¡Tu UP está activo hoy!",
+    upAnniversaryOnLukso:    "en LUKSO!",
+
+    // ── Arte de insignia comunitaria / series ────────────────────────────────
+    communityBadgeArtTitle:  "Arte de insignia comunitaria",
+    communityBadgeArtSub:    "Vota por la imagen oficial de insignia para estas próximas festividades.",
+    seriesVoteLabel:         "Votar por la insignia oficial",
+
+    // ── Sección admin ────────────────────────────────────────────────────────
+    adminComingSoon:         "Próximamente — usa el contrato directamente por ahora.",
+
+    // ── Modal de regalo ─────────────────────────────────────────────────────
+    giftModalEmpty:          "Sin elementos en la lista de deseos",
 
     // ── Notificaciones push ─────────────────────────────────────────────────
     pushEnableTitle:         "Activar recordatorios",

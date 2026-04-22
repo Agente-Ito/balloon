@@ -95,7 +95,7 @@ export function GreetingCardTile({ card, chainId, className = "" }: GreetingCard
 
             <div className="card bg-white/5 border-white/10">
               <p className="text-sm whitespace-pre-wrap" style={{ color: "rgba(44,44,44,0.82)" }}>
-                {metadata.message || "💜"}
+                {metadata.message || "···"}
               </p>
             </div>
 

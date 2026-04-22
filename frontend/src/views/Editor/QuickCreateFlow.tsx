@@ -80,11 +80,13 @@ export function QuickCreateFlow({ initialEvent, profileName, onModeChange, isSav
   useEffect(() => {
     if (initialEvent) return;
     const nextSuggestion = suggestedTitle;
-    if (!title.trim() || title === lastSuggestedTitle) {
+    // Only overwrite the title if it still matches the previous suggestion
+    // (i.e. user hasn't typed something different, and hasn't intentionally cleared it).
+    if (title === lastSuggestedTitle) {
       setTitle(nextSuggestion);
     }
     setLastSuggestedTitle(nextSuggestion);
-  }, [initialEvent, lastSuggestedTitle, suggestedTitle, title]);
+  }, [suggestedTitle]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const maxDayForMonth = new Date(year, month, 0).getDate();
   useEffect(() => {
@@ -146,14 +148,44 @@ export function QuickCreateFlow({ initialEvent, profileName, onModeChange, isSav
                 key={template.id}
                 type="button"
                 onClick={() => setSelectedTemplateId(template.id)}
-                className={`snap-start min-w-[96px] sm:min-w-[112px] rounded-xl sm:rounded-2xl border px-2.5 sm:px-3 py-2.5 sm:py-3 text-left transition-all ${
+                className={`snap-start min-w-[80px] sm:min-w-[96px] rounded-xl sm:rounded-2xl border overflow-hidden transition-all flex flex-col items-center ${
                   active
-                    ? "border-lukso-purple bg-lukso-purple/10 shadow-[0_10px_30px_rgba(106,27,154,0.12)]"
-                    : "border-lukso-border bg-white/70"
+                    ? "border-lukso-purple shadow-[0_10px_30px_rgba(106,27,154,0.12)]"
+                    : "border-lukso-border"
                 }`}
               >
-                <span className="block text-xl sm:text-2xl mb-1.5 sm:mb-2">{template.emoji}</span>
-                <span className="block text-xs sm:text-sm font-medium text-[#3b2d1f] leading-tight">{label}</span>
+                <div
+                  className="w-full aspect-square relative"
+                  style={
+                    active
+                      ? { outline: "2px solid #6A1B9A", outlineOffset: "-2px" }
+                      : undefined
+                  }
+                >
+                  <img
+                    src={`/templates/${template.id}-balloon.png`}
+                    alt={label}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                      (e.currentTarget.nextElementSibling as HTMLElement | null)?.classList.remove("hidden");
+                    }}
+                  />
+                  {/* Fallback emoji if PNG unavailable */}
+                  <span
+                    className="hidden absolute inset-0 flex items-center justify-center text-3xl"
+                    style={{ background: `linear-gradient(135deg, ${template.gradient[0]}, ${template.gradient[1]})` }}
+                  >
+                    {template.emoji}
+                  </span>
+                </div>
+                <span
+                  className={`block text-[10px] sm:text-xs font-medium leading-tight py-1.5 px-1 text-center ${
+                    active ? "text-lukso-purple" : "text-[#3b2d1f]"
+                  }`}
+                >
+                  {label}
+                </span>
               </button>
             );
           })}

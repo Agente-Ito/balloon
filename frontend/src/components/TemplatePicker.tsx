@@ -14,17 +14,35 @@ export function TemplatePicker({ selected, onSelect }: TemplatePickerProps) {
           key={tpl.id}
           type="button"
           onClick={() => onSelect(tpl)}
-          className={`aspect-square rounded-xl flex flex-col items-center justify-center gap-1 border-2 transition-all ${
-            selected === tpl.id ? "scale-105 shadow-lg" : "border-transparent"
+          className={`rounded-xl overflow-hidden border-2 transition-all relative ${
+            selected === tpl.id
+              ? "border-lukso-purple scale-105 shadow-lg"
+              : "border-transparent hover:border-lukso-purple/40"
           }`}
-          style={{
-            background: `linear-gradient(135deg, ${tpl.gradient[0]}, ${tpl.gradient[1]})`,
-            borderColor: selected === tpl.id ? "rgba(255,255,255,0.8)" : "transparent",
-          }}
+          title={tpl.label}
         >
-          <span className="text-2xl">{tpl.emoji}</span>
-          {/* Intentionally white — text sits on a colored gradient, not on cream */}
-          <span className="text-[10px] font-semibold drop-shadow" style={{ color: "#ffffff" }}>
+          <div className="aspect-square relative">
+            <img
+              src={`/templates/${tpl.id}-balloon.png`}
+              alt={tpl.label}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+                (e.currentTarget.nextElementSibling as HTMLElement | null)?.classList.remove("hidden");
+              }}
+            />
+            {/* Fallback gradient shown if PNG fails to load */}
+            <span
+              className="hidden absolute inset-0 flex items-center justify-center text-3xl"
+              style={{ background: `linear-gradient(135deg, ${tpl.gradient[0]}, ${tpl.gradient[1]})` }}
+            >
+              {tpl.emoji}
+            </span>
+          </div>
+          <span
+            className="block text-[10px] font-semibold text-center py-1 px-1 truncate"
+            style={{ color: selected === tpl.id ? "#6A1B9A" : "#5a4a38" }}
+          >
             {tpl.label}
           </span>
         </button>

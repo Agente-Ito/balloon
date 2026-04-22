@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import toast from "react-hot-toast";
 import { useMintBadge } from "@/hooks/useMintBadge";
 import { uploadFileToIPFS } from "@/lib/ipfs";
-import { generateTemplateSVG, templateToFile } from "@/lib/celebrationTemplates";
+import { CELEBRATION_TEMPLATES } from "@/lib/celebrationTemplates";
 import { TemplatePicker } from "./TemplatePicker";
 import { Avatar } from "./Avatar";
 import { getCelebrationTypeKey } from "@/constants/celebrationTypes";
@@ -13,6 +13,22 @@ import { useAppStore } from "@/store/useAppStore";
 import { CelebrationType, type Address } from "@/types";
 import type { CelebrationTemplate } from "@/lib/celebrationTemplates";
 import type { WalletClient } from "viem";
+
+function celebrationTypeToTemplateId(type: CelebrationType): string {
+  switch (type) {
+    case CelebrationType.Birthday: return "birthday";
+    case CelebrationType.UPAnniversary: return "anniversary";
+    case CelebrationType.GlobalHoliday: return "holiday";
+    default: return "celebration";
+  }
+}
+
+async function fetchTemplateFile(templateId: string): Promise<File> {
+  const url = `/templates/${templateId}-balloon.png`;
+  const res = await fetch(url);
+  const blob = await res.blob();
+  return new File([blob], `${templateId}-balloon.png`, { type: "image/png" });
+}
 
 interface MintBadgeModalProps {
   onClose: () => void;
@@ -33,9 +49,14 @@ export function MintBadgeModal({
 }: MintBadgeModalProps) {
   const t = useT();
   const [soulbound, setSoulbound] = useState(true);
-  const [selectedTemplate, setSelectedTemplate] = useState<CelebrationTemplate | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<CelebrationTemplate | null>(() => {
+    const id = celebrationTypeToTemplateId(celebrationType);
+    return CELEBRATION_TEMPLATES.find((t) => t.id === id) ?? null;
+  });
   const [customImageFile, setCustomImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(
+    `/templates/${celebrationTypeToTemplateId(celebrationType)}-balloon.png`
+  );
   const [isUploading, setIsUploading] = useState(false);
   const triggerBurst = useAppStore((s) => s.triggerBurst);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -47,16 +68,11 @@ export function MintBadgeModal({
     ?? `${recipientAddress.slice(0, 10)}…${recipientAddress.slice(-6)}`;
   const isBusy = isPending || isUploading;
 
-  // Reactive SVG preview: regenerate whenever template selection changes (label is fixed here)
+  // Update preview when template changes — use the static PNG from /public/templates/
   useEffect(() => {
     if (!selectedTemplate) return;
-    const badgeTitle = `${label} ${year}`;
-    const svg = generateTemplateSVG(selectedTemplate, badgeTitle);
-    const blob = new Blob([svg], { type: "image/svg+xml" });
-    const url = URL.createObjectURL(blob);
-    setImagePreview(url);
-    return () => URL.revokeObjectURL(url);
-  }, [selectedTemplate, label, year]);
+    setImagePreview(`/templates/${selectedTemplate.id}-balloon.png`);
+  }, [selectedTemplate]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -81,7 +97,11 @@ export function MintBadgeModal({
       let imageUrl: string | undefined;
       let imageHash: string | undefined;
 
-      const fileToUpload = customImageFile ?? (selectedTemplate ? templateToFile(selectedTemplate, `${label} ${year}`) : null);
+      let fileToUpload: File | null = customImageFile;
+      if (!fileToUpload && selectedTemplate) {
+        fileToUpload = await fetchTemplateFile(selectedTemplate.id);
+      }
+
       if (fileToUpload) {
         setIsUploading(true);
         const result = await uploadFileToIPFS(fileToUpload);
@@ -91,7 +111,7 @@ export function MintBadgeModal({
       }
 
       await mintBadge({ to: recipientAddress, celebrationType, year, soulbound, imageUrl, imageHash });
-      toast.success("Badge minted! 🎖️");
+      toast.success(t.anniversaryMinted);
       if (celebrationType === CelebrationType.Birthday) {
         triggerBurst("celebration", "birthday");
       } else if (celebrationType === CelebrationType.UPAnniversary) {
