@@ -31,6 +31,8 @@ export interface DropFormPrefill {
   year?: number;
   /** Pre-generated image file (anniversary SVG, holiday badge, etc.) */
   imageFile?: File;
+  /** Template id to pre-select in the carousel (e.g. "birthday", "holiday") */
+  templateId?: string;
 }
 
 export interface DropSourceOption {
@@ -143,6 +145,8 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
   const monthNames = useMemo(() => getMonthNames(t), [t]);
 
   const initialTemplateId = useMemo(() => {
+    // Explicit templateId from prefill always wins
+    if (prefill?.templateId) return prefill.templateId;
     // If we already got concrete prefill data, don't force a template.
     if (prefill?.name || prefill?.description || prefill?.imageFile) return null;
     if (prefill?.celebrationType === 0) return "birthday";
@@ -202,6 +206,16 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
   const [coHosts, setCoHosts] = useState<Address[]>([]);
   const [manualCoHost, setManualCoHost] = useState("");
   const { data: socialContacts = [] } = useSocialContacts(host);
+
+  // Advanced options (limits)
+  const [showAdvanced, setShowAdvanced] = useState(false);
+
+  // Scroll-to-top on mount
+  const formRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = formRef.current?.parentElement;
+    if (el) el.scrollTop = 0;
+  }, []);
 
   const [selectedTplId, setSelectedTplId] = useState<string | null>(initialTemplate?.id ?? null);
   const [selectedSourceId, setSelectedSourceId] = useState<string | null>(initialSourceId ?? sourceOptions[0]?.id ?? null);
@@ -436,7 +450,7 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
   };
 
   return (
-    <div className="flex flex-col gap-5">
+    <div ref={formRef} className="flex flex-col gap-5">
 
       {sourceOptions.length > 0 && (
         <div>
@@ -453,46 +467,7 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
         </div>
       )}
 
-      {/* ── Badge image ────────────────────────────────────────────── */}
-      <div>
-        <p className="text-xs text-[#7b6950] mb-1.5">{t.dropFormBadgePreview}</p>
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="w-16 h-16 rounded-2xl bg-white/5 border border-dashed border-white/20 flex items-center justify-center overflow-hidden hover:border-lukso-purple/50 transition-colors flex-shrink-0"
-          >
-            {imagePreview
-              ? <img src={imagePreview} alt="badge" className="w-full h-full object-cover" />
-              : <span className="text-2xl">🖼️</span>}
-          </button>
-          <div className="flex-1 text-xs text-[#7b6950]">
-            {imageFile
-              ? <><span className="text-[#6f5c3f]">{imageDisplayName}</span><button type="button" onClick={() => { setImageFile(undefined); setSelectedTplId(null); }} className="block text-[#9b8a6a] hover:text-[#6f5c3f] mt-1">{t.dropImageRemove}</button></>
-              : selectedTplId
-                ? <span className="text-[#6f5c3f]">{t.dropFormTemplateApplied}</span>
-                : t.dropFormBadgeHint ?? "Upload your own or pick a template above"}
-          </div>
-        </div>
-        <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
-      </div>
-
-      {/* ── Basics ─────────────────────────────────────────────────── */}
-      <div>
-        <label className="block text-xs text-[#7b6950] mb-1">{t.dropFormName}</label>
-        <input type="text" value={name} onChange={(e) => setName(e.target.value)}
-          onFocus={(e) => e.target.select()}
-          placeholder={t.dropFormNamePlaceholder} className="input w-full" />
-      </div>
-
-      <div>
-        <label className="block text-xs text-[#7b6950] mb-1">{t.dropFormDescription}</label>
-        <textarea value={description} onChange={(e) => setDesc(e.target.value)}
-          onFocus={(e) => e.target.select()}
-          placeholder={t.dropFormDescPlaceholder}
-          rows={2} className="input w-full resize-none" />
-      </div>
-
+      {/* ── Type + carousel ─────────────────────────────────────────── */}
       <div>
         <label className="block text-xs text-[#7b6950] mb-1">{t.dropFormType}</label>
         <select value={typeMenuValue}
@@ -534,6 +509,46 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
             })}
           </div>
         </div>
+      </div>
+
+      {/* ── Badge image ────────────────────────────────────────────── */}
+      <div>
+        <p className="text-xs text-[#7b6950] mb-1.5">{t.dropFormBadgePreview}</p>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="w-16 h-16 rounded-2xl bg-white/5 border border-dashed border-white/20 flex items-center justify-center overflow-hidden hover:border-lukso-purple/50 transition-colors flex-shrink-0"
+          >
+            {imagePreview
+              ? <img src={imagePreview} alt="badge" className="w-full h-full object-cover" />
+              : <span className="text-2xl">🖼️</span>}
+          </button>
+          <div className="flex-1 text-xs text-[#7b6950]">
+            {imageFile
+              ? <><span className="text-[#6f5c3f]">{imageDisplayName}</span><button type="button" onClick={() => { setImageFile(undefined); setSelectedTplId(null); }} className="block text-[#9b8a6a] hover:text-[#6f5c3f] mt-1">{t.dropImageRemove}</button></>
+              : selectedTplId
+                ? <span className="text-[#6f5c3f]">{t.dropFormTemplateApplied}</span>
+                : t.dropFormBadgeHint ?? "Upload your own or pick a template above"}
+          </div>
+        </div>
+        <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+      </div>
+
+      {/* ── Basics ─────────────────────────────────────────────────── */}
+      <div>
+        <label className="block text-xs text-[#7b6950] mb-1">{t.dropFormName}</label>
+        <input type="text" value={name} onChange={(e) => setName(e.target.value)}
+          onFocus={(e) => e.target.select()}
+          placeholder={t.dropFormNamePlaceholder} className="input w-full" />
+      </div>
+
+      <div>
+        <label className="block text-xs text-[#7b6950] mb-1">{t.dropFormDescription}</label>
+        <textarea value={description} onChange={(e) => setDesc(e.target.value)}
+          onFocus={(e) => e.target.select()}
+          placeholder={t.dropFormDescPlaceholder}
+          rows={2} className="input w-full resize-none" />
       </div>
 
       <div>
@@ -584,22 +599,35 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
         </div>
       </div>
 
-      {/* ── Limits ─────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <div>
-          <label className="block text-xs text-[#7b6950] mb-1">
-            {t.dropFormClosesOn} <span className="text-[#9b8a6a]">{t.dropFormOptional}</span>
-          </label>
-          <input type="datetime-local" value={endDate} onChange={(e) => setEndDate(e.target.value)}
-            className="input w-full text-sm" />
-        </div>
-        <div>
-          <label className="block text-xs text-[#7b6950] mb-1">
-            {t.dropFormBalloons} <span className="text-[#9b8a6a]">{t.dropFormOptional}</span>
-          </label>
-          <input type="number" value={maxSupply} onChange={(e) => setMaxSupply(e.target.value)}
-            placeholder={t.dropFormUnlimited} min={1} className="input w-full text-sm" />
-        </div>
+      {/* ── Advanced (collapsible): Limits ─────────────────────────── */}
+      <div className="border border-lukso-border rounded-2xl overflow-hidden">
+        <button type="button" onClick={() => setShowAdvanced((v) => !v)}
+          className="w-full flex items-center justify-between px-4 py-3 hover:bg-white/5 transition-colors">
+          <span className="text-sm font-medium">{t.dropFormAdvanced}</span>
+          <span className="text-[#7b6950] text-xs">
+            {showAdvanced ? t.dropFormAdvancedHide : t.dropFormAdvancedShow}
+          </span>
+        </button>
+        {showAdvanced && (
+          <div className="px-4 pb-4 pt-3 border-t border-lukso-border">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs text-[#7b6950] mb-1">
+                  {t.dropFormClosesOn} <span className="text-[#9b8a6a]">{t.dropFormOptional}</span>
+                </label>
+                <input type="datetime-local" value={endDate} onChange={(e) => setEndDate(e.target.value)}
+                  className="input w-full text-sm" />
+              </div>
+              <div>
+                <label className="block text-xs text-[#7b6950] mb-1">
+                  {t.dropFormBalloons} <span className="text-[#9b8a6a]">{t.dropFormOptional}</span>
+                </label>
+                <input type="number" value={maxSupply} onChange={(e) => setMaxSupply(e.target.value)}
+                  placeholder={t.dropFormUnlimited} min={1} className="input w-full text-sm" />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── Eligibility (collapsible) ───────────────────────────────── */}

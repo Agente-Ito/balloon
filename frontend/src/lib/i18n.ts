@@ -295,6 +295,9 @@ const translations = {
     dropFormCoHostsBoth: "Both",
     dropFormCoHostsMetaNote: "For now, co-celebrators are saved in the drop description metadata.",
     dropFormCreateBtn:    "Create Drop",
+    dropFormAdvanced:         "Advanced",
+    dropFormAdvancedShow:     "Show options",
+    dropFormAdvancedHide:     "Hide options",
 
     // ── Celebration types ─────────────────────────────────────────────────────
     typeBirthday:    "Birthday",
@@ -944,6 +947,9 @@ const translations = {
     dropFormCoHostsBoth: "Ambos",
     dropFormCoHostsMetaNote: "Por ahora, los co-celebradores se guardan en la metadata de descripción de la celebración.",
     dropFormCreateBtn:    "Crear celebración",
+    dropFormAdvanced:         "Avanzado",
+    dropFormAdvancedShow:     "Mostrar opciones",
+    dropFormAdvancedHide:     "Ocultar opciones",
 
     // ── Tipos de celebración ──────────────────────────────────────────────────
     typeBirthday:    "Cumpleaños",

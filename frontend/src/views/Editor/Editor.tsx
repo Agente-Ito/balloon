@@ -126,6 +126,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
 
   // After saving an event, offer to create a drop from it
   const [pendingDropFromEvent, setPendingDropFromEvent] = useState<Celebration | null>(null);
+  const [pendingDropTemplateId, setPendingDropTemplateId] = useState<string | null>(null);
   const [quickCreateAsCelebration, setQuickCreateAsCelebration] = useState(false);
 
   const [birthdayMonth, setBirthdayMonth] = useState("");
@@ -503,7 +504,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
             onModeChange={setQuickCreateAsCelebration}
             isSaving={addEventMutation.isPending || replaceEventsMutation.isPending}
             onCancel={exitQuickCreate}
-            onSubmit={async ({ event, createDrop }) => {
+            onSubmit={async ({ event, createDrop, templateId }) => {
               if (!walletClient) {
                 toast.error(t.toastNoWallet);
                 return;
@@ -523,6 +524,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
                     toast.success(t.toastEventUpdated);
 
                     if (createDrop) {
+                      setPendingDropTemplateId(templateId ?? null);
                       setPendingDropFromEvent(updatedLocalEvent);
                       setPendingAnniversaryDrop(false);
                       setPendingEventDraft(null);
@@ -550,6 +552,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
                   toast.success(t.toastEventUpdated);
 
                   if (createDrop) {
+                    setPendingDropTemplateId(templateId ?? null);
                     setPendingDropFromEvent(updatedEvent);
                     setPendingAnniversaryDrop(false);
                     setPendingEventDraft(null);
@@ -564,6 +567,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
 
                 if (createDrop) {
                   triggerBurst("celebration", "mixed");
+                  setPendingDropTemplateId(templateId ?? null);
                   setPendingDropFromEvent({ ...event, storage: "local" });
                   setPendingAnniversaryDrop(false);
                   setPendingEventDraft(null);
@@ -664,6 +668,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
           month: Number(mm),
           day: Number(dd),
           year: Number(yy) || new Date().getFullYear(),
+          templateId: pendingDropTemplateId ?? undefined,
         };
       }
       if (pendingDropDate) {
@@ -717,6 +722,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
             setPendingDropFromEvent(null);
             setPendingDropDate(null);
             setPendingAnniversaryDrop(false);
+            setPendingDropTemplateId(null);
           }}
           backLabel={pendingDropDate ? t.calendarTitle : t.back}
           title={
@@ -728,7 +734,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
           }
           right={toolbarActions}
         />
-        <div className="flex-1 overflow-y-auto p-4">
+        <div key="add-drop-scroll" className="flex-1 overflow-y-auto p-4">
           <DropForm
             host={contextProfile as Address}
             chainId={chainId}

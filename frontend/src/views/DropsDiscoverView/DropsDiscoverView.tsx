@@ -596,11 +596,40 @@ export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewPr
 
         {/* ── Community art series ─────────────────────────────────────── */}
         {openSeries.length > 0 && (
-          <section>
-            <h2 className="title-premium text-xs uppercase mb-1">{t.communityBadgeArtTitle}</h2>
-            <p className="text-xs mb-3" style={{ color: "rgba(251,191,36,0.55)" }}>
-              {t.communityBadgeArtSub}
-            </p>
+          <section
+            className="rounded-2xl p-4 flex flex-col gap-3"
+            style={{
+              background: "linear-gradient(135deg, #2d1b4e 0%, #1e1540 60%, #2a1a5e 100%)",
+              border: "1px solid rgba(156,78,219,0.30)",
+              boxShadow: "0 4px 24px rgba(106,27,154,0.14)",
+            }}
+          >
+            {/* Header */}
+            <div className="flex items-start gap-3">
+              <div
+                className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
+                style={{ background: "rgba(251,191,36,0.18)", border: "1px solid rgba(251,191,36,0.35)" }}
+              >
+                {/* palette icon */}
+                <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                  <circle cx="10" cy="10" r="8" stroke="rgb(251,191,36)" strokeWidth="1.4"/>
+                  <circle cx="7" cy="9" r="1.5" fill="rgb(251,191,36)"/>
+                  <circle cx="10" cy="7" r="1.5" fill="rgba(156,78,219,0.9)"/>
+                  <circle cx="13" cy="9" r="1.5" fill="rgba(255,100,100,0.85)"/>
+                  <circle cx="10" cy="12.5" r="1.5" fill="rgba(100,220,150,0.85)"/>
+                </svg>
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-sm font-semibold leading-snug" style={{ color: "#f5e9c8", fontFamily: "'Poppins', system-ui" }}>
+                  {t.communityBadgeArtTitle}
+                </h2>
+                <p className="text-xs mt-0.5 leading-snug" style={{ color: "rgba(245,233,200,0.60)" }}>
+                  {t.communityBadgeArtSub}
+                </p>
+              </div>
+            </div>
+
+            {/* Series cards */}
             <div className="flex flex-col gap-2">
               {openSeries.map((s) => (
                 <button
@@ -609,33 +638,40 @@ export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewPr
                     setActiveSeriesId(s.id);
                     setView("series");
                   }}
-                  className="w-full text-left flex items-center gap-3 rounded-2xl px-3 py-3 transition-colors"
+                  className="w-full text-left flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors"
                   style={{
-                    background: "rgba(251,191,36,0.06)",
-                    border: "1px solid rgba(251,191,36,0.18)",
+                    background: "rgba(255,255,255,0.06)",
+                    border: "1px solid rgba(255,255,255,0.10)",
                   }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.10)")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
                 >
+                  {/* Art placeholder thumbnail */}
                   <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{ background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.22)" }}
+                    className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden"
+                    style={{ background: "rgba(251,191,36,0.14)", border: "1px solid rgba(251,191,36,0.28)" }}
                   >
-                    <span className="block w-4 h-4 rounded-sm" style={{ background: "rgba(251,191,36,0.5)" }} />
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <rect x="2" y="2" width="12" height="12" rx="2" stroke="rgba(251,191,36,0.7)" strokeWidth="1.2"/>
+                      <path d="M2 11l3-3 2 2 3-4 4 5" stroke="rgba(251,191,36,0.55)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
                   </div>
+
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <p className="text-sm font-medium truncate">{s.name}</p>
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <p className="text-sm font-medium truncate" style={{ color: "#f5e9c8" }}>{s.name}</p>
                       <span
                         className="text-[9px] font-bold tracking-wide px-1.5 py-0.5 rounded-full shrink-0"
-                        style={{ background: "rgba(251,191,36,0.18)", color: "rgb(251,191,36)" }}
+                        style={{ background: "rgba(251,191,36,0.25)", color: "rgb(251,191,36)", border: "1px solid rgba(251,191,36,0.45)" }}
                       >
                         {t.seriesOpenPill}
                       </span>
                     </div>
-                    <p className="text-xs" style={{ color: "rgba(251,191,36,0.5)" }}>
+                    <p className="text-[11px]" style={{ color: "rgba(245,233,200,0.50)" }}>
                       {monthNames[(s.month ?? 1) - 1]} {s.day} · {t.seriesVoteLabel}
                     </p>
                   </div>
-                  <span className="text-xs shrink-0" style={{ color: "rgba(251,191,36,0.35)" }}>›</span>
+                  <span className="text-sm shrink-0" style={{ color: "rgba(245,233,200,0.35)" }}>›</span>
                 </button>
               ))}
             </div>

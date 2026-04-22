@@ -76,7 +76,7 @@ function DropRow({
         </div>
         <div className="flex items-center gap-1.5">
           {isRecentlyCreated && (
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-lukso-purple/15 text-lukso-purple border border-lukso-purple/30">
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-lukso-purple/15 text-lukso-purple border border-lukso-purple/30 shrink-0">
               {t.dropsNewBadge}
             </span>
           )}
@@ -242,7 +242,7 @@ export function DropsManageView({ walletClient, chainId }: DropsManageViewProps)
           title={t.addDrop}
           right={<LanguageToggle />}
         />
-        <div className="flex-1 overflow-y-auto px-4 py-4">
+        <div key="drop-form-scroll" className="flex-1 overflow-y-auto px-4 py-4">
           <DropForm
             host={connectedAccount}
             chainId={chainId}

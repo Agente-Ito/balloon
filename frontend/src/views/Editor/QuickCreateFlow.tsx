@@ -13,7 +13,7 @@ interface QuickCreateFlowProps {
   onModeChange?: (createDrop: boolean) => void;
   isSaving: boolean;
   onCancel: () => void;
-  onSubmit: (payload: { event: Celebration; createDrop: boolean }) => Promise<void>;
+  onSubmit: (payload: { event: Celebration; createDrop: boolean; templateId?: string }) => Promise<void>;
 }
 
 export function QuickCreateFlow({ initialEvent, profileName, onModeChange, isSaving, onCancel, onSubmit }: QuickCreateFlowProps) {
@@ -122,7 +122,7 @@ export function QuickCreateFlow({ initialEvent, profileName, onModeChange, isSav
       notifyTime: createDrop ? undefined : notifyTime,
     };
 
-    await onSubmit({ event, createDrop });
+    await onSubmit({ event, createDrop, templateId: createDrop ? selectedTemplateId : undefined });
   };
 
   const notifyOptions = [
@@ -356,7 +356,7 @@ export function QuickCreateFlow({ initialEvent, profileName, onModeChange, isSav
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-2 pt-1">
+          <div className="flex flex-col-reverse gap-2 pt-1 sm:grid sm:grid-cols-2">
             <button
               type="button"
               onClick={onCancel}
@@ -389,7 +389,7 @@ export function QuickCreateFlow({ initialEvent, profileName, onModeChange, isSav
             <p className="text-xs text-[#7b6950] leading-relaxed">{t.quickCreateCelebrationDesc}</p>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 pt-1">
+          <div className="flex flex-col-reverse gap-2 pt-1 sm:grid sm:grid-cols-2">
             <button
               type="button"
               onClick={onCancel}
