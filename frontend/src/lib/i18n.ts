@@ -51,6 +51,21 @@ const translations = {
     gridUpcoming:     "Upcoming",
     gridToday:        "Today",
 
+    // ── Birthday nudge (first-time prompt) ────────────────────────────────────
+    birthdayNudgeTitle:       "When is your birthday?",
+    birthdayNudgeSub:         "Save it once \u2014 get wished every year.",
+    birthdayNudgeMonthLabel:  "Month",
+    birthdayNudgeDayLabel:    "Day",
+    birthdayNudgeYearHint:    "Year (optional)",
+    birthdayNudgeSave:        "Save birthday",
+    birthdayNudgeSkip:        "Not now",
+    birthdayNudgeConfirmTitle: "Is this your birthday?",
+    birthdayNudgeConfirmDate:  "{date}",
+    birthdayNudgeConfirm:     "Yes, save it",
+    birthdayNudgeEdit:        "Change",
+    birthdayNudgeEditHint:    "You can always update it in",
+    birthdayNudgeEditHintLink: "your profile editor",
+
     // ── Calendar ──────────────────────────────────────────────────────────────
     calendarTitle:       "Calendar",
     calendarThisMonth:   "This month",
@@ -164,6 +179,12 @@ const translations = {
     quickCreateNotify3Days: "3 days before",
     quickCreateNotify1Week: "1 week before",
     quickCreateNotifyHint: "We'll remind you in the app and via push notification.",
+    quickCreateNotifyTime: "At what time",
+    quickCreateReminderFor: "Reminder for {name}",
+    quickCreateReminderNote: "Notes (optional)",
+    quickCreateReminderNotePlaceholder: "Extra notes…",
+    quickCreateReminderNotePlaceholderWithName: "Notes about {name}",
+    quickCreateRecurringSubReminder: "Remind me every year on this date",
     quickCreateCelebrationDesc: "Create a badge drop your network can claim — perfect for birthdays, anniversaries and special dates.",
     quickCreateCelebrationCta: "Set up celebration",
     wishlistShortcutTitle: "Wishlist",
@@ -617,9 +638,10 @@ const translations = {
     upAnniversaryOnLukso:    "on LUKSO!",
 
     // ── Community badge art / series ────────────────────────────────────────
-    communityBadgeArtTitle:  "Community Badge Art",
-    communityBadgeArtSub:    "Vote for the official badge image for these upcoming holidays.",
-    seriesVoteLabel:         "Vote for the official badge",
+    communityBadgeArtTitle:  "Badge Proposals",
+    communityBadgeArtSub:    "Submit your art or vote — the winner becomes the official badge claimed on celebration day.",
+    seriesVoteLabel:         "Submit art · Vote",
+    seriesOpenPill:          "OPEN",
 
     // ── Admin section ───────────────────────────────────────────────────────
     adminComingSoon:         "Coming soon — use the contract directly for now.",
@@ -677,6 +699,21 @@ const translations = {
     gridReminderDueIn: "Falta",
     gridUpcoming:     "Próximas",
     gridToday:        "Hoy",
+
+    // ── Nudge de cumpleaños (primera vez) ────────────────────────────────────
+    birthdayNudgeTitle:       "¿Cuándo es tu cumpleaños?",
+    birthdayNudgeSub:         "Guárdalo una vez \u2014 te felicitamos cada año.",
+    birthdayNudgeMonthLabel:  "Mes",
+    birthdayNudgeDayLabel:    "Día",
+    birthdayNudgeYearHint:    "Año (opcional)",
+    birthdayNudgeSave:        "Guardar cumpleaños",
+    birthdayNudgeSkip:        "Ahora no",
+    birthdayNudgeConfirmTitle: "¿Esta es tu fecha de cumpleaños?",
+    birthdayNudgeConfirmDate:  "{date}",
+    birthdayNudgeConfirm:     "Sí, guardar",
+    birthdayNudgeEdit:        "Cambiar",
+    birthdayNudgeEditHint:    "Puedes actualizarlo en",
+    birthdayNudgeEditHintLink: "tu editor de perfil",
 
     // ── Calendario ────────────────────────────────────────────────────────────
     calendarTitle:       "Calendario",
@@ -791,6 +828,12 @@ const translations = {
     quickCreateNotify3Days: "3 días antes",
     quickCreateNotify1Week: "1 semana antes",
     quickCreateNotifyHint: "Te avisaremos en la app y por notificación push.",
+    quickCreateNotifyTime: "A qué hora",
+    quickCreateReminderFor: "Recordatorio de {name}",
+    quickCreateReminderNote: "Notas (opcional)",
+    quickCreateReminderNotePlaceholder: "Notas adicionales…",
+    quickCreateReminderNotePlaceholderWithName: "Notas sobre {name}",
+    quickCreateRecurringSubReminder: "Recordarme cada año en esta fecha",
     quickCreateCelebrationDesc: "Crea un drop de badge que tu red puede reclamar — perfecto para cumpleaños, aniversarios y fechas especiales.",
     quickCreateCelebrationCta: "Configurar celebración",
     wishlistShortcutTitle: "Deseos",
@@ -1243,9 +1286,10 @@ const translations = {
     upAnniversaryOnLukso:    "en LUKSO!",
 
     // ── Arte de insignia comunitaria / series ────────────────────────────────
-    communityBadgeArtTitle:  "Arte de insignia comunitaria",
-    communityBadgeArtSub:    "Vota por la imagen oficial de insignia para estas próximas festividades.",
-    seriesVoteLabel:         "Votar por la insignia oficial",
+    communityBadgeArtTitle:  "Convocatorias",
+    communityBadgeArtSub:    "Propón tu arte o vota — el ganador se acuña como insignia oficial el día de la celebración.",
+    seriesVoteLabel:         "Propón tu arte · Vota",
+    seriesOpenPill:          "ABIERTA",
 
     // ── Sección admin ────────────────────────────────────────────────────────
     adminComingSoon:         "Próximamente — usa el contrato directamente por ahora.",

@@ -360,7 +360,7 @@ function GlobalSection({
 
 function AdminSection() {
   const t = useT();
-  const { setView } = useAppStore();
+  const { setView, setPendingDropCreate } = useAppStore();
   const [showForm, setShowForm] = useState(false);
 
   return (
@@ -388,7 +388,7 @@ function AdminSection() {
           </div>
         )}
         <button
-          onClick={() => setView("drops-manage")}
+          onClick={() => { setPendingDropCreate(true); setView("drops-manage"); }}
           className="btn-primary text-xs"
         >
           {t.dropsAdminCreateGlobal}
@@ -401,7 +401,7 @@ function AdminSection() {
 // ── Main view ─────────────────────────────────────────────────────────────────
 
 export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewProps) {
-  const { connectedAccount, setView, setActiveSeriesId, goBack } = useAppStore();
+  const { connectedAccount, setView, setActiveSeriesId, goBack, setPendingDropCreate } = useAppStore();
   const t = useT();
   const monthNames = useMemo(() => getMonthNames(t), [t]);
 
@@ -510,7 +510,7 @@ export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewPr
           walletClient={walletClient}
           chainId={chainId}
           onGreetNetwork={() => setShowBulkGreet(true)}
-          onCreateGlobal={() => setView("drops-manage")}
+          onCreateGlobal={() => { setPendingDropCreate(true); setView("drops-manage"); }}
         />
 
         {/* ── From following ────────────────────────────────────────────── */}
@@ -598,7 +598,7 @@ export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewPr
         {openSeries.length > 0 && (
           <section>
             <h2 className="title-premium text-xs uppercase mb-1">{t.communityBadgeArtTitle}</h2>
-            <p className="text-xs text-white/25 mb-3">
+            <p className="text-xs mb-3" style={{ color: "rgba(251,191,36,0.55)" }}>
               {t.communityBadgeArtSub}
             </p>
             <div className="flex flex-col gap-2">
@@ -609,18 +609,33 @@ export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewPr
                     setActiveSeriesId(s.id);
                     setView("series");
                   }}
-                  className="card w-full text-left flex items-center gap-3 hover:border-lukso-purple/40 transition-colors"
+                  className="w-full text-left flex items-center gap-3 rounded-2xl px-3 py-3 transition-colors"
+                  style={{
+                    background: "rgba(251,191,36,0.06)",
+                    border: "1px solid rgba(251,191,36,0.18)",
+                  }}
                 >
-                  <div className="w-10 h-10 rounded-xl bg-lukso-purple/15 flex items-center justify-center flex-shrink-0">
-                    <span className="w-5 h-5 rounded-full bg-lukso-purple/50" />
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.22)" }}
+                  >
+                    <span className="block w-4 h-4 rounded-sm" style={{ background: "rgba(251,191,36,0.5)" }} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium">{s.name}</p>
-                    <p className="text-xs text-white/40">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <p className="text-sm font-medium truncate">{s.name}</p>
+                      <span
+                        className="text-[9px] font-bold tracking-wide px-1.5 py-0.5 rounded-full shrink-0"
+                        style={{ background: "rgba(251,191,36,0.18)", color: "rgb(251,191,36)" }}
+                      >
+                        {t.seriesOpenPill}
+                      </span>
+                    </div>
+                    <p className="text-xs" style={{ color: "rgba(251,191,36,0.5)" }}>
                       {monthNames[(s.month ?? 1) - 1]} {s.day} · {t.seriesVoteLabel}
                     </p>
                   </div>
-                  <span className="text-white/20 text-sm flex-shrink-0">›</span>
+                  <span className="text-xs shrink-0" style={{ color: "rgba(251,191,36,0.35)" }}>›</span>
                 </button>
               ))}
             </div>

@@ -50,24 +50,29 @@ export function QuickCreateFlow({ initialEvent, profileName, onModeChange, isSav
   const [lastSuggestedTitle, setLastSuggestedTitle] = useState("");
   const [recurring, setRecurring] = useState(true);
   const [notifyDaysBefore, setNotifyDaysBefore] = useState<number>(1);
+  const [notifyTime, setNotifyTime] = useState("09:00");
   const [showTemplates, setShowTemplates] = useState(!initialEvent);
 
   const personalizedNamePlaceholder = profileName
-    ? t.quickCreateNamePlaceholderWithName.replace("{name}", profileName)
+    ? (mode === "reminder"
+        ? t.quickCreateReminderFor.replace("{name}", profileName)
+        : t.quickCreateNamePlaceholderWithName.replace("{name}", profileName))
     : t.quickCreateNamePlaceholder;
   const personalizedDescPlaceholder = profileName
-    ? t.quickCreateDescPlaceholderWithName.replace("{name}", profileName)
-    : t.quickCreateDescPlaceholder;
+    ? t.quickCreateReminderNotePlaceholderWithName.replace("{name}", profileName)
+    : t.quickCreateReminderNotePlaceholder;
 
   const selectedTemplate = templates.find((template) => template.id === selectedTemplateId) ?? templates[0];
 
   const suggestedTitle = useMemo(() => {
     if (!selectedTemplate) return personalizedNamePlaceholder;
     if (selectedTemplate.id === "birthday" && profileName) {
-      return t.quickCreateNamePlaceholderWithName.replace("{name}", profileName);
+      return mode === "reminder"
+        ? t.quickCreateReminderFor.replace("{name}", profileName)
+        : t.quickCreateNamePlaceholderWithName.replace("{name}", profileName);
     }
     return lang === "es" ? selectedTemplate.nameEs : selectedTemplate.name;
-  }, [lang, personalizedNamePlaceholder, profileName, selectedTemplate, t]);
+  }, [lang, mode, personalizedNamePlaceholder, profileName, selectedTemplate, t]);
 
   useEffect(() => {
     if (!initialEvent) return;
@@ -114,6 +119,7 @@ export function QuickCreateFlow({ initialEvent, profileName, onModeChange, isSav
       recurring: initialEvent?.recurring ?? recurring,
       description: description.trim() || undefined,
       notifyDaysBefore: createDrop ? undefined : notifyDaysBefore,
+      notifyTime: createDrop ? undefined : notifyTime,
     };
 
     await onSubmit({ event, createDrop });
@@ -126,7 +132,7 @@ export function QuickCreateFlow({ initialEvent, profileName, onModeChange, isSav
     { value: 7, label: t.quickCreateNotify1Week },
   ];
 
-  // ── Shared: template + date + title ──────────────────────────────────────
+  // ── Shared: template + date + recurring (reminder) + title ──────────────
 
   const sharedContent = (
     <>
@@ -212,6 +218,22 @@ export function QuickCreateFlow({ initialEvent, profileName, onModeChange, isSav
         </div>
       </div>
 
+      {/* Recurring — shown right after date in reminder mode */}
+      {mode === "reminder" && !isEditing && (
+        <label className="flex items-start gap-3 rounded-xl border border-lukso-border bg-white/60 px-3 py-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={recurring}
+            onChange={(e) => setRecurring(e.target.checked)}
+            className="mt-0.5 h-4 w-4 flex-shrink-0 accent-[#c99a2e]"
+          />
+          <span className="min-w-0">
+            <span className="block text-sm font-medium">{t.quickCreateRecurring}</span>
+            <span className="block text-xs text-[#7b6950] break-words">{t.quickCreateRecurringSubReminder}</span>
+          </span>
+        </label>
+      )}
+
       <div className="min-w-0">
         <label className="block text-xs text-[#7b6950] mb-1">{t.quickCreateNameOptional}</label>
         <input
@@ -292,14 +314,24 @@ export function QuickCreateFlow({ initialEvent, profileName, onModeChange, isSav
                   </button>
                 ))}
               </div>
+              {/* Time of day */}
+              <div className="mt-2 flex items-center gap-3">
+                <label className="text-xs text-[#7b6950] shrink-0">{t.quickCreateNotifyTime}</label>
+                <input
+                  type="time"
+                  value={notifyTime}
+                  onChange={(e) => setNotifyTime(e.target.value)}
+                  className="input text-sm flex-1"
+                />
+              </div>
               <p className="text-[11px] text-[#9b8a6a] mt-1.5">{t.quickCreateNotifyHint}</p>
             </div>
           )}
 
-          {/* Recurring + description (more options) */}
+          {/* Notes + recurring in edit mode */}
           <div className="space-y-3 rounded-2xl border border-lukso-border bg-white/60 p-3">
             <div className="min-w-0">
-              <label className="block text-xs text-[#7b6950] mb-1">{t.quickCreateDesc}</label>
+              <label className="block text-xs text-[#7b6950] mb-1">{t.quickCreateReminderNote}</label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -308,18 +340,20 @@ export function QuickCreateFlow({ initialEvent, profileName, onModeChange, isSav
                 maxLength={180}
               />
             </div>
-            <label className="flex items-start gap-3 rounded-xl border border-lukso-border px-3 py-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={recurring}
-                onChange={(e) => setRecurring(e.target.checked)}
-                className="mt-0.5 h-4 w-4 flex-shrink-0 accent-[#c99a2e]"
-              />
-              <span className="min-w-0">
-                <span className="block text-sm font-medium">{t.quickCreateRecurring}</span>
-                <span className="block text-xs text-[#7b6950] break-words">{t.quickCreateRecurringSub}</span>
-              </span>
-            </label>
+            {isEditing && (
+              <label className="flex items-start gap-3 rounded-xl border border-lukso-border px-3 py-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={recurring}
+                  onChange={(e) => setRecurring(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 flex-shrink-0 accent-[#c99a2e]"
+                />
+                <span className="min-w-0">
+                  <span className="block text-sm font-medium">{t.quickCreateRecurring}</span>
+                  <span className="block text-xs text-[#7b6950] break-words">{t.quickCreateRecurringSubReminder}</span>
+                </span>
+              </label>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-2 pt-1">

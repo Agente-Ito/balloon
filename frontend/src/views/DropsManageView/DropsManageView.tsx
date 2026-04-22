@@ -125,10 +125,20 @@ export function DropsManageView({ walletClient, chainId }: DropsManageViewProps)
     postCreateDropNotice,
     setPostCreateDropNotice,
     clearPostCreateDropNotice,
+    pendingDropCreate,
+    setPendingDropCreate,
   } = useAppStore();
   const t = useT();
 
   const [addingDrop, setAddingDrop] = useState(false);
+
+  // If coming from a "crear celebración" CTA, open the form immediately
+  useEffect(() => {
+    if (pendingDropCreate && connectedAccount) {
+      setAddingDrop(true);
+      setPendingDropCreate(false);
+    }
+  }, [pendingDropCreate, connectedAccount, setPendingDropCreate]);
 
   const { data: myDrops, isLoading } = useDrops({
     host: connectedAccount as Address | null,

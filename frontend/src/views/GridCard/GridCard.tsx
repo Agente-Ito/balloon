@@ -2,6 +2,7 @@
  * GridCard — compact home shown in the Universal Profile Grid.
  * Keeps one visual focal point plus up to 3 clear actions.
  */
+import { useState } from "react";
 import { useAppStore } from "@/store/useAppStore";
 import { useProfileData } from "@/hooks/useUniversalProfile";
 import { NetworkBadge } from "@/components/NetworkBadge";
@@ -12,6 +13,7 @@ import { Avatar } from "@/components/Avatar";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { useT } from "@/hooks/useT";
 import { useLSP3Profile } from "@/hooks/useLSP3Profile";
+import { BirthdayNudgeCard, isBirthdayNudgeDismissed } from "./BirthdayNudgeCard";
 import type { WalletClient, PublicClient } from "viem";
 
 interface GridCardProps {
@@ -20,7 +22,7 @@ interface GridCardProps {
   chainId: number;
 }
 
-export function GridCard({ chainId }: GridCardProps) {
+export function GridCard({ walletClient, chainId }: GridCardProps) {
   const { contextProfile, isOwner, setView, setEditorEntry } = useAppStore();
   const t = useT();
   const { data: profileData, isLoading } = useProfileData(contextProfile, chainId);
@@ -28,9 +30,17 @@ export function GridCard({ chainId }: GridCardProps) {
   const hasBirthday = !!profileData?.birthday;
   const showBirthdayCta = isOwner && !hasBirthday;
 
+  // Birthday nudge: show inline card instead of the action button on first load.
+  // Falls back to button once dismissed (stored in localStorage for 30 days).
+  const [nudgeDismissed, setNudgeDismissed] = useState(() =>
+    contextProfile ? isBirthdayNudgeDismissed(contextProfile) : true
+  );
+  const showNudge = showBirthdayCta && !nudgeDismissed;
+
   const actions: Array<{ key: string; label: string; onClick: () => void; primary?: boolean }> = [];
 
-  if (showBirthdayCta) {
+  if (showBirthdayCta && nudgeDismissed) {
+    // Nudge was dismissed — surface the birthday CTA as a regular button fallback
     actions.push({
       key: "birthday",
       label: t.gridAddBirthdayCta,
@@ -135,6 +145,16 @@ export function GridCard({ chainId }: GridCardProps) {
           ))}
         </div>
       </div>
+
+      {/* Birthday nudge — inline, non-blocking, first-time only */}
+      {showNudge && contextProfile && (
+        <BirthdayNudgeCard
+          profileAddress={contextProfile}
+          walletClient={walletClient}
+          chainId={chainId}
+          onDismiss={() => setNudgeDismissed(true)}
+        />
+      )}
 
       {/* Debug overlay — dev only, never renders in prod */}
       {import.meta.env.DEV && import.meta.env.VITE_DEBUG_GRID === "1" && (

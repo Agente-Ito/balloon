@@ -26,6 +26,7 @@ export interface Celebration {
   description?: string;
   imageUrl?: string; // ipfs:// URL of an attached image
   notifyDaysBefore?: number; // 0 = day of, 1 = 1 day before, 3 = 3 days before, 7 = 1 week before
+  notifyTime?: string;        // "HH:MM" 24h, e.g. "09:00" — time of day to fire the notification
 }
 
 // ── NFTs ─────────────────────────────────────────────────────────────────────

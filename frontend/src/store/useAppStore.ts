@@ -72,6 +72,10 @@ interface AppStore {
   pendingDropDate: string | null;          // "YYYY-MM-DD"
   setPendingDropDate: (date: string | null) => void;
 
+  // Signal: navigate to drops-manage and immediately open the create form
+  pendingDropCreate: boolean;
+  setPendingDropCreate: (value: boolean) => void;
+
   // Explicit flag: only prefill anniversary drop when user asks for it
   pendingAnniversaryDrop: boolean;
   setPendingAnniversaryDrop: (enabled: boolean) => void;
@@ -159,6 +163,9 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   pendingDropDate: null,
   setPendingDropDate: (date) => set({ pendingDropDate: date }),
+
+  pendingDropCreate: false,
+  setPendingDropCreate: (value) => set({ pendingDropCreate: value }),
 
   pendingAnniversaryDrop: false,
   setPendingAnniversaryDrop: (enabled) => set({ pendingAnniversaryDrop: enabled }),

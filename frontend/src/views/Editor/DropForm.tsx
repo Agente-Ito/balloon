@@ -184,6 +184,13 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
 
   // Eligibility
   const [showEligibility, setShowEligibility] = useState(false);
+  const eligibilityRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (showEligibility) {
+      // Small timeout lets the DOM expand before scrolling
+      setTimeout(() => eligibilityRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 60);
+    }
+  }, [showEligibility]);
   const [requireFollow,   setRequireFollow]   = useState(true);
   const [minFollowers,    setMinFollowers]     = useState("");
   const [lsp7List,        setLsp7List]         = useState<Address[]>([]);
@@ -596,7 +603,7 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
       </div>
 
       {/* ── Eligibility (collapsible) ───────────────────────────────── */}
-      <div className="border border-lukso-border rounded-2xl overflow-hidden">
+      <div ref={eligibilityRef} className="border border-lukso-border rounded-2xl overflow-hidden">
         <button type="button" onClick={() => setShowEligibility((v) => !v)}
           className="w-full flex items-center justify-between px-4 py-3 hover:bg-white/5 transition-colors">
           <div className="flex items-center gap-2">
