@@ -25,6 +25,7 @@ export interface Celebration {
   profileAddress?: Address; // for social celebrations from followed profiles
   description?: string;
   imageUrl?: string; // ipfs:// URL of an attached image
+  notifyDaysBefore?: number; // 0 = day of, 1 = 1 day before, 3 = 3 days before, 7 = 1 week before
 }
 
 // ── NFTs ─────────────────────────────────────────────────────────────────────

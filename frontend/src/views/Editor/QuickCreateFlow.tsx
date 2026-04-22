@@ -5,6 +5,8 @@ import { getMonthNames } from "@/lib/monthNames";
 import { HOLIDAY_DROP_TEMPLATES } from "@/constants/dropTemplates";
 import { useAppStore } from "@/store/useAppStore";
 
+type CreateMode = "reminder" | "celebration";
+
 interface QuickCreateFlowProps {
   initialEvent?: Celebration;
   profileName?: string;
@@ -38,6 +40,7 @@ export function QuickCreateFlow({ initialEvent, profileName, onModeChange, isSav
   };
 
   const initialParts = parseDateParts(initialEvent?.date);
+  const [mode, setMode] = useState<CreateMode>("reminder");
   const [year, setYear] = useState(initialParts.year);
   const [month, setMonth] = useState(initialParts.month);
   const [day, setDay] = useState(initialParts.day);
@@ -45,9 +48,8 @@ export function QuickCreateFlow({ initialEvent, profileName, onModeChange, isSav
   const [description, setDescription] = useState(initialEvent?.description ?? "");
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("celebration");
   const [lastSuggestedTitle, setLastSuggestedTitle] = useState("");
-  const [createDrop, setCreateDrop] = useState(false);
   const [recurring, setRecurring] = useState(true);
-  const [showMore, setShowMore] = useState(Boolean(initialEvent?.description));
+  const [notifyDaysBefore, setNotifyDaysBefore] = useState<number>(1);
   const [showTemplates, setShowTemplates] = useState(!initialEvent);
 
   const personalizedNamePlaceholder = profileName
@@ -80,8 +82,6 @@ export function QuickCreateFlow({ initialEvent, profileName, onModeChange, isSav
   useEffect(() => {
     if (initialEvent) return;
     const nextSuggestion = suggestedTitle;
-    // Only overwrite the title if it still matches the previous suggestion
-    // (i.e. user hasn't typed something different, and hasn't intentionally cleared it).
     if (title === lastSuggestedTitle) {
       setTitle(nextSuggestion);
     }
@@ -94,16 +94,15 @@ export function QuickCreateFlow({ initialEvent, profileName, onModeChange, isSav
   }, [day, maxDayForMonth]);
 
   useEffect(() => {
-    onModeChange?.(createDrop);
-  }, [createDrop, onModeChange]);
+    onModeChange?.(mode === "celebration");
+  }, [mode, onModeChange]);
 
   const date = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
   const resolvedTitle = title.trim() || suggestedTitle || personalizedNamePlaceholder;
   const canSubmit = resolvedTitle.trim().length > 1 && !!date;
 
-  const handleSubmit = async (shouldCreateDrop: boolean) => {
+  const handleSubmit = async (createDrop: boolean) => {
     if (!canSubmit) return;
-    setCreateDrop(shouldCreateDrop);
 
     const event: Celebration = {
       id: initialEvent?.id ?? (typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -114,24 +113,27 @@ export function QuickCreateFlow({ initialEvent, profileName, onModeChange, isSav
       date,
       recurring: initialEvent?.recurring ?? recurring,
       description: description.trim() || undefined,
+      notifyDaysBefore: createDrop ? undefined : notifyDaysBefore,
     };
 
-    await onSubmit({ event, createDrop: shouldCreateDrop });
+    await onSubmit({ event, createDrop });
   };
 
-  return (
-    <div className="card space-y-3 sm:space-y-4">
-      <div className="space-y-1">
-        <p className="title-premium text-sm text-lukso-purple">
-          {isEditing ? t.quickCreateEditTitle : (createDrop ? t.quickCreateHeaderCelebration : t.quickCreateHeaderReminder)}
-        </p>
-        <p className="text-xs text-[#7b6950]">{isEditing ? t.quickCreateEditSub : t.quickCreateTemplates}</p>
-      </div>
+  const notifyOptions = [
+    { value: 0, label: t.quickCreateNotifyDay },
+    { value: 1, label: t.quickCreateNotify1Day },
+    { value: 3, label: t.quickCreateNotify3Days },
+    { value: 7, label: t.quickCreateNotify1Week },
+  ];
 
+  // ── Shared: template + date + title ──────────────────────────────────────
+
+  const sharedContent = (
+    <>
       {isEditing && (
         <button
           type="button"
-          onClick={() => setShowTemplates((value) => !value)}
+          onClick={() => setShowTemplates((v) => !v)}
           className="w-full rounded-xl border border-lukso-border px-3 py-2 text-left text-sm text-[#6f5c3f]"
         >
           {showTemplates ? t.quickCreateHideTemplates : t.quickCreateShowTemplates}
@@ -156,11 +158,7 @@ export function QuickCreateFlow({ initialEvent, profileName, onModeChange, isSav
               >
                 <div
                   className="w-full aspect-square relative"
-                  style={
-                    active
-                      ? { outline: "2px solid #6A1B9A", outlineOffset: "-2px" }
-                      : undefined
-                  }
+                  style={active ? { outline: "2px solid #6A1B9A", outlineOffset: "-2px" } : undefined}
                 >
                   <img
                     src={`/templates/${template.id}-balloon.png`}
@@ -171,7 +169,6 @@ export function QuickCreateFlow({ initialEvent, profileName, onModeChange, isSav
                       (e.currentTarget.nextElementSibling as HTMLElement | null)?.classList.remove("hidden");
                     }}
                   />
-                  {/* Fallback emoji if PNG unavailable */}
                   <span
                     className="hidden absolute inset-0 flex items-center justify-center text-3xl"
                     style={{ background: `linear-gradient(135deg, ${template.gradient[0]}, ${template.gradient[1]})` }}
@@ -194,20 +191,12 @@ export function QuickCreateFlow({ initialEvent, profileName, onModeChange, isSav
 
       <div className="rounded-2xl border border-lukso-border bg-[#fffaf1] p-2.5 sm:p-3">
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          <select
-            value={month}
-            onChange={(e) => setMonth(Number(e.target.value))}
-            className="input text-sm"
-          >
+          <select value={month} onChange={(e) => setMonth(Number(e.target.value))} className="input text-sm">
             {monthNames.map((m, i) => (
               <option key={m} value={i + 1}>{m}</option>
             ))}
           </select>
-          <select
-            value={day}
-            onChange={(e) => setDay(Number(e.target.value))}
-            className="input text-sm"
-          >
+          <select value={day} onChange={(e) => setDay(Number(e.target.value))} className="input text-sm">
             {Array.from({ length: maxDayForMonth }, (_, i) => i + 1).map((d) => (
               <option key={d} value={d}>{d}</option>
             ))}
@@ -234,72 +223,157 @@ export function QuickCreateFlow({ initialEvent, profileName, onModeChange, isSav
           maxLength={72}
         />
       </div>
+    </>
+  );
 
-      <button
-        type="button"
-        onClick={() => setShowMore((value) => !value)}
-        className="w-full rounded-xl border border-lukso-border px-3 py-2 text-left text-sm text-[#6f5c3f]"
-      >
-        {showMore ? t.quickCreateLess : t.quickCreateMore}
-      </button>
+  return (
+    <div className="card space-y-3 sm:space-y-4">
 
-      {showMore && (
-        <div className="space-y-3 rounded-2xl border border-lukso-border bg-white/60 p-3">
-          <div className="min-w-0">
-            <label className="block text-xs text-[#7b6950] mb-1">{t.quickCreateDesc}</label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder={personalizedDescPlaceholder}
-              className="input text-sm min-h-[74px] max-w-full"
-              maxLength={180}
-            />
-          </div>
-
-          <label className="flex items-start gap-3 rounded-xl border border-lukso-border px-3 py-2">
-            <input
-              type="checkbox"
-              checked={recurring}
-              onChange={(e) => setRecurring(e.target.checked)}
-              className="mt-0.5 h-4 w-4 flex-shrink-0 accent-[#c99a2e]"
-            />
-            <span className="min-w-0">
-              <span className="block text-sm font-medium">{t.quickCreateRecurring}</span>
-              <span className="block text-xs text-[#7b6950] break-words">{t.quickCreateRecurringSub}</span>
-            </span>
-          </label>
+      {/* ── Tab switcher ── */}
+      {!isEditing && (
+        <div className="flex gap-1 p-1 rounded-2xl bg-[#f5ede0] border border-lukso-border">
+          <button
+            type="button"
+            onClick={() => setMode("reminder")}
+            className="flex-1 rounded-xl py-2 text-sm font-semibold transition-all"
+            style={
+              mode === "reminder"
+                ? { background: "#fff", color: "#6A1B9A", boxShadow: "0 1px 4px rgba(106,27,154,0.12)" }
+                : { color: "#8B7D7D" }
+            }
+          >
+            {t.quickCreateTabReminder}
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode("celebration")}
+            className="flex-1 rounded-xl py-2 text-sm font-semibold transition-all"
+            style={
+              mode === "celebration"
+                ? { background: "#fff", color: "#6A1B9A", boxShadow: "0 1px 4px rgba(106,27,154,0.12)" }
+                : { color: "#8B7D7D" }
+            }
+          >
+            {t.quickCreateTabCelebration}
+          </button>
         </div>
       )}
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-2 pt-1">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="btn-ghost w-full text-xs sm:text-sm py-2 border border-lukso-border"
-        >
-          {t.cancel}
-        </button>
-        <button
-          type="button"
-          onClick={() => handleSubmit(false)}
-          disabled={!canSubmit || isSaving}
-          className="btn-primary w-full text-xs sm:text-sm py-2"
-        >
-          {isSaving
-            ? t.quickCreateSaving
-            : initialEvent
-              ? t.quickCreateUpdateBtn
-              : t.quickCreateReminderBtn}
-        </button>
-        <button
-          type="button"
-          onClick={() => handleSubmit(true)}
-          disabled={!canSubmit || isSaving}
-          className="btn-ghost w-full text-xs sm:text-sm py-2 border border-lukso-border"
-        >
-          {isSaving ? t.quickCreateSaving : t.quickCreateSaveAndCelebrate}
-        </button>
-      </div>
+      {isEditing && (
+        <div className="space-y-1">
+          <p className="title-premium text-sm text-lukso-purple">{t.quickCreateEditTitle}</p>
+          <p className="text-xs text-[#7b6950]">{t.quickCreateEditSub}</p>
+        </div>
+      )}
+
+      {/* ── Reminder tab ── */}
+      {(mode === "reminder" || isEditing) && (
+        <>
+          {sharedContent}
+
+          {/* Notify timing */}
+          {!isEditing && (
+            <div>
+              <label className="block text-xs text-[#7b6950] mb-1.5">{t.quickCreateNotifyWhen}</label>
+              <div className="grid grid-cols-2 gap-2">
+                {notifyOptions.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setNotifyDaysBefore(opt.value)}
+                    className="rounded-2xl border px-3 py-2 text-sm text-left transition-colors"
+                    style={
+                      notifyDaysBefore === opt.value
+                        ? { borderColor: "#6A1B9A", background: "rgba(106,27,154,0.08)", color: "#4d206f" }
+                        : { borderColor: "#E8D9C8", background: "rgba(255,255,255,0.6)", color: "#6f5c3f" }
+                    }
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[11px] text-[#9b8a6a] mt-1.5">{t.quickCreateNotifyHint}</p>
+            </div>
+          )}
+
+          {/* Recurring + description (more options) */}
+          <div className="space-y-3 rounded-2xl border border-lukso-border bg-white/60 p-3">
+            <div className="min-w-0">
+              <label className="block text-xs text-[#7b6950] mb-1">{t.quickCreateDesc}</label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder={personalizedDescPlaceholder}
+                className="input text-sm min-h-[60px] max-w-full"
+                maxLength={180}
+              />
+            </div>
+            <label className="flex items-start gap-3 rounded-xl border border-lukso-border px-3 py-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={recurring}
+                onChange={(e) => setRecurring(e.target.checked)}
+                className="mt-0.5 h-4 w-4 flex-shrink-0 accent-[#c99a2e]"
+              />
+              <span className="min-w-0">
+                <span className="block text-sm font-medium">{t.quickCreateRecurring}</span>
+                <span className="block text-xs text-[#7b6950] break-words">{t.quickCreateRecurringSub}</span>
+              </span>
+            </label>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 pt-1">
+            <button
+              type="button"
+              onClick={onCancel}
+              className="btn-ghost w-full text-sm py-2 border border-lukso-border"
+            >
+              {t.cancel}
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSubmit(false)}
+              disabled={!canSubmit || isSaving}
+              className="btn-primary w-full text-sm py-2"
+            >
+              {isSaving
+                ? t.quickCreateSaving
+                : isEditing
+                  ? t.quickCreateUpdateBtn
+                  : t.quickCreateReminderBtn}
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* ── Celebration tab ── */}
+      {mode === "celebration" && !isEditing && (
+        <>
+          {sharedContent}
+
+          <div className="rounded-2xl border border-lukso-border bg-white/60 px-4 py-3">
+            <p className="text-xs text-[#7b6950] leading-relaxed">{t.quickCreateCelebrationDesc}</p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 pt-1">
+            <button
+              type="button"
+              onClick={onCancel}
+              className="btn-ghost w-full text-sm py-2 border border-lukso-border"
+            >
+              {t.cancel}
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSubmit(true)}
+              disabled={!canSubmit || isSaving}
+              className="btn-primary w-full text-sm py-2"
+            >
+              {isSaving ? t.quickCreateSaving : t.quickCreateCelebrationCta}
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }

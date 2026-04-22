@@ -124,13 +124,7 @@ export function SettingsForm({ settings, walletClient }: SettingsFormProps) {
         onChange={() => updateDraft({ eventsVisible: !draft.eventsVisible })}
         disabled={isPending}
       />
-      <ToggleRow
-        label={t.settingsWishlistVis}
-        description={t.settingsWishlistVisSub}
-        checked={draft.wishlistVisible}
-        onChange={() => updateDraft({ wishlistVisible: !draft.wishlistVisible })}
-        disabled={isPending}
-      />
+      {/* Wishlist visibility toggle — hidden until feature is ready */}
       <ToggleRow
         label={t.settingsNotify}
         description={t.settingsNotifySub}

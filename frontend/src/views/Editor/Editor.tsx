@@ -61,7 +61,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
     subView: editorEntrySubView,
   }), []);
   const [activeTab, setActiveTab] = useState<EditorTab>(
-    editorEntryTab === "wishlist" || editorEntryTab === "settings" ? editorEntryTab : "dates"
+    editorEntryTab === "settings" ? editorEntryTab : "dates"
   );
 
   // If coming from the calendar "Create drop for this day" action,
@@ -493,7 +493,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
         <ViewToolbar
           onBack={exitQuickCreate}
           backLabel={t.back}
-          title={quickCreateAsCelebration ? t.quickCreateHeaderCelebration : t.quickCreateHeaderReminder}
+          title={quickCreateAsCelebration ? t.quickCreateTabCelebration : t.quickCreateTabReminder}
           right={toolbarActions}
         />
         <div className="flex-1 overflow-y-auto p-4">
@@ -789,7 +789,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
 
       {/* Tabs */}
       <div className="flex gap-1 px-4 pt-2 mb-1">
-        {(["dates", "wishlist"] as const).map((tab) => (
+        {(["dates"] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -799,7 +799,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
               color: activeTab === tab ? "#6A1B9A" : "#8B7D7D",
             }}
           >
-            {tab === "dates" ? t.tabDates : t.tabWishlist}
+            {t.tabDates}
           </button>
         ))}
       </div>
@@ -935,23 +935,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
               )
             )}
 
-            <button
-              type="button"
-              onClick={() => setActiveTab("wishlist")}
-              className="w-full rounded-2xl border border-[#E8D9C8] bg-white/60 px-4 py-3 flex items-center justify-between gap-3 text-left hover:border-lukso-purple/35 transition-colors"
-            >
-              <div className="min-w-0">
-                <p className="title-premium text-[11px] uppercase text-lukso-purple/80 mb-1">
-                  {t.wishlistShortcutTitle}
-                </p>
-                <p className="text-[11px] text-[#7b6950] truncate">
-                  {t.wishlistShortcutSub}
-                </p>
-              </div>
-              <span className="btn-ghost text-[11px] px-2.5 py-1.5 border border-lukso-border flex-shrink-0">
-                {t.wishlistShortcutCta}
-              </span>
-            </button>
+            {/* Wishlist shortcut — hidden until feature is ready */}
 
             <div className="rounded-2xl border border-[#E8D9C8] bg-white/60 px-4 py-3 flex flex-col gap-2">
               <div className="min-w-0">

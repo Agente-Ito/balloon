@@ -37,7 +37,6 @@ export function CelebrationView({ walletClient, chainId }: CelebrationViewProps)
     connectedAccount,
     isOwner,
     activeCelebrationDate,
-    setView,
     goBack,
   } = useAppStore();
 
@@ -114,12 +113,12 @@ export function CelebrationView({ walletClient, chainId }: CelebrationViewProps)
       </div>
 
       {/* CTAs */}
-      <div className="px-4 grid grid-cols-3 gap-2 mb-3">
+      <div className="px-4 flex gap-2 mb-3">
         {/* Mint badge — only for own profile */}
         {isOwner && (
           <button
             onClick={() => setOpenModal("badge")}
-            className="card flex flex-col items-center gap-2 py-3 hover:border-lukso-pink/40 transition-colors"
+            className="card flex-1 flex flex-col items-center gap-2 py-3 hover:border-lukso-pink/40 transition-colors"
           >
             <span className="w-5 h-5 rounded-full bg-lukso-pink/60" />
             <span className="text-xs text-center text-white/70 leading-tight">{t.celebrationMintBadge}</span>
@@ -131,7 +130,7 @@ export function CelebrationView({ walletClient, chainId }: CelebrationViewProps)
           <button
             onClick={() => setOpenModal("greeting")}
             disabled={canSendData?.canSend === false}
-            className="card flex flex-col items-center gap-2 py-3 hover:border-lukso-purple/40 transition-colors disabled:opacity-40"
+            className="card flex-1 flex flex-col items-center gap-2 py-3 hover:border-lukso-purple/40 transition-colors disabled:opacity-40"
           >
             <span className="w-5 h-5 rounded-full bg-lukso-purple/60" />
             <span className="text-xs text-center text-white/70 leading-tight">
@@ -144,21 +143,14 @@ export function CelebrationView({ walletClient, chainId }: CelebrationViewProps)
         {!isOwner && (
           <button
             onClick={() => setOpenModal("gift")}
-            className="card flex flex-col items-center gap-2 py-3 hover:border-amber-500/40 transition-colors"
+            className="card flex-1 flex flex-col items-center gap-2 py-3 hover:border-amber-500/40 transition-colors"
           >
             <span className="w-5 h-5 rounded-full bg-amber-500/60" />
             <span className="text-xs text-center text-white/70 leading-tight">{t.celebrationGiftAsset}</span>
           </button>
         )}
 
-        {/* Wishlist — always visible */}
-        <button
-          onClick={() => setView("wishlist")}
-          className="card flex flex-col items-center gap-2 py-3 hover:border-white/20 transition-colors"
-        >
-          <span className="w-5 h-5 rounded-full bg-white/20" />
-          <span className="text-xs text-center text-white/70 leading-tight">{t.celebrationWishlistBtn}</span>
-        </button>
+        {/* Wishlist — hidden until feature is ready */}
       </div>
 
       {/* Tabs: Badges / Greeting Cards */}
