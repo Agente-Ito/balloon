@@ -170,6 +170,10 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
   const currentYear = new Date().getFullYear();
   const monthNames = useMemo(() => getMonthNames(t), [t]);
 
+  // Stable initial source option — used only for first-render state initialisation.
+  // sourceOptions is provided by the admin holiday picker and doesn't change.
+  const initialSourceOption = sourceOptions.find((o) => o.id === initialSourceId) ?? null;
+
   const initialTemplateId = useMemo(() => {
     // Explicit templateId from prefill always wins
     if (prefill?.templateId) return prefill.templateId;
@@ -178,9 +182,11 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
     if (prefill?.celebrationType === 0) return "birthday";
     if (prefill?.celebrationType === 1) return "anniversary";
     if (prefill?.celebrationType === 2) return "holiday";
+    // Use the template from the initial source option (e.g., global holiday picker).
+    if (initialSourceOption?.templateId) return initialSourceOption.templateId;
     // Default for new drops: practical birthday-style starter.
     return "birthday";
-  }, [prefill]);
+  }, [prefill, initialSourceOption]);
 
   const initialTemplate = useMemo(() => (
     initialTemplateId ? HOLIDAY_DROP_TEMPLATES.find((tpl) => tpl.id === initialTemplateId) ?? null : null
@@ -188,22 +194,24 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
 
   const initialName = useMemo(() => {
     if (prefill?.name) return prefill.name;
+    if (initialSourceOption?.suggestedName) return initialSourceOption.suggestedName;
     if (!initialTemplate) return "";
     return lang === "es" ? initialTemplate.nameEs : initialTemplate.name;
-  }, [prefill, initialTemplate, lang]);
+  }, [prefill, initialSourceOption, initialTemplate, lang]);
 
   const initialDescription = useMemo(() => {
     if (prefill?.description) return prefill.description;
+    if (initialSourceOption?.suggestedDescription) return initialSourceOption.suggestedDescription;
     if (!initialTemplate) return "";
     return lang === "es" ? initialTemplate.descEs : initialTemplate.description;
-  }, [prefill, initialTemplate, lang]);
+  }, [prefill, initialSourceOption, initialTemplate, lang]);
 
   const [name,        setName]        = useState(initialName);
   const [description, setDesc]        = useState(initialDescription);
-  const [celebType,   setCelebType]   = useState<CelebrationType>(prefill?.celebrationType ?? (initialTemplate?.celebrationType ?? 0));
-  const [year,        setYear]        = useState(prefill?.year ? String(prefill.year) : "");
-  const [month,       setMonth]       = useState(prefill?.month ?? new Date().getMonth() + 1);
-  const [day,         setDay]         = useState(prefill?.day ?? new Date().getDate());
+  const [celebType,   setCelebType]   = useState<CelebrationType>(prefill?.celebrationType ?? initialSourceOption?.celebrationType ?? (initialTemplate?.celebrationType ?? 0));
+  const [year,        setYear]        = useState(prefill?.year ? String(prefill.year) : (initialSourceOption?.year ? String(initialSourceOption.year) : ""));
+  const [month,       setMonth]       = useState(prefill?.month ?? initialSourceOption?.month ?? new Date().getMonth() + 1);
+  const [day,         setDay]         = useState(prefill?.day ?? initialSourceOption?.day ?? new Date().getDate());
   const [maxSupply,   setMaxSupply]   = useState("");
   const [endDate,     setEndDate]     = useState("");
   const [imageFile,   setImageFile]   = useState<File | undefined>(() => (
@@ -243,7 +251,7 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
     if (el) el.scrollTop = 0;
   }, []);
 
-  const [selectedTplId, setSelectedTplId] = useState<string | null>(initialTemplate?.id ?? null);
+  const [selectedTplId, setSelectedTplId] = useState<string | null>(initialSourceOption?.templateId ?? initialTemplate?.id ?? null);
   const [selectedSourceId, setSelectedSourceId] = useState<string | null>(initialSourceId ?? sourceOptions[0]?.id ?? null);
 
   const typeMenuOptions = useMemo(() => {
