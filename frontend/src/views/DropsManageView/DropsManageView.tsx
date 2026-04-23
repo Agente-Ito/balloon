@@ -18,7 +18,9 @@ import { LanguageToggle } from "@/components/LanguageToggle";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { ViewToolbar } from "@/components/ViewToolbar";
 import { DropForm } from "@/views/Editor/DropForm";
+import type { DropSourceOption } from "@/views/Editor/DropForm";
 import { useCreateDrop } from "@/hooks/useCreateDrop";
+import { GLOBAL_HOLIDAYS } from "@/constants/celebrationTypes";
 import toast from "react-hot-toast";
 import type { Address, IndexedDrop } from "@/types";
 import { CelebrationType } from "@/types";
@@ -130,6 +132,7 @@ export function DropsManageView({ walletClient, chainId }: DropsManageViewProps)
     clearPostCreateDropNotice,
     pendingDropCreate,
     setPendingDropCreate,
+    lang,
   } = useAppStore();
   const t = useT();
   const { data: allSeries } = useAllSeries();
@@ -147,6 +150,22 @@ export function DropsManageView({ walletClient, chainId }: DropsManageViewProps)
     );
 
   const [addingDrop, setAddingDrop] = useState(false);
+  const [globalHolidayMode, setGlobalHolidayMode] = useState(false);
+  const [selectedGlobalSourceId, setSelectedGlobalSourceId] = useState<string | null>(null);
+
+  const globalHolidaySourceOptions: DropSourceOption[] = GLOBAL_HOLIDAYS.map((h) => {
+    const [month, day] = h.date.split("-").map(Number);
+    return {
+      id: `event:${h.id}`,
+      label: `${h.emoji} ${lang === "es" ? (h.titleEs ?? h.title) : h.title}`,
+      suggestedName: lang === "es" ? (h.titleEs ?? h.title) : h.title,
+      suggestedDescription: lang === "es" ? (h.descEs ?? h.description) : h.description,
+      celebrationType: CelebrationType.GlobalHoliday,
+      month,
+      day,
+      templateId: "holiday",
+    };
+  });
 
   // If coming from a "crear celebración" CTA, open the form immediately
   useEffect(() => {
@@ -248,12 +267,55 @@ export function DropsManageView({ walletClient, chainId }: DropsManageViewProps)
     }
   }, [matchedDropReady]);
 
-  // ── Create drop form ────────────────────────────────────────────────────────
-  if (addingDrop && connectedAccount) {
+  // ── Global holiday picker ──────────────────────────────────────────────────
+  if (globalHolidayMode && !addingDrop && connectedAccount) {
     return (
       <div className="h-full flex flex-col overflow-hidden">
         <ViewToolbar
-          onBack={() => setAddingDrop(false)}
+          onBack={() => setGlobalHolidayMode(false)}
+          backLabel={t.back}
+          title={t.dropsAdminCreateGlobal}
+          right={<LanguageToggle />}
+        />
+        <div className="flex-1 overflow-y-auto px-4 py-4">
+          <div className="grid grid-cols-2 gap-3">
+            {GLOBAL_HOLIDAYS.map((h) => {
+              const [month, day] = h.date.split("-").map(Number);
+              return (
+                <button
+                  key={h.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedGlobalSourceId(`event:${h.id}`);
+                    setAddingDrop(true);
+                  }}
+                  className="card flex flex-col items-center gap-2 py-4 hover:border-lukso-purple/40 transition-colors text-center"
+                >
+                  <span className="text-3xl">{h.emoji}</span>
+                  <p className="text-xs font-medium leading-tight">{lang === "es" ? (h.titleEs ?? h.title) : h.title}</p>
+                  <p className="text-[10px] text-white/40">{String(month).padStart(2, "0")}/{String(day).padStart(2, "0")}</p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Create drop form ────────────────────────────────────────────────────────
+  if (addingDrop && connectedAccount) {
+    const isGlobal = globalHolidayMode && !!selectedGlobalSourceId;
+    return (
+      <div className="h-full flex flex-col overflow-hidden">
+        <ViewToolbar
+          onBack={() => {
+            setAddingDrop(false);
+            if (globalHolidayMode) {
+              setSelectedGlobalSourceId(null);
+              // stay in picker
+            }
+          }}
           backLabel={t.back}
           title={t.addDrop}
           right={<LanguageToggle />}
@@ -262,9 +324,20 @@ export function DropsManageView({ walletClient, chainId }: DropsManageViewProps)
           <DropForm
             host={connectedAccount}
             chainId={chainId}
-            onSave={handleCreate}
-            onCancel={() => setAddingDrop(false)}
+            onSave={async (params) => {
+              await handleCreate(params);
+              setGlobalHolidayMode(false);
+              setSelectedGlobalSourceId(null);
+            }}
+            onCancel={() => {
+              setAddingDrop(false);
+              if (globalHolidayMode) setSelectedGlobalSourceId(null);
+            }}
             isSaving={createDropMutation.isPending}
+            {...(isGlobal ? {
+              sourceOptions: globalHolidaySourceOptions,
+              initialSourceId: selectedGlobalSourceId,
+            } : {})}
           />
         </div>
       </div>
@@ -320,14 +393,6 @@ export function DropsManageView({ walletClient, chainId }: DropsManageViewProps)
       />
 
       <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-4">
-        {/* ── Temp admin debug — remove once VITE_ADMIN_ADDRESSES is confirmed ── */}
-        {connectedAccount && !isAdmin && (
-          <div className="rounded-xl border border-dashed border-white/10 px-3 py-2 text-[10px] text-white/30 font-mono break-all space-y-1">
-            <div>connected: {connectedAccount}</div>
-            <div>env: {import.meta.env.VITE_ADMIN_ADDRESSES ?? "(not set)"}</div>
-          </div>
-        )}
-
         {/* ── Create new drop inline CTA ─────────────────────────────────── */}
         {connectedAccount && (
           <button
@@ -472,8 +537,8 @@ export function DropsManageView({ walletClient, chainId }: DropsManageViewProps)
             <div className="flex flex-col gap-2">
               <button
                 onClick={() => {
-                  setPendingDropCreate(true);
-                  setView("drops-manage");
+                  setGlobalHolidayMode(true);
+                  setSelectedGlobalSourceId(null);
                 }}
                 className="btn-primary text-xs"
               >
