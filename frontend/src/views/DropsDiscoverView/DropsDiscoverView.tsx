@@ -486,15 +486,25 @@ export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewPr
                   {t.dropsManageTabManage}
                 </button>
               )}
-              {openSeries.length > 0 && (
-                <button
-                  onClick={() => { setActiveSeriesId(openSeries[0].id); setView("series"); }}
-                  className="title-premium text-[11px] sm:text-xs px-2 sm:px-3 py-1 rounded-md transition-colors"
-                  style={{ color: "#c99a2e" }}
-                >
-                  ✦ {t.dropsManageTabSeries}
-                </button>
-              )}
+              <button
+                onClick={() => {
+                  if (openSeries.length > 0) {
+                    setActiveSeriesId(openSeries[0].id);
+                    setView("series");
+                  }
+                }}
+                className="title-premium text-[11px] sm:text-xs px-2 sm:px-3 py-1 rounded-md transition-colors relative"
+                style={{ color: openSeries.length > 0 ? "#c99a2e" : "#C0A870", opacity: openSeries.length > 0 ? 1 : 0.55 }}
+                title={openSeries.length > 0 ? t.dropsManageTabSeries : undefined}
+              >
+                {t.dropsManageTabSeries}
+                {openSeries.length > 0 && (
+                  <span
+                    className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full"
+                    style={{ background: "#c99a2e" }}
+                  />
+                )}
+              </button>
             </div>
             <LanguageToggle />
           </div>

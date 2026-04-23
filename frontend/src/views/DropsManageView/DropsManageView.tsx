@@ -11,6 +11,7 @@ import { useAppStore } from "@/store/useAppStore";
 import { useDrops } from "@/hooks/useDrops";
 import { useLSP3Name } from "@/hooks/useLSP3Name";
 import { useT } from "@/hooks/useT";
+import { useAllSeries } from "@/hooks/useSeries";
 import { Avatar } from "@/components/Avatar";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
@@ -120,6 +121,7 @@ export function DropsManageView({ walletClient, chainId }: DropsManageViewProps)
     connectedAccount,
     setView,
     setActiveDropId,
+    setActiveSeriesId,
     goBack,
     triggerBurst,
     postCreateDropNotice,
@@ -129,6 +131,8 @@ export function DropsManageView({ walletClient, chainId }: DropsManageViewProps)
     setPendingDropCreate,
   } = useAppStore();
   const t = useT();
+  const { data: allSeries } = useAllSeries();
+  const openSeries = (allSeries ?? []).filter((s) => s.submissionOpen);
 
   const [addingDrop, setAddingDrop] = useState(false);
 
@@ -276,6 +280,26 @@ export function DropsManageView({ walletClient, chainId }: DropsManageViewProps)
                 style={{ background: "rgba(106,27,154,0.15)", color: "#6A1B9A" }}
               >
                 {t.dropsManageTabManage}
+              </button>
+              <button
+                onClick={() => {
+                  if (openSeries.length > 0) {
+                    setActiveSeriesId(openSeries[0].id);
+                    setView("series");
+                  } else {
+                    setView("drops");
+                  }
+                }}
+                className="title-premium text-xs px-3 py-1 rounded-md whitespace-nowrap transition-colors relative"
+                style={{ color: openSeries.length > 0 ? "#c99a2e" : "#C0A870", opacity: openSeries.length > 0 ? 1 : 0.55 }}
+              >
+                {t.dropsManageTabSeries}
+                {openSeries.length > 0 && (
+                  <span
+                    className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full"
+                    style={{ background: "#c99a2e" }}
+                  />
+                )}
               </button>
             </div>
             <LanguageToggle />
