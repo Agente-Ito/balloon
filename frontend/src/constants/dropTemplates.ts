@@ -78,6 +78,17 @@ export const HOLIDAY_DROP_TEMPLATES: HolidayDropTemplate[] = [
     gradient: ["#7e22ce", "#db2777"],
   },
   {
+    id: "other",
+    name: "Other",
+    nameEs: "Otro",
+    emoji: "✏️",
+    month: 0, day: 0,
+    celebrationType: CelebrationType.CustomEvent,
+    description: "A special occasion — claim your commemorative badge on LUKSO!",
+    descEs: "Una ocasión especial — ¡reclama tu insignia conmemorativa en LUKSO!",
+    gradient: ["#374151", "#6b7280"],
+  },
+  {
     id: "graduation",
     name: "Graduation",
     nameEs: "Graduación",

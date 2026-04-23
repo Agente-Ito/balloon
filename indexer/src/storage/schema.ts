@@ -229,6 +229,15 @@ export function createSchema(db: Database.Database): void {
       last_block    INTEGER NOT NULL DEFAULT 0,
       updated_at    INTEGER NOT NULL DEFAULT (unixepoch())
     );
+
+    -- ── Reminder notifications sent (dedup guard for scheduled push) ─────────
+    CREATE TABLE IF NOT EXISTS reminder_notifications_sent (
+      profile_address  TEXT NOT NULL,
+      reminder_id      TEXT NOT NULL,
+      notification_date TEXT NOT NULL,  -- YYYY-MM-DD of the notify day (not the event day)
+      sent_at          INTEGER NOT NULL DEFAULT (unixepoch()),
+      PRIMARY KEY (profile_address, reminder_id, notification_date)
+    );
   `);
 
   runMigrations(db);

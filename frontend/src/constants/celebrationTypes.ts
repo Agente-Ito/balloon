@@ -22,16 +22,29 @@ export const CELEBRATION_COLORS: Record<CelebrationType, string> = {
 };
 
 export const GLOBAL_HOLIDAYS: GlobalHoliday[] = [
-  { id: "christmas", title: "Christmas", date: "12-25", emoji: "🎄", description: "Merry Christmas!" },
-  { id: "new-year", title: "New Year", date: "01-01", emoji: "🥂", description: "Happy New Year!" },
-  { id: "valentines", title: "Valentine's Day", date: "02-14", emoji: "💝", description: "Happy Valentine's Day!" },
-  { id: "halloween", title: "Halloween", date: "10-31", emoji: "🎃", description: "Happy Halloween!" },
-  { id: "thanksgiving", title: "Thanksgiving", date: "11-28", emoji: "🦃", description: "Happy Thanksgiving!" },
-  { id: "easter", title: "Easter", date: "03-31", emoji: "🐣", description: "Happy Easter!" },
-  { id: "independence-day", title: "Independence Day (US)", date: "07-04", emoji: "🎆", description: "Happy 4th of July!" },
-  { id: "eid", title: "Eid al-Fitr", date: "04-01", emoji: "🌙", description: "Eid Mubarak!" },
-  { id: "diwali", title: "Diwali", date: "10-20", emoji: "🪔", description: "Happy Diwali!" },
-  { id: "hanukkah", title: "Hanukkah", date: "12-25", emoji: "🕎", description: "Happy Hanukkah!" },
+  // ── January ──────────────────────────────────────────────────────────────
+  { id: "new-year",          title: "New Year",                 titleEs: "Año Nuevo",                date: "01-01", emoji: "🥂",  description: "Happy New Year!",                   descEs: "¡Feliz Año Nuevo!",                      image: "/holidays/new-year.png" },
+  // ── February ─────────────────────────────────────────────────────────────
+  { id: "valentines",        title: "Valentine's Day",          titleEs: "San Valentín",             date: "02-14", emoji: "💝",  description: "Happy Valentine's Day!",             descEs: "¡Feliz Día de San Valentín!",             image: "/holidays/valentines.png" },
+  // ── March ────────────────────────────────────────────────────────────────
+  { id: "easter",            title: "Easter",                   titleEs: "Semana Santa",             date: "03-31", emoji: "🐣",  description: "Happy Easter!",                     descEs: "¡Felices Pascuas!" },
+  // ── April ────────────────────────────────────────────────────────────────
+  { id: "eid",               title: "Eid al-Fitr",              titleEs: "Eid al-Fitr",              date: "04-01", emoji: "🌙",  description: "Eid Mubarak!",                      descEs: "¡Eid Mubarak!" },
+  { id: "earth-day",         title: "Earth Day",                titleEs: "Día de la Tierra",         date: "04-22", emoji: "🌍",  description: "Happy Earth Day!",                  descEs: "¡Feliz Día de la Tierra!",               image: "/holidays/earth-day.png" },
+  // ── May ──────────────────────────────────────────────────────────────────
+  { id: "press-freedom-day", title: "World Press Freedom Day",  titleEs: "Día Lib. de Prensa",       date: "05-03", emoji: "📰",  description: "World Press Freedom Day",           descEs: "Día Mundial de la Libertad de Prensa",   image: "/holidays/press-freedom-day.png" },
+  { id: "museum-day",        title: "International Museum Day", titleEs: "Día de los Museos",        date: "05-18", emoji: "🏛️", description: "Happy International Museum Day!",   descEs: "¡Feliz Día de los Museos!",              image: "/holidays/museum-day.png" },
+  { id: "lukso-anniversary", title: "LUKSO Anniversary",        titleEs: "Aniversario LUKSO",        date: "05-23", emoji: "🔮",  description: "Happy LUKSO Anniversary!",          descEs: "¡Feliz Aniversario de LUKSO!",           image: "/holidays/lukso-anniversary.png" },
+  // ── July ─────────────────────────────────────────────────────────────────
+  { id: "independence-day",  title: "Independence Day (US)",    titleEs: "Día Independencia (EE.UU)",date: "07-04", emoji: "🎆",  description: "Happy 4th of July!",               descEs: "¡Feliz 4 de Julio!" },
+  // ── October ──────────────────────────────────────────────────────────────
+  { id: "diwali",            title: "Diwali",                   titleEs: "Diwali",                  date: "10-20", emoji: "🪔",  description: "Happy Diwali!",                     descEs: "¡Feliz Diwali!" },
+  { id: "halloween",         title: "Halloween",                titleEs: "Halloween",               date: "10-31", emoji: "🎃",  description: "Happy Halloween!",                  descEs: "¡Feliz Halloween!",                      image: "/holidays/halloween.png" },
+  // ── November ─────────────────────────────────────────────────────────────
+  { id: "thanksgiving",      title: "Thanksgiving",             titleEs: "Día de Acción de Gracias",date: "11-28", emoji: "🦃",  description: "Happy Thanksgiving!",               descEs: "¡Feliz Día de Acción de Gracias!" },
+  // ── December ─────────────────────────────────────────────────────────────
+  { id: "hanukkah",          title: "Hanukkah",                 titleEs: "Hanukkah",                date: "12-25", emoji: "🕎",  description: "Happy Hanukkah!",                   descEs: "¡Feliz Hanukkah!" },
+  { id: "christmas",         title: "Christmas",                titleEs: "Navidad",                 date: "12-25", emoji: "🎄",  description: "Merry Christmas!",                  descEs: "¡Feliz Navidad!" },
 ];
 
 /**

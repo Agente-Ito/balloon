@@ -13,6 +13,7 @@ import { startGreetingListener } from "./listeners/greetings";
 import { startFollowListener } from "./listeners/followEvents";
 import { startDropListener } from "./listeners/drops";
 import { seedDefaultSeries } from "./workers/seedSeries";
+import { startReminderNotifier } from "./workers/reminderNotifier";
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
@@ -64,6 +65,7 @@ app.use((err: Error, req: express.Request, res: express.Response, _next: express
 app.listen(PORT, () => {
   console.log(`[indexer] API listening on http://localhost:${PORT}/api`);
   seedDefaultSeries();
+  startReminderNotifier();
 });
 
 // ── Start listeners ───────────────────────────────────────────────────────────

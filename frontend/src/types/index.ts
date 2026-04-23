@@ -121,9 +121,13 @@ export interface ProfileSettings {
 export interface GlobalHoliday {
   id: string;
   title: string;
+  titleEs?: string;
   date: string; // "MM-DD"
   emoji: string;
   description: string;
+  descEs?: string;
+  /** Path to a static image in /public, e.g. "/holidays/valentines.png" */
+  image?: string;
 }
 
 // ── Drops ─────────────────────────────────────────────────────────────────────

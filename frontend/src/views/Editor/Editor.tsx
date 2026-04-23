@@ -19,6 +19,7 @@ import { CELEBRATION_COLORS } from "@/constants/celebrationTypes";
 import { useCreateDrop, type CreateDropParams } from "@/hooks/useCreateDrop";
 import { useUPCreationDate } from "@/hooks/useUPCreationDate";
 import { useLocalReminders } from "@/hooks/useLocalReminders";
+import { useReminderSync } from "@/hooks/useReminderSync";
 import { computeAnniversary } from "@/lib/upCreationDate";
 import { anniversarySVGToFile } from "@/lib/anniversaryBadge";
 import type { Celebration, WishlistItem, Address } from "@/types";
@@ -39,6 +40,7 @@ type SetupMode = "quick" | "step";
 export function Editor({ walletClient, chainId }: EditorProps) {
   const {
     contextProfile,
+    connectedAccount,
     setView,
     goBack,
     setActiveCelebrationDate,
@@ -82,9 +84,41 @@ export function Editor({ walletClient, chainId }: EditorProps) {
   const { data: profileData, isLoading } = useProfileData(contextProfile, chainId);
   const {
     reminders: localReminders,
+    allReminderRecords,
     saveReminder,
     updateReminder,
   } = useLocalReminders(contextProfile as Address | null);
+
+  const {
+    backupReminders,
+    isBackingUp: isSyncingReminders,
+    lastSyncMeta: reminderSyncMeta,
+  } = useReminderSync({
+    walletClient: walletClient ?? undefined,
+    profileAddress: contextProfile as Address | null,
+    connectedAccount,
+  });
+
+  const [syncBannerDismissed, setSyncBannerDismissed] = useState(() => {
+    try {
+      if (!contextProfile) return false;
+      return localStorage.getItem(
+        `celebrations:sync-banner-dismissed:${contextProfile.toLowerCase()}`
+      ) === "1";
+    } catch { return false; }
+  });
+
+  const dismissSyncBanner = () => {
+    setSyncBannerDismissed(true);
+    try {
+      if (contextProfile) {
+        localStorage.setItem(
+          `celebrations:sync-banner-dismissed:${contextProfile.toLowerCase()}`,
+          "1"
+        );
+      }
+    } catch { /* ignore */ }
+  };
 
   const { mutateAsync: setBirthday, isPending: isSavingBirthday } = useSetBirthday({
     walletClient: walletClient!,
@@ -181,7 +215,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
         }}
         aria-label={t.tabSettings}
         title={t.tabSettings}
-        className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl border transition-all duration-200 flex items-center justify-center p-0"
+        className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl border transition-all duration-200 flex items-center justify-center p-0 overflow-hidden"
         style={{
           borderColor: activeTab === "settings" && subView === "main" ? "rgba(201,154,46,0.92)" : "#E8D9C8",
           background: activeTab === "settings" && subView === "main"
@@ -196,7 +230,7 @@ export function Editor({ walletClient, chainId }: EditorProps) {
         <img
           src="/settings-gear.png"
           alt={t.tabSettings}
-          className="w-[92%] h-[92%] object-contain"
+          className="w-full h-full object-contain scale-[1.35]"
           loading="lazy"
           decoding="async"
           onError={(e) => {
@@ -939,6 +973,34 @@ export function Editor({ walletClient, chainId }: EditorProps) {
                   </div>
                 </div>
               )
+            )}
+
+            {/* Sync banner — shown after first reminder saved, until user enables push or dismisses */}
+            {localReminders.length > 0 && !reminderSyncMeta && !syncBannerDismissed && (
+              <div className="rounded-2xl border border-[#c99a2e]/40 bg-[#fdf7e8] px-3 py-2.5 flex items-center gap-2.5">
+                <div className="flex-1 min-w-0">
+                  <p className="text-[11px] text-[#6b4a12]">{t.reminderSyncBannerText}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    backupReminders(allReminderRecords).catch(() => {/* user cancelled or offline */});
+                  }}
+                  disabled={isSyncingReminders}
+                  className="title-premium text-[11px] px-2.5 py-1 rounded-lg border border-[#c99a2e]/60 flex-shrink-0 transition-colors"
+                  style={{ color: "#7a5010", background: "rgba(201,154,46,0.12)" }}
+                >
+                  {isSyncingReminders ? "…" : t.reminderSyncBannerBtn}
+                </button>
+                <button
+                  type="button"
+                  onClick={dismissSyncBanner}
+                  className="text-[#9c7a3a]/60 hover:text-[#9c7a3a] text-base leading-none flex-shrink-0"
+                  aria-label="Dismiss"
+                >
+                  ×
+                </button>
+              </div>
             )}
 
             {/* Wishlist shortcut — hidden until feature is ready */}

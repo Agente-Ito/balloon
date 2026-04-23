@@ -94,7 +94,7 @@ function SubmissionCard({
           className="absolute -top-2 left-3 text-[10px] font-bold px-2 py-0.5 rounded-full"
           style={{
             background: "rgba(201,154,46,0.22)",
-            color: "#9c6d16",
+            color: "#b08830",
             border: "1px solid rgba(201,154,46,0.40)",
           }}
         >
@@ -139,7 +139,7 @@ function SubmissionCard({
               submission.votedByViewer
                 ? {
                     background: "rgba(201,154,46,0.25)",
-                    color: "#9c6d16",
+                    color: "#b08830",
                     border: "1px solid rgba(201,154,46,0.45)",
                   }
                 : {
@@ -156,7 +156,7 @@ function SubmissionCard({
             className="text-[10px] px-2 py-0.5 rounded-full"
             style={{
               background: "rgba(201,154,46,0.20)",
-              color: "#9c6d16",
+              color: "#b08830",
               border: "1px solid rgba(201,154,46,0.35)",
             }}
           >
@@ -318,7 +318,7 @@ export function SeriesView({ walletClient, chainId }: SeriesViewProps) {
               isOpen
                 ? {
                     background: "rgba(201,154,46,0.20)",
-                    color: "#9c6d16",
+                    color: "#b08830",
                     border: "1px solid rgba(201,154,46,0.35)",
                   }
                 : {

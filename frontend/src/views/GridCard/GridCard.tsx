@@ -108,12 +108,12 @@ export function GridCard({ walletClient, chainId }: GridCardProps) {
             }}
             aria-label={t.tabSettings}
             title={t.tabSettings}
-            className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl border border-lukso-border bg-white/5 hover:bg-lukso-purple/10 hover:border-lukso-purple/30 transition-colors flex items-center justify-center p-0"
+            className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl border border-lukso-border bg-white/5 hover:bg-lukso-purple/10 hover:border-lukso-purple/30 transition-colors flex items-center justify-center p-0 overflow-hidden"
           >
             <img
               src="/settings-gear.png"
               alt={t.tabSettings}
-              className="w-[92%] h-[92%] object-contain"
+              className="w-full h-full object-contain scale-[1.35]"
               loading="lazy"
               decoding="async"
               onError={(e) => {

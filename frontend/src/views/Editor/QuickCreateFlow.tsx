@@ -6,6 +6,10 @@ import { HOLIDAY_DROP_TEMPLATES } from "@/constants/dropTemplates";
 import { useAppStore } from "@/store/useAppStore";
 
 type CreateMode = "reminder" | "celebration";
+type OccasionId = "birthday" | "anniversary" | "holiday" | "other";
+
+// Fixed order for the reminder carousel: birthday → anniversary → holiday → other
+const REMINDER_TEMPLATE_IDS: OccasionId[] = ["birthday", "anniversary", "holiday", "other"];
 
 interface QuickCreateFlowProps {
   initialEvent?: Celebration;
@@ -22,8 +26,17 @@ export function QuickCreateFlow({ initialEvent, profileName, onModeChange, isSav
   const isEditing = Boolean(initialEvent);
   const now = new Date();
   const monthNames = useMemo(() => getMonthNames(t), [t]);
+  // Celebration carousel — excludes anniversary (handled separately in Editor)
   const templates = useMemo(
     () => HOLIDAY_DROP_TEMPLATES.filter((template) => template.id !== "anniversary"),
+    []
+  );
+
+  // Reminder carousel — birthday, anniversary, holiday, other in a fixed order
+  const reminderTemplates = useMemo(
+    () => REMINDER_TEMPLATE_IDS
+      .map((id) => HOLIDAY_DROP_TEMPLATES.find((t) => t.id === id))
+      .filter((t): t is NonNullable<typeof t> => Boolean(t)),
     []
   );
 
@@ -43,6 +56,7 @@ export function QuickCreateFlow({ initialEvent, profileName, onModeChange, isSav
   const [title, setTitle] = useState(initialEvent?.title ?? "");
   const [description, setDescription] = useState(initialEvent?.description ?? "");
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("celebration");
+  const [occasionId, setOccasionId] = useState<OccasionId>("birthday");
   const [lastSuggestedTitle, setLastSuggestedTitle] = useState("");
   const [recurring, setRecurring] = useState(true);
   const [notifyDaysBefore, setNotifyDaysBefore] = useState<number>(1);
@@ -50,17 +64,32 @@ export function QuickCreateFlow({ initialEvent, profileName, onModeChange, isSav
   const [showTemplates, setShowTemplates] = useState(!initialEvent);
   const [showValidation, setShowValidation] = useState(false);
 
-  const selectedTemplate = templates.find((t) => t.id === selectedTemplateId) ?? templates[0];
+  const selectedTemplate = templates.find((tpl) => tpl.id === selectedTemplateId) ?? templates[0];
 
   const suggestedTitle = useMemo(() => {
+    if (mode === "reminder" || isEditing) {
+      // Occasion-based auto-title for reminders
+      if (occasionId === "other") return "";
+      if (occasionId === "birthday") {
+        return profileName
+          ? t.quickCreateReminderFor.replace("{name}", profileName)
+          : t.quickCreateOccasionBirthday;
+      }
+      if (occasionId === "anniversary") {
+        return profileName
+          ? t.quickCreateAnniversaryFor.replace("{name}", profileName)
+          : t.quickCreateOccasionAnniversary;
+      }
+      // holiday
+      return t.quickCreateOccasionHoliday;
+    }
+    // Celebration mode: use selected template
     if (!selectedTemplate) return "";
     if (selectedTemplate.id === "birthday" && profileName) {
-      return mode === "reminder"
-        ? t.quickCreateReminderFor.replace("{name}", profileName)
-        : t.quickCreateNamePlaceholderWithName.replace("{name}", profileName);
+      return t.quickCreateNamePlaceholderWithName.replace("{name}", profileName);
     }
     return lang === "es" ? selectedTemplate.nameEs : selectedTemplate.name;
-  }, [lang, mode, profileName, selectedTemplate, t]);
+  }, [isEditing, lang, mode, occasionId, profileName, selectedTemplate, t]);
 
   useEffect(() => {
     if (!initialEvent) return;
@@ -86,11 +115,44 @@ export function QuickCreateFlow({ initialEvent, profileName, onModeChange, isSav
     onModeChange?.(mode === "celebration");
   }, [mode, onModeChange]);
 
+  // Auto-set recurring based on occasion (birthday/anniversary repeat every year)
+  useEffect(() => {
+    if (isEditing || mode !== "reminder") return;
+    setRecurring(occasionId === "birthday" || occasionId === "anniversary");
+  }, [occasionId, mode, isEditing]);
+
+  // selectedTemplateId → occasionId when in reminder mode
+  useEffect(() => {
+    if (mode !== "reminder" || isEditing) return;
+    const map: Record<string, OccasionId> = {
+      birthday: "birthday",
+      anniversary: "anniversary",
+      holiday: "holiday",
+    };
+    setOccasionId(map[selectedTemplateId] ?? "other");
+  }, [selectedTemplateId, mode, isEditing]);
+
+  // Sync occasion → template when switching to celebration, for a sensible default
+  useEffect(() => {
+    if (mode !== "celebration") return;
+    const map: Record<OccasionId, string> = {
+      birthday: "birthday",
+      anniversary: "celebration",
+      holiday: "holiday",
+      other: "celebration",
+    };
+    setSelectedTemplateId(map[occasionId]);
+  }, [mode, occasionId]);
+
   const date = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
   const resolvedTitle = title.trim() || suggestedTitle;
   const isDateToday = month === now.getMonth() + 1 && day === now.getDate() && year === now.getFullYear();
 
+  // "Other" with no typed title has no fallback → require user input
+  const reminderNeedsTitle = (mode === "reminder" || isEditing) && occasionId === "other" && !title.trim();
+
   const handleSubmit = async (createDrop: boolean) => {
+    if (reminderNeedsTitle) { setShowValidation(true); return; }
     if (!resolvedTitle.trim()) { setShowValidation(true); return; }
 
     const event: Celebration = {
@@ -115,9 +177,10 @@ export function QuickCreateFlow({ initialEvent, profileName, onModeChange, isSav
     { value: 7, label: t.quickCreateNotify1Week },
   ];
 
-  // ── Template picker (shared visual, label varies by tab) ──────────────────
+  // ── Template picker (balloon carousel — used by both reminder and celebration tabs) ──
+  // Pass tplList to override the default celebration templates.
 
-  const templatePicker = (label: string) => (
+  const templatePicker = (label: string, tplList = templates) => (
     <div>
       {isEditing ? (
         <button
@@ -133,7 +196,7 @@ export function QuickCreateFlow({ initialEvent, profileName, onModeChange, isSav
 
       {showTemplates && (
         <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 snap-x snap-mandatory">
-          {templates.map((tpl) => {
+          {tplList.map((tpl) => {
             const active = tpl.id === selectedTemplateId;
             const tplLabel = lang === "es" ? tpl.nameEs : tpl.name;
             return (
@@ -217,11 +280,11 @@ export function QuickCreateFlow({ initialEvent, profileName, onModeChange, isSav
         type="text"
         value={title}
         onChange={(e) => { setTitle(e.target.value); if (showValidation) setShowValidation(false); }}
-        placeholder={suggestedTitle}
-        className={`input text-sm max-w-full ${showValidation && !resolvedTitle.trim() ? "border-red-400" : ""}`}
+        placeholder={suggestedTitle || undefined}
+        className={`input text-sm max-w-full ${showValidation && reminderNeedsTitle ? "border-red-400" : ""}`}
         maxLength={72}
       />
-      {showValidation && !resolvedTitle.trim() && (
+      {showValidation && reminderNeedsTitle && (
         <p className="text-xs text-red-500 mt-1">{t.quickCreateTitleRequired}</p>
       )}
       {!title.trim() && !showValidation && suggestedTitle && (
@@ -286,8 +349,8 @@ export function QuickCreateFlow({ initialEvent, profileName, onModeChange, isSav
           ════════════════════════════════════════ */}
       {(mode === "reminder" || isEditing) && (
         <>
-          {/* 1. Type */}
-          {templatePicker(t.quickCreateReminderCategoryLabel)}
+          {/* 1. Balloon carousel — birthday / anniversary / holiday / other */}
+          {!isEditing && templatePicker(t.quickCreateReminderCategoryLabel, reminderTemplates)}
 
           {/* 2. Event date */}
           {datePicker(isEditing ? t.quickCreateDateLabel : t.quickCreateReminderDateLabel)}

@@ -60,15 +60,16 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
               },
               success: {
                 style: {
-                  background: "linear-gradient(135deg, #b07a1b 0%, #d7a23a 45%, #9c6d16 100%)",
-                  color: "#5c1a8a",
-                  border: "1px solid rgba(255, 245, 215, 0.8)",
-                  boxShadow: "0 10px 22px rgba(128, 87, 18, 0.32), inset 0 1px 0 rgba(255,255,255,0.45)",
+                  background: "linear-gradient(135deg, rgba(214,178,58,0.82) 0%, rgba(232,198,72,0.86) 50%, rgba(202,163,42,0.82) 100%)",
+                  backdropFilter: "blur(10px)",
+                  color: "#3a2200",
+                  border: "1px solid rgba(214,178,58,0.45)",
+                  boxShadow: "0 4px 20px rgba(150,115,15,0.18), inset 0 1px 0 rgba(255,255,255,0.40)",
                   fontWeight: 700,
                 },
                 iconTheme: {
                   primary: "#5c1a8a",
-                  secondary: "#f8ebc8",
+                  secondary: "rgba(255,248,220,0.9)",
                 },
               },
             }}

@@ -757,7 +757,7 @@ export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewPr
                           className="text-[9px] font-bold tracking-wide px-1.5 py-0.5 rounded-full shrink-0"
                           style={{
                             background: "rgba(201,154,46,0.20)",
-                            color: "#9c6d16",
+                            color: "#b08830",
                             border: "1px solid rgba(201,154,46,0.40)",
                           }}
                         >

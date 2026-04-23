@@ -4,14 +4,39 @@
  */
 import { useState, useEffect, useRef, useMemo } from "react";
 import type { CreateDropParams } from "@/hooks/useCreateDrop";
-import type { Address, CelebrationType } from "@/types";
+import { CelebrationType, type Address } from "@/types";
 import { HOLIDAY_DROP_TEMPLATES, generateHolidaySVG, holidayTemplateToFile } from "@/constants/dropTemplates";
+import { GLOBAL_HOLIDAYS } from "@/constants/celebrationTypes";
 import { useSocialContacts } from "@/hooks/useSocialContacts";
 import { useLSP3Name } from "@/hooks/useLSP3Name";
 import { Avatar } from "@/components/Avatar";
 import { useT } from "@/hooks/useT";
 import { useAppStore } from "@/store/useAppStore";
 import { getMonthNames } from "@/lib/monthNames";
+
+/**
+ * Returns the path to a static /public/holidays image for the given drop source,
+ * or null if no specific image is registered for it.
+ */
+function getHolidayStaticImagePath(sourceId: string, celebType: CelebrationType): string | null {
+  if (celebType === CelebrationType.UPAnniversary) return "/holidays/up-anniversary.png";
+  if (celebType === CelebrationType.GlobalHoliday && sourceId.startsWith("event:")) {
+    const holidayId = sourceId.replace("event:", "");
+    return GLOBAL_HOLIDAYS.find((h) => h.id === holidayId)?.image ?? null;
+  }
+  return null;
+}
+
+async function fetchStaticImageFile(path: string): Promise<File | undefined> {
+  try {
+    const res = await fetch(path, { cache: "no-store" });
+    if (!res.ok) return undefined;
+    const blob = await res.blob();
+    return new File([blob], path.split("/").pop() ?? "image.png", { type: blob.type || "image/png" });
+  } catch {
+    return undefined;
+  }
+}
 
 const TEMPLATE_ASSET_PATHS: Partial<Record<string, string>> = {
   anniversary: "/templates/anniversary-balloon.png",
@@ -336,6 +361,20 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
     return () => URL.revokeObjectURL(url);
   }, [imageFile]);
 
+  // On mount: try to load a static holiday/anniversary image for the initial source.
+  // This overrides the generated SVG template image with the real curated artwork.
+  useEffect(() => {
+    if (!initialSourceId) return;
+    const src = sourceOptions.find((o) => o.id === initialSourceId);
+    if (!src) return;
+    const path = getHolidayStaticImagePath(initialSourceId, src.celebrationType);
+    if (!path) return;
+    void (async () => {
+      const file = await fetchStaticImageFile(path);
+      if (file) setImageFile(await normalizeToSquarePng(file));
+    })();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -420,6 +459,13 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
       await applyHolidayTemplate(nextSource.templateId);
       if (nextSource.suggestedName) setName(nextSource.suggestedName);
       if (nextSource.suggestedDescription) setDesc(nextSource.suggestedDescription);
+    }
+
+    // Override with the curated static image when available (holiday-specific or anniversary)
+    const staticPath = getHolidayStaticImagePath(sourceId, nextSource.celebrationType);
+    if (staticPath) {
+      const file = await fetchStaticImageFile(staticPath);
+      if (file) setImageFile(await normalizeToSquarePng(file));
     }
   }
 
