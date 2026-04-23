@@ -45,6 +45,7 @@ const TEMPLATE_ASSET_PATHS: Partial<Record<string, string>> = {
   graduation: "/templates/graduation-balloon.png",
   holiday: "/templates/holiday-balloon.png",
   birthday: "/templates/birthday-balloon.png",
+  other: "/templates/other-balloon.png",
 };
 
 export interface DropFormPrefill {
@@ -360,6 +361,18 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
     setImagePreview(url);
     return () => URL.revokeObjectURL(url);
   }, [imageFile]);
+
+  // On mount: replace the initial SVG (from holidayTemplateToFile) with the PNG from
+  // TEMPLATE_ASSET_PATHS so the badge preview matches the carousel thumbnail.
+  useEffect(() => {
+    if (!initialTemplateId) return;
+    const src = TEMPLATE_ASSET_PATHS[initialTemplateId];
+    if (!src) return;
+    void (async () => {
+      const file = await templateAssetToFile(initialTemplateId);
+      if (file) setImageFile(await normalizeToSquarePng(file));
+    })();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // On mount: try to load a static holiday/anniversary image for the initial source.
   // This overrides the generated SVG template image with the real curated artwork.

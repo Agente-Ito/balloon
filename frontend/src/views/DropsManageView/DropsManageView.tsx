@@ -135,10 +135,16 @@ export function DropsManageView({ walletClient, chainId }: DropsManageViewProps)
   const { data: allSeries } = useAllSeries();
   const openSeries = (allSeries ?? []).filter((s) => s.submissionOpen);
   const { data: registryOwner } = useRegistryOwner(chainId);
+  const extraAdmins = (import.meta.env.VITE_ADMIN_ADDRESSES ?? "")
+    .split(",")
+    .map((a: string) => a.trim().toLowerCase())
+    .filter(Boolean);
   const isAdmin =
     !!connectedAccount &&
-    !!registryOwner &&
-    connectedAccount.toLowerCase() === registryOwner;
+    (
+      (!!registryOwner && connectedAccount.toLowerCase() === registryOwner) ||
+      extraAdmins.includes(connectedAccount.toLowerCase())
+    );
 
   const [addingDrop, setAddingDrop] = useState(false);
 
