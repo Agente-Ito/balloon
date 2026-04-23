@@ -12,6 +12,7 @@ import { useDrops } from "@/hooks/useDrops";
 import { useLSP3Name } from "@/hooks/useLSP3Name";
 import { useT } from "@/hooks/useT";
 import { useAllSeries } from "@/hooks/useSeries";
+import { useRegistryOwner } from "@/hooks/useRegistryOwner";
 import { Avatar } from "@/components/Avatar";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
@@ -133,6 +134,11 @@ export function DropsManageView({ walletClient, chainId }: DropsManageViewProps)
   const t = useT();
   const { data: allSeries } = useAllSeries();
   const openSeries = (allSeries ?? []).filter((s) => s.submissionOpen);
+  const { data: registryOwner } = useRegistryOwner(chainId);
+  const isAdmin =
+    !!connectedAccount &&
+    !!registryOwner &&
+    connectedAccount.toLowerCase() === registryOwner;
 
   const [addingDrop, setAddingDrop] = useState(false);
 
@@ -443,6 +449,24 @@ export function DropsManageView({ walletClient, chainId }: DropsManageViewProps)
               </section>
             )}
           </>
+        )}
+
+        {/* ── Admin ──────────────────────────────────────────────────────────── */}
+        {isAdmin && (
+          <section>
+            <h2 className="title-premium text-xs uppercase mb-3">{t.dropsAdminSection}</h2>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={() => {
+                  setPendingDropCreate(true);
+                  setView("drops-manage");
+                }}
+                className="btn-primary text-xs"
+              >
+                {t.dropsAdminCreateGlobal}
+              </button>
+            </div>
+          </section>
         )}
       </div>
     </div>

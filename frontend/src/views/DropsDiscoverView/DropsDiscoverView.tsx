@@ -7,20 +7,18 @@ import { useSocialCalendar } from "@/hooks/useSocialCalendar";
 import { useSocialContacts } from "@/hooks/useSocialContacts";
 import { useAllSeries } from "@/hooks/useSeries";
 import { useFestivities } from "@/hooks/useFestivities";
-import { useRegistryOwner } from "@/hooks/useRegistryOwner";
+import { useProfileData } from "@/hooks/useUniversalProfile";
 import { useUPCreationDate } from "@/hooks/useUPCreationDate";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { ViewToolbar } from "@/components/ViewToolbar";
 import { Avatar } from "@/components/Avatar";
 import { LanguageToggle } from "@/components/LanguageToggle";
-import { MintBadgeModal } from "@/components/MintBadgeModal";
 import { useT } from "@/hooks/useT";
 import { useLSP3Name } from "@/hooks/useLSP3Name";
 import { getLocalizedDropEligibilityReason } from "@/lib/dropEligibilityReason";
 import { getMonthNames } from "@/lib/monthNames";
 import { BulkGreetingModal } from "./BulkGreetingModal";
-import { CelebrationType } from "@/types";
-import type { IndexedDrop, Address } from "@/types";
+import type { IndexedDrop, Address, SocialProfile } from "@/types";
 import type { WalletClient } from "viem";
 
 interface DropsDiscoverViewProps {
@@ -28,14 +26,58 @@ interface DropsDiscoverViewProps {
   chainId: number;
 }
 
-// ── helpers ───────────────────────────────────────────────────────────────────
+// ── Date helpers ──────────────────────────────────────────────────────────────
 
-function isTodayAnniversary(created: Date): boolean {
-  const now = new Date();
-  return created.getMonth() === now.getMonth() && created.getDate() === now.getDate();
+function startOfDay(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
 }
 
-// ── DropCard ─────────────────────────────────────────────────────────────────
+function nextOccurrenceOfMMDD(month: number, day: number, todayStart: Date): Date {
+  const thisYear = new Date(todayStart.getFullYear(), month - 1, day);
+  if (thisYear >= todayStart) return thisYear;
+  return new Date(todayStart.getFullYear() + 1, month - 1, day);
+}
+
+function daysUntil(d: Date, todayStart: Date): number {
+  return Math.round((d.getTime() - todayStart.getTime()) / 86400000);
+}
+
+function parseBirthdayMMDD(birthday: string): { month: number; day: number } | null {
+  if (birthday.startsWith("--")) {
+    const month = parseInt(birthday.slice(2, 4), 10);
+    const day = parseInt(birthday.slice(5, 7), 10);
+    if (isNaN(month) || isNaN(day)) return null;
+    return { month, day };
+  }
+  const parts = birthday.split("-");
+  if (parts.length < 3) return null;
+  const month = parseInt(parts[1], 10);
+  const day = parseInt(parts[2], 10);
+  if (isNaN(month) || isNaN(day)) return null;
+  return { month, day };
+}
+
+function getLocalizedFestivityName(name: string, t: ReturnType<typeof useT>): string {
+  const map: Record<string, string> = {
+    "New Year":          t.holidayNewYear,
+    "Happy New Year":    t.holidayNewYear,
+    "Valentine's Day":   t.holidayValentines,
+    "Easter":            t.holidayEaster,
+    "Happy Easter":      t.holidayEaster,
+    "Halloween":         t.holidayHalloween,
+    "Happy Halloween":   t.holidayHalloween,
+    "Christmas":         t.holidayChristmas,
+    "Merry Christmas":   t.holidayChristmas,
+    "New Year's Eve":    t.holidayNewYearEve,
+    "Diwali":            t.holidayDiwali,
+    "Happy Diwali":      t.holidayDiwali,
+    "Hanukkah":          t.holidayHanukkah,
+    "Happy Hanukkah":    t.holidayHanukkah,
+  };
+  return map[name] ?? name;
+}
+
+// ── DropCard ──────────────────────────────────────────────────────────────────
 
 function DropCard({
   drop,
@@ -94,12 +136,7 @@ function DropCard({
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-sm truncate">{drop.name}</p>
           <div className="flex items-center gap-2 mt-1">
-            <Avatar
-              address={drop.host}
-              size={20}
-              chainId={chainId}
-              className="ring-1 ring-white/20"
-            />
+            <Avatar address={drop.host} size={20} chainId={chainId} className="ring-1 ring-white/20" />
             <span className="text-xs text-lukso-purple/90 truncate font-medium">
               {hostName ?? `${drop.host.slice(0, 6)}…${drop.host.slice(-4)}`}
             </span>
@@ -124,9 +161,7 @@ function DropCard({
         <span>{supplyLabel}</span>
         {drop.requireFollow && <span>· {t.dropFollowRequired}</span>}
         {drop.minFollowers > 0 && (
-          <span>
-            · {drop.minFollowers}+ {t.dropFollowerReq}
-          </span>
+          <span>· {drop.minFollowers}+ {t.dropFollowerReq}</span>
         )}
         {drop.requiredLSP7.length > 0 && <span>· LSP7 gate</span>}
         {drop.requiredLSP8.length > 0 && <span>· LSP8 gate</span>}
@@ -162,85 +197,153 @@ function DropCard({
       )}
       {claimMutation.isError && (
         <p className="text-xs text-red-400 text-center">
-          {claimMutation.error instanceof Error
-            ? claimMutation.error.message
-            : t.dropClaimFailed}
+          {claimMutation.error instanceof Error ? claimMutation.error.message : t.dropClaimFailed}
         </p>
       )}
     </div>
   );
 }
 
-// ── AnniversarySection ───────────────────────────────────────────────────────
+// ── UpcomingSection ───────────────────────────────────────────────────────────
 
-function AnniversarySection({
-  address,
-  walletClient,
-  chainId,
-}: {
-  address: Address;
-  walletClient?: WalletClient;
-  chainId: number;
-}) {
+interface UpcomingItem {
+  key: string;
+  label: string;
+  dateStr: string;
+  daysAway: number;
+  color: string;
+}
+
+function UpcomingSection({ address, chainId }: { address: Address; chainId: number }) {
   const t = useT();
-  const [showMint, setShowMint] = useState(false);
+  const monthNames = useMemo(() => getMonthNames(t), [t]);
+  const [collapsed, setCollapsed] = useState(false);
+  const { data: profileData } = useProfileData(address, chainId);
   const { data: createdAt } = useUPCreationDate(address, chainId);
 
-  if (!createdAt || !isTodayAnniversary(createdAt)) return null;
+  const items = useMemo((): UpcomingItem[] => {
+    const today = startOfDay(new Date());
+    const result: UpcomingItem[] = [];
 
-  const year = new Date().getFullYear();
-  const upYear = createdAt.getFullYear();
-  const anniversaryNumber = year - upYear;
+    // Birthday
+    if (profileData?.birthday) {
+      const parsed = parseBirthdayMMDD(profileData.birthday);
+      if (parsed) {
+        const next = nextOccurrenceOfMMDD(parsed.month, parsed.day, today);
+        result.push({
+          key: "birthday",
+          label: t.dropsBirthdayLabel,
+          dateStr: `${next.getDate()} ${monthNames[next.getMonth()]}`,
+          daysAway: daysUntil(next, today),
+          color: "#E84393",
+        });
+      }
+    }
+
+    // UP Anniversary — only show if at least 1 year old
+    const upCreated =
+      createdAt ??
+      (profileData?.profileCreatedAt ? new Date(profileData.profileCreatedAt * 1000) : null);
+    if (upCreated) {
+      const next = nextOccurrenceOfMMDD(upCreated.getMonth() + 1, upCreated.getDate(), today);
+      if (next.getFullYear() > upCreated.getFullYear()) {
+        result.push({
+          key: "up-anniv",
+          label: t.dropsUPAnnivLabel,
+          dateStr: `${next.getDate()} ${monthNames[next.getMonth()]}`,
+          daysAway: daysUntil(next, today),
+          color: "#6A1B9A",
+        });
+      }
+    }
+
+    // Custom events (up to 2 more)
+    if (profileData?.events) {
+      for (const ev of profileData.events) {
+        if (result.length >= 4) break;
+        let next: Date | null = null;
+        const parts = ev.date.split("-");
+
+        if (ev.recurring) {
+          const month = parts.length === 3 ? parseInt(parts[1], 10) : parseInt(parts[0], 10);
+          const day = parts.length === 3 ? parseInt(parts[2], 10) : parseInt(parts[1], 10);
+          if (!isNaN(month) && !isNaN(day)) {
+            next = nextOccurrenceOfMMDD(month, day, today);
+          }
+        } else if (parts.length === 3) {
+          const evDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+          if (daysUntil(evDate, today) >= 0) next = evDate;
+        }
+
+        if (next) {
+          result.push({
+            key: ev.id,
+            label: ev.title,
+            dateStr: `${next.getDate()} ${monthNames[next.getMonth()]}`,
+            daysAway: daysUntil(next, today),
+            color: "#C8932A",
+          });
+        }
+      }
+    }
+
+    return result.sort((a, b) => a.daysAway - b.daysAway).slice(0, 4);
+  }, [profileData, createdAt, monthNames, t]);
+
+  if (items.length === 0) return null;
+
+  function daysLabel(n: number): string {
+    if (n === 0) return t.quickCreateEventToday;
+    if (n === 1) return t.dropsTomorrowLabel;
+    return t.dropsInDays.replace("{n}", String(n));
+  }
 
   return (
-    <>
-      <section>
-        <h2 className="title-premium text-xs uppercase mb-3">{t.upAnniversaryTitle}</h2>
-        <div
-          className="rounded-2xl p-4 flex items-center gap-4"
-          style={{
-            background:
-              "linear-gradient(135deg, rgba(106,27,154,0.22) 0%, rgba(233,30,99,0.12) 100%)",
-            border: "1px solid rgba(106,27,154,0.35)",
-          }}
+    <section>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="title-premium text-xs uppercase">{t.dropsMyUpcoming}</h2>
+        <button
+          onClick={() => setCollapsed((v) => !v)}
+          className="text-xs text-white/30 hover:text-white/50 transition-colors px-1 leading-none"
+          aria-expanded={!collapsed}
         >
-          <div className="w-10 h-10 rounded-2xl bg-lukso-purple/30 flex items-center justify-center shrink-0">
-            <span className="w-5 h-5 rounded-full bg-lukso-purple/60" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="font-semibold text-sm">
-              {anniversaryNumber > 0
-                ? `${anniversaryNumber} ${anniversaryNumber === 1 ? t.anniversaryTodayUnit : t.anniversaryTodayUnit2} ${t.upAnniversaryOnLukso}`
-                : t.upAnniversaryLive}
-            </p>
-            <p className="text-xs text-white/40 mt-0.5">
-              {t.anniversaryMintBadge} — {year}
-            </p>
-          </div>
-          {walletClient ? (
-            <button
-              onClick={() => setShowMint(true)}
-              className="btn-primary text-xs shrink-0"
+          {collapsed ? "+" : "−"}
+        </button>
+      </div>
+      {!collapsed && (
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {items.map((item) => (
+            <div
+              key={item.key}
+              className="flex-shrink-0 rounded-xl p-3 flex flex-col gap-1 min-w-[112px] max-w-[148px]"
+              style={{
+                background: "rgba(245,240,225,0.55)",
+                border: `1px solid ${item.color}28`,
+              }}
             >
-              {t.anniversaryMintBadge}
-            </button>
-          ) : (
-            <span className="text-xs text-white/30">{t.anniversaryAlreadyMinted}</span>
-          )}
+              <div className="flex items-center gap-1.5">
+                <span
+                  className="w-1.5 h-1.5 rounded-sm flex-shrink-0"
+                  style={{ background: item.color, opacity: 0.8 }}
+                />
+                <span
+                  className="text-[10px] font-semibold uppercase tracking-wide truncate"
+                  style={{ color: item.color }}
+                >
+                  {item.label}
+                </span>
+              </div>
+              <p className="text-[12px] font-semibold" style={{ color: "#3d2c1e" }}>
+                {item.dateStr}
+              </p>
+              <p className="text-[10px]" style={{ color: "#7a5c2e" }}>
+                {daysLabel(item.daysAway)}
+              </p>
+            </div>
+          ))}
         </div>
-      </section>
-
-      {showMint && walletClient && (
-        <MintBadgeModal
-          onClose={() => setShowMint(false)}
-          recipientAddress={address}
-          celebrationType={CelebrationType.UPAnniversary}
-          year={year}
-          walletClient={walletClient}
-          chainId={chainId}
-        />
       )}
-    </>
+    </section>
   );
 }
 
@@ -262,13 +365,21 @@ function GlobalSection({
   onCreateGlobal: () => void;
 }) {
   const t = useT();
+  const monthNames = useMemo(() => getMonthNames(t), [t]);
   const { data: festivities = [], isLoading } = useFestivities(chainId);
 
-  const now = new Date();
-  const currentMonth = now.getMonth() + 1;
-  const currentDay = now.getDate();
-
-  const thisMonthFests = festivities.filter((f) => f.month === currentMonth);
+  // Show next 3 upcoming festivities regardless of month
+  const upcomingFests = useMemo(() => {
+    const today = startOfDay(new Date());
+    return festivities
+      .map((f) => ({
+        ...f,
+        nextDate: nextOccurrenceOfMMDD(f.month, f.day, today),
+        daysAway: daysUntil(nextOccurrenceOfMMDD(f.month, f.day, today), today),
+      }))
+      .sort((a, b) => a.daysAway - b.daysAway)
+      .slice(0, 3);
+  }, [festivities]);
 
   if (isLoading) {
     return (
@@ -281,23 +392,20 @@ function GlobalSection({
     );
   }
 
-  if (thisMonthFests.length === 0) return null;
+  if (upcomingFests.length === 0) return null;
 
   return (
     <section>
       <h2 className="title-premium text-xs uppercase mb-3">{t.dropsGlobal}</h2>
       <div className="flex flex-col gap-3">
-        {thisMonthFests.map((fest) => {
+        {upcomingFests.map((fest) => {
           const matchingDrops = allDrops.filter(
             (d) =>
               d.month === fest.month &&
               d.day === fest.day &&
               d.celebrationType === "global_holiday"
           );
-          const isPast =
-            fest.month < currentMonth ||
-            (fest.month === currentMonth && fest.day < currentDay);
-          const isToday = fest.month === currentMonth && fest.day === currentDay;
+          const isToday = fest.daysAway === 0;
 
           if (matchingDrops.length > 0) {
             return matchingDrops.map((drop) => (
@@ -319,31 +427,27 @@ function GlobalSection({
               style={{
                 background: "rgba(255,255,255,0.03)",
                 border: "1px solid rgba(255,255,255,0.06)",
-                opacity: isPast && !isToday ? 0.5 : 1,
               }}
             >
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm">{fest.name}</p>
+                <p className="font-semibold text-sm">{getLocalizedFestivityName(fest.name, t)}</p>
                 <p className="text-xs text-white/35 mt-0.5">
-                  {String(fest.month).padStart(2, "0")}-{String(fest.day).padStart(2, "0")}
+                  {fest.nextDate.getDate()} {monthNames[fest.nextDate.getMonth()]}
                   {isToday && (
-                    <span className="ml-1 text-amber-400 font-medium"> · Today!</span>
+                    <span className="ml-1 text-amber-400 font-medium"> · {t.quickCreateEventToday}</span>
+                  )}
+                  {!isToday && fest.daysAway <= 14 && (
+                    <span className="ml-1 text-amber-400/70"> · {fest.daysAway}d</span>
                   )}
                 </p>
                 <p className="text-xs text-white/25 mt-1">{t.dropsGlobalNoInsignia}</p>
               </div>
               {viewer && (
                 <div className="flex flex-col gap-1.5 shrink-0">
-                  <button
-                    onClick={onGreetNetwork}
-                    className="btn-ghost text-[11px] py-1 px-2.5"
-                  >
+                  <button onClick={onGreetNetwork} className="btn-ghost text-[11px] py-1 px-2.5">
                     {t.dropsGlobalGreetCta}
                   </button>
-                  <button
-                    onClick={onCreateGlobal}
-                    className="btn-primary text-[11px] py-1 px-2.5"
-                  >
+                  <button onClick={onCreateGlobal} className="btn-primary text-[11px] py-1 px-2.5">
                     {t.dropsGlobalCreateCta}
                   </button>
                 </div>
@@ -356,66 +460,62 @@ function GlobalSection({
   );
 }
 
-// ── AdminSection ─────────────────────────────────────────────────────────────
+// ── SocialBirthdayChip ────────────────────────────────────────────────────────
 
-function AdminSection() {
-  const t = useT();
-  const { setView, setPendingDropCreate } = useAppStore();
-  const [showForm, setShowForm] = useState(false);
+function SocialBirthdayChip({
+  profile,
+  chainId,
+  daysAway,
+  dateStr,
+  todayLabel,
+  tomorrowLabel,
+}: {
+  profile: SocialProfile;
+  chainId: number;
+  daysAway: number;
+  dateStr: string;
+  todayLabel: string;
+  tomorrowLabel: string;
+}) {
+  const { data: name } = useLSP3Name(profile.address, chainId);
+  const displayName = name ?? `${profile.address.slice(0, 6)}…${profile.address.slice(-4)}`;
+  const dayLabel =
+    daysAway === 0 ? todayLabel : daysAway === 1 ? tomorrowLabel : `${daysAway}d`;
 
   return (
-    <section>
-      <h2 className="title-premium text-xs uppercase mb-3">{t.dropsAdminSection}</h2>
-      <div className="flex flex-col gap-2">
-        <button
-          onClick={() => setShowForm((v) => !v)}
-          className="btn-ghost text-xs text-left w-full"
-        >
-          {showForm ? "▲" : "▼"} {t.dropsAdminAddFestivity}
-        </button>
-        {showForm && (
-          <div
-            className="rounded-xl p-3 text-xs text-white/40"
-            style={{
-              background: "rgba(255,255,255,0.03)",
-              border: "1px solid rgba(255,255,255,0.06)",
-            }}
-          >
-            <p className="mb-2 text-white/50">{t.dropsAdminAddFestivity}</p>
-            <p className="italic">
-              {t.adminComingSoon}
-            </p>
-          </div>
-        )}
-        <button
-          onClick={() => { setPendingDropCreate(true); setView("drops-manage"); }}
-          className="btn-primary text-xs"
-        >
-          {t.dropsAdminCreateGlobal}
-        </button>
-      </div>
-    </section>
+    <div
+      className="flex-shrink-0 flex flex-col gap-0.5 rounded-xl px-3 py-2 min-w-[120px] max-w-[148px]"
+      style={{
+        background: "rgba(245,240,225,0.55)",
+        border: "1px solid rgba(232,67,147,0.18)",
+      }}
+    >
+      <span className="text-[11px] font-medium truncate" style={{ color: "#4a3728" }}>
+        {displayName}
+      </span>
+      <span className="text-[10px]" style={{ color: "#5c3d1e" }}>
+        {dateStr}
+      </span>
+      <span className="text-[10px]" style={{ color: "#E84393CC" }}>
+        {dayLabel}
+      </span>
+    </div>
   );
 }
 
 // ── Main view ─────────────────────────────────────────────────────────────────
 
 export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewProps) {
-  const { connectedAccount, setView, setActiveSeriesId, goBack, setPendingDropCreate } = useAppStore();
+  const { connectedAccount, setView, setActiveSeriesId, goBack, setPendingDropCreate } =
+    useAppStore();
   const t = useT();
   const monthNames = useMemo(() => getMonthNames(t), [t]);
 
   const { data: socialData, isLoading: socialLoading } = useSocialCalendar(connectedAccount);
   const { data: contacts = [] } = useSocialContacts(connectedAccount);
   const { data: allSeries } = useAllSeries();
-  const { data: registryOwner } = useRegistryOwner(chainId);
-
-  const isAdmin =
-    !!connectedAccount &&
-    !!registryOwner &&
-    connectedAccount.toLowerCase() === registryOwner;
-
   const openSeries = (allSeries ?? []).filter((s) => s.submissionOpen);
+
   const followingAddresses = socialData?.drops.map((d) => d.host) ?? [];
 
   const { data: socialDrops, isLoading: socialDropsLoading } = useDrops({
@@ -437,11 +537,7 @@ export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewPr
 
   const socialDropIds = new Set((socialDrops ?? []).map((d) => d.dropId));
 
-  const ownDrops = (allDrops ?? []).filter(
-    (d) =>
-      !!connectedAccount && d.host.toLowerCase() === connectedAccount.toLowerCase()
-  );
-
+  // Community drops = active drops not from following and not own
   const communityDrops = (allDrops ?? []).filter(
     (d) =>
       !socialDropIds.has(d.dropId) &&
@@ -449,7 +545,6 @@ export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewPr
   );
 
   const isLoading = socialLoading || socialDropsLoading;
-
   const [showBulkGreet, setShowBulkGreet] = useState(false);
 
   function getRelationLabel(hostAddress: string) {
@@ -459,6 +554,24 @@ export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewPr
     if (src === "following") return t.dropRelFollowing;
     return t.dropRelFollower;
   }
+
+  // Upcoming birthdays from followed profiles (birthdayMonth > 0 = publicly shared)
+  const socialBirthdays = useMemo(() => {
+    const today = startOfDay(new Date());
+    return (socialData?.profiles ?? [])
+      .filter((p) => p.birthdayMonth > 0 && p.birthdayDay > 0)
+      .map((p) => {
+        const next = nextOccurrenceOfMMDD(p.birthdayMonth, p.birthdayDay, today);
+        return {
+          profile: p,
+          next,
+          daysAway: daysUntil(next, today),
+          dateStr: `${next.getDate()} ${monthNames[next.getMonth()]}`,
+        };
+      })
+      .sort((a, b) => a.daysAway - b.daysAway)
+      .slice(0, 5);
+  }, [socialData, monthNames]);
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
@@ -494,8 +607,10 @@ export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewPr
                   }
                 }}
                 className="title-premium text-[11px] sm:text-xs px-2 sm:px-3 py-1 rounded-md transition-colors relative"
-                style={{ color: openSeries.length > 0 ? "#c99a2e" : "#C0A870", opacity: openSeries.length > 0 ? 1 : 0.55 }}
-                title={openSeries.length > 0 ? t.dropsManageTabSeries : undefined}
+                style={{
+                  color: openSeries.length > 0 ? "#c99a2e" : "#C0A870",
+                  opacity: openSeries.length > 0 ? 1 : 0.55,
+                }}
               >
                 {t.dropsManageTabSeries}
                 {openSeries.length > 0 && (
@@ -513,26 +628,25 @@ export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewPr
 
       <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-6">
 
-        {/* ── UP Anniversary badge claim ────────────────────────────────── */}
+        {/* ── Tus próximas celebraciones ──────────────────────────────────── */}
         {connectedAccount && (
-          <AnniversarySection
-            address={connectedAccount}
-            walletClient={walletClient}
-            chainId={chainId}
-          />
+          <UpcomingSection address={connectedAccount} chainId={chainId} />
         )}
 
-        {/* ── Global festivities ────────────────────────────────────────── */}
+        {/* ── Celebraciones globales ──────────────────────────────────────── */}
         <GlobalSection
           allDrops={allDrops ?? []}
           viewer={connectedAccount}
           walletClient={walletClient}
           chainId={chainId}
           onGreetNetwork={() => setShowBulkGreet(true)}
-          onCreateGlobal={() => { setPendingDropCreate(true); setView("drops-manage"); }}
+          onCreateGlobal={() => {
+            setPendingDropCreate(true);
+            setView("drops-manage");
+          }}
         />
 
-        {/* ── From following ────────────────────────────────────────────── */}
+        {/* ── De quienes sigues ────────────────────────────────────────────── */}
         {connectedAccount && (
           <section>
             <div className="flex items-center justify-between mb-3">
@@ -546,6 +660,24 @@ export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewPr
                 </button>
               )}
             </div>
+
+            {/* Upcoming birthdays from followed profiles */}
+            {socialBirthdays.length > 0 && (
+              <div className="flex gap-2 overflow-x-auto pb-2 mb-3">
+                {socialBirthdays.map(({ profile, daysAway, dateStr }) => (
+                  <SocialBirthdayChip
+                    key={profile.address}
+                    profile={profile}
+                    chainId={chainId}
+                    daysAway={daysAway}
+                    dateStr={dateStr}
+                    todayLabel={t.quickCreateEventToday}
+                    tomorrowLabel={t.dropsTomorrowLabel}
+                  />
+                ))}
+              </div>
+            )}
+
             {isLoading ? (
               <div className="flex justify-center py-6">
                 <LoadingSpinner />
@@ -553,7 +685,7 @@ export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewPr
             ) : (socialDrops ?? []).length === 0 ? (
               <p className="text-xs text-white/30 text-center py-4">{t.dropsFromFollowsEmpty}</p>
             ) : (
-              <div className="flex flex-col gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {(socialDrops ?? []).map((drop) => (
                   <DropCard
                     key={drop.dropId}
@@ -569,26 +701,7 @@ export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewPr
           </section>
         )}
 
-        {/* ── My campaigns ─────────────────────────────────────────────── */}
-        {connectedAccount && ownDrops.length > 0 && (
-          <section>
-            <h2 className="title-premium text-xs uppercase mb-3">{t.dropsMyCampaigns}</h2>
-            <div className="flex flex-col gap-3">
-              {ownDrops.map((drop) => (
-                <DropCard
-                  key={drop.dropId}
-                  drop={drop}
-                  viewer={connectedAccount}
-                  walletClient={walletClient}
-                  chainId={chainId}
-                  relationLabel={t.dropRelOwn}
-                />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* ── Community discover ────────────────────────────────────────── */}
+        {/* ── Descubrir ────────────────────────────────────────────────────── */}
         <section>
           <h2 className="title-premium text-xs uppercase mb-3">{t.dropsDiscover}</h2>
           {allDropsLoading ? (
@@ -598,7 +711,7 @@ export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewPr
           ) : communityDrops.length === 0 ? (
             <p className="text-xs text-white/30 text-center py-4">{t.dropsDiscoverEmpty}</p>
           ) : (
-            <div className="flex flex-col gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {communityDrops.map((drop) => (
                 <DropCard
                   key={drop.dropId}
@@ -613,95 +726,58 @@ export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewPr
           )}
         </section>
 
-        {/* ── Community art series ─────────────────────────────────────── */}
+        {/* ── Convocatoria ──────────────────────────────────────────────────── */}
         {openSeries.length > 0 && (
-          <section
-            className="rounded-2xl p-4 flex flex-col gap-3"
-            style={{
-              background: "linear-gradient(135deg, #2d1b4e 0%, #1e1540 60%, #2a1a5e 100%)",
-              border: "1px solid rgba(156,78,219,0.30)",
-              boxShadow: "0 4px 24px rgba(106,27,154,0.14)",
-            }}
-          >
-            {/* Header */}
-            <div className="flex items-start gap-3">
-              <div
-                className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
-                style={{ background: "rgba(251,191,36,0.18)", border: "1px solid rgba(251,191,36,0.35)" }}
-              >
-                {/* palette icon */}
-                <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                  <circle cx="10" cy="10" r="8" stroke="rgb(251,191,36)" strokeWidth="1.4"/>
-                  <circle cx="7" cy="9" r="1.5" fill="rgb(251,191,36)"/>
-                  <circle cx="10" cy="7" r="1.5" fill="rgba(156,78,219,0.9)"/>
-                  <circle cx="13" cy="9" r="1.5" fill="rgba(255,100,100,0.85)"/>
-                  <circle cx="10" cy="12.5" r="1.5" fill="rgba(100,220,150,0.85)"/>
-                </svg>
-              </div>
-              <div className="min-w-0">
-                <h2 className="text-sm font-semibold leading-snug" style={{ color: "#f5e9c8", fontFamily: "'Poppins', system-ui" }}>
-                  {t.communityBadgeArtTitle}
-                </h2>
-                <p className="text-xs mt-0.5 leading-snug" style={{ color: "rgba(245,233,200,0.60)" }}>
-                  {t.communityBadgeArtSub}
-                </p>
-              </div>
-            </div>
-
-            {/* Series cards */}
-            <div className="flex flex-col gap-2">
-              {openSeries.map((s) => (
-                <button
-                  key={s.id}
-                  onClick={() => {
-                    setActiveSeriesId(s.id);
-                    setView("series");
-                  }}
-                  className="w-full text-left flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors"
-                  style={{
-                    background: "rgba(255,255,255,0.06)",
-                    border: "1px solid rgba(255,255,255,0.10)",
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.10)")}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
-                >
-                  {/* Art placeholder thumbnail */}
-                  <div
-                    className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden"
-                    style={{ background: "rgba(251,191,36,0.14)", border: "1px solid rgba(251,191,36,0.28)" }}
+          <section>
+            <h2 className="title-premium text-xs uppercase mb-3">{t.communityBadgeArtTitle}</h2>
+            <div
+              className="rounded-2xl p-4 flex flex-col gap-3"
+              style={{
+                background: "rgba(201,154,46,0.07)",
+                border: "1px solid rgba(201,154,46,0.22)",
+              }}
+            >
+              <p className="text-xs" style={{ color: "#7a5c2e" }}>
+                {t.communityBadgeArtSub}
+              </p>
+              <div className="flex flex-col gap-2">
+                {openSeries.map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => {
+                      setActiveSeriesId(s.id);
+                      setView("series");
+                    }}
+                    className="card w-full text-left flex items-center gap-3 transition-shadow hover:shadow-sm"
                   >
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                      <rect x="2" y="2" width="12" height="12" rx="2" stroke="rgba(251,191,36,0.7)" strokeWidth="1.2"/>
-                      <path d="M2 11l3-3 2 2 3-4 4 5" stroke="rgba(251,191,36,0.55)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 mb-0.5">
-                      <p className="text-sm font-medium truncate" style={{ color: "#f5e9c8" }}>{s.name}</p>
-                      <span
-                        className="text-[9px] font-bold tracking-wide px-1.5 py-0.5 rounded-full shrink-0"
-                        style={{ background: "rgba(251,191,36,0.25)", color: "rgb(251,191,36)", border: "1px solid rgba(251,191,36,0.45)" }}
-                      >
-                        {t.seriesOpenPill}
-                      </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <p className="text-sm font-medium truncate">{s.name}</p>
+                        <span
+                          className="text-[9px] font-bold tracking-wide px-1.5 py-0.5 rounded-full shrink-0"
+                          style={{
+                            background: "rgba(201,154,46,0.20)",
+                            color: "#9c6d16",
+                            border: "1px solid rgba(201,154,46,0.40)",
+                          }}
+                        >
+                          {t.seriesOpenPill}
+                        </span>
+                      </div>
+                      <p className="text-xs text-white/40">
+                        {monthNames[(s.month ?? 1) - 1]} {s.day} · {t.seriesVoteLabel}
+                      </p>
                     </div>
-                    <p className="text-[11px]" style={{ color: "rgba(245,233,200,0.50)" }}>
-                      {monthNames[(s.month ?? 1) - 1]} {s.day} · {t.seriesVoteLabel}
-                    </p>
-                  </div>
-                  <span className="text-sm shrink-0" style={{ color: "rgba(245,233,200,0.35)" }}>›</span>
-                </button>
-              ))}
+                    <span className="text-white/30 shrink-0">›</span>
+                  </button>
+                ))}
+              </div>
             </div>
           </section>
         )}
 
-        {/* ── Admin section ─────────────────────────────────────────────── */}
-        {isAdmin && <AdminSection />}
       </div>
 
-      {/* Bulk greeting wizard */}
       {showBulkGreet && connectedAccount && walletClient && (
         <BulkGreetingModal
           onClose={() => setShowBulkGreet(false)}

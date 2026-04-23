@@ -4,23 +4,30 @@
  * Artists submit image proposals; any connected UP address can cast one vote
  * per series. The submission with the most votes becomes the official badge image.
  */
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { format, fromUnixTime } from "date-fns";
 import { useAppStore } from "@/store/useAppStore";
-import { useSeriesById, useSeriesSubmissions, useCastVote, useRemoveVote, useSubmitArt } from "@/hooks/useSeries";
+import {
+  useSeriesById,
+  useSeriesSubmissions,
+  useCastVote,
+  useRemoveVote,
+  useSubmitArt,
+} from "@/hooks/useSeries";
 import { useLSP3Name } from "@/hooks/useLSP3Name";
 import { Avatar } from "@/components/Avatar";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { ViewToolbar } from "@/components/ViewToolbar";
 import { uploadFileToIPFS } from "@/lib/ipfs";
+import { getMonthNames } from "@/lib/monthNames";
 import { useT } from "@/hooks/useT";
 import toast from "react-hot-toast";
 import type { Address, SeriesSubmission } from "@/types";
 import type { WalletClient } from "viem";
 
-const MONTH_NAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-const IPFS_GATEWAY = (import.meta.env.VITE_PINATA_GATEWAY as string | undefined) ?? "https://gateway.pinata.cloud";
+const IPFS_GATEWAY =
+  (import.meta.env.VITE_PINATA_GATEWAY as string | undefined) ?? "https://gateway.pinata.cloud";
 
 function resolveImage(url: string): string {
   if (url.startsWith("ipfs://")) return `${IPFS_GATEWAY}/ipfs/${url.slice(7)}`;
@@ -51,32 +58,47 @@ function SubmissionCard({
   seriesId: string;
   chainId: number;
 }) {
+  const t = useT();
   const castVote = useCastVote(seriesId);
   const removeVote = useRemoveVote(seriesId);
 
   const handleVote = async () => {
-    if (!viewer) { toast.error("Connect your UP to vote"); return; }
-    if (!walletClient) { toast.error("No wallet connected"); return; }
+    if (!viewer) { toast.error(t.seriesConnectToVote); return; }
+    if (!walletClient) { toast.error(t.seriesNoWallet); return; }
     try {
       if (submission.votedByViewer) {
         await removeVote.mutateAsync(viewer);
-        toast.success("Vote removed");
+        toast.success(t.seriesVoted);
       } else {
         await castVote.mutateAsync({ submissionId: submission.id, voter: viewer });
-        toast.success("Vote cast! 🎨");
+        toast.success(t.seriesVoted);
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message.slice(0, 80) : "Failed");
+      toast.error(err instanceof Error ? err.message.slice(0, 80) : t.dropClaimFailed);
     }
   };
 
   const isPending = castVote.isPending || removeVote.isPending;
+  const voteCountLabel = `${submission.voteCount} ${
+    submission.voteCount === 1 ? t.seriesVoteSingular : t.seriesVotePlural
+  }`;
 
   return (
-    <div className={`card flex flex-col gap-3 relative ${isLeading ? "border-lukso-purple/50 bg-lukso-purple/5" : ""}`}>
+    <div
+      className={`card flex flex-col gap-3 relative ${
+        isLeading ? "border-amber-400/30 bg-amber-400/5" : ""
+      }`}
+    >
       {isLeading && (
-        <div className="absolute -top-2 left-3 bg-lukso-purple text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-          👑 Leading
+        <div
+          className="absolute -top-2 left-3 text-[10px] font-bold px-2 py-0.5 rounded-full"
+          style={{
+            background: "rgba(201,154,46,0.22)",
+            color: "#9c6d16",
+            border: "1px solid rgba(201,154,46,0.40)",
+          }}
+        >
+          {t.seriesLeading}
         </div>
       )}
 
@@ -86,44 +108,59 @@ function SubmissionCard({
           src={resolveImage(submission.imageIPFS)}
           alt="Submission"
           className="w-full h-full object-cover"
-          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+          onError={(e) => {
+            (e.target as HTMLImageElement).style.display = "none";
+          }}
         />
       </div>
 
       {/* Artist */}
       <div className="flex items-center gap-2">
         <Avatar address={submission.artist as Address} size={20} />
-        <p className="text-xs text-[#7b6950]">
+        <p className="text-xs text-white/50">
           <ArtistName address={submission.artist} chainId={chainId} />
         </p>
       </div>
 
       {/* Message */}
       {submission.message && (
-        <p className="text-xs text-[#7b6950] italic">"{submission.message}"</p>
+        <p className="text-xs text-white/40 italic">"{submission.message}"</p>
       )}
 
       {/* Vote row */}
       <div className="flex items-center justify-between">
-        <span className="text-xs text-[#7b6950]">
-          {submission.voteCount} {submission.voteCount === 1 ? "vote" : "votes"}
-        </span>
+        <span className="text-xs text-white/40">{voteCountLabel}</span>
         {isOpen && viewer && (
           <button
             onClick={handleVote}
             disabled={isPending}
-            className={`text-xs px-3 py-1 rounded-lg font-semibold transition-colors ${
+            className="text-xs px-3 py-1 rounded-lg font-semibold transition-colors"
+            style={
               submission.votedByViewer
-                ? "bg-lukso-purple text-white"
-                : "bg-white/10 text-white/60 hover:bg-white/20"
-            }`}
+                ? {
+                    background: "rgba(201,154,46,0.25)",
+                    color: "#9c6d16",
+                    border: "1px solid rgba(201,154,46,0.45)",
+                  }
+                : {
+                    background: "rgba(255,255,255,0.10)",
+                    color: "rgba(255,255,255,0.60)",
+                  }
+            }
           >
-            {isPending ? "…" : submission.votedByViewer ? "✓ Voted" : "Vote"}
+            {isPending ? "…" : submission.votedByViewer ? t.seriesVoted : t.seriesVote}
           </button>
         )}
         {!isOpen && submission.selected && (
-          <span className="text-xs bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full">
-            Winner
+          <span
+            className="text-[10px] px-2 py-0.5 rounded-full"
+            style={{
+              background: "rgba(201,154,46,0.20)",
+              color: "#9c6d16",
+              border: "1px solid rgba(201,154,46,0.35)",
+            }}
+          >
+            {t.seriesWinner}
           </span>
         )}
       </div>
@@ -140,6 +177,7 @@ function SubmitForm({
   artist: Address;
   onDone: () => void;
 }) {
+  const t = useT();
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [message, setMessage] = useState("");
@@ -150,13 +188,13 @@ function SubmitForm({
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
-    if (f.size > 10 * 1024 * 1024) { toast.error("File too large (max 10 MB)"); return; }
+    if (f.size > 10 * 1024 * 1024) { toast.error(t.seriesFileTooLarge); return; }
     setFile(f);
     setPreview(URL.createObjectURL(f));
   };
 
   const handleSubmit = async () => {
-    if (!file) { toast.error("Pick an image first"); return; }
+    if (!file) { toast.error(t.seriesPickImageFirst); return; }
     try {
       setUploading(true);
       const { url } = await uploadFileToIPFS(file);
@@ -165,10 +203,10 @@ function SubmitForm({
         return;
       }
       await submitArt.mutateAsync({ artist, imageIPFS: url, message: message.trim() || undefined });
-      toast.success("Artwork submitted! 🎨");
+      toast.success(t.seriesSubmitCta);
       onDone();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message.slice(0, 80) : "Submission failed");
+      toast.error(err instanceof Error ? err.message.slice(0, 80) : t.dropClaimFailed);
     } finally {
       setUploading(false);
     }
@@ -176,29 +214,28 @@ function SubmitForm({
 
   return (
     <div className="card flex flex-col gap-4">
-      <p className="text-sm font-semibold">Submit your artwork</p>
-      <p className="text-xs text-[#7b6950]">
-        Upload your badge design. PNG, JPG, GIF or SVG — max 10 MB.
-        The community will vote for their favourite.
-      </p>
+      <p className="text-sm font-semibold">{t.seriesSubmitArtworkTitle}</p>
+      <p className="text-xs text-white/40">{t.seriesSubmitArtworkHint}</p>
 
       <button
         type="button"
         onClick={() => fileRef.current?.click()}
         className="w-full aspect-square rounded-xl bg-white/5 border border-dashed border-white/20 flex items-center justify-center overflow-hidden hover:border-lukso-purple/50 transition-colors"
       >
-        {preview
-          ? <img src={preview} alt="preview" className="w-full h-full object-cover rounded-xl" />
-          : <span className="text-4xl">🖼️</span>}
+        {preview ? (
+          <img src={preview} alt="preview" className="w-full h-full object-cover rounded-xl" />
+        ) : (
+          <span className="text-white/20 text-sm">{t.seriesSubmitArtworkHint.split(".")[0]}</span>
+        )}
       </button>
       <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
 
       <div>
-        <label className="block text-xs text-[#7b6950] mb-1">Artist statement (optional)</label>
+        <label className="block text-xs text-white/40 mb-1">{t.seriesArtistStatement}</label>
         <textarea
           value={message}
           onChange={(e) => setMessage(e.target.value.slice(0, 200))}
-          placeholder="Tell us about your design…"
+          placeholder={t.seriesArtistStatementPlaceholder}
           rows={2}
           className="input resize-none w-full"
         />
@@ -210,7 +247,11 @@ function SubmitForm({
         disabled={!file || uploading || submitArt.isPending}
         className="btn-primary w-full flex items-center justify-center gap-2"
       >
-        {uploading || submitArt.isPending ? <><LoadingSpinner size="sm" /> Uploading…</> : "Submit artwork"}
+        {uploading || submitArt.isPending ? (
+          <><LoadingSpinner size="sm" /> {t.seriesUploadingCta}</>
+        ) : (
+          t.seriesSubmitCta
+        )}
       </button>
     </div>
   );
@@ -226,6 +267,7 @@ interface SeriesViewProps {
 export function SeriesView({ walletClient, chainId }: SeriesViewProps) {
   const { activeSeriesId, connectedAccount, goBack } = useAppStore();
   const t = useT();
+  const monthNames = useMemo(() => getMonthNames(t), [t]);
   const [showSubmitForm, setShowSubmitForm] = useState(false);
 
   const { data: series, isLoading: seriesLoading } = useSeriesById(activeSeriesId);
@@ -246,7 +288,7 @@ export function SeriesView({ walletClient, chainId }: SeriesViewProps) {
   const deadline = series.votingDeadline;
   const sortedSubs = [...(submissions ?? [])].sort((a, b) => b.voteCount - a.voteCount);
   const leadingId = sortedSubs[0]?.id;
-  const monthLabel = MONTH_NAMES[(series.month ?? 1) - 1];
+  const monthLabel = monthNames[(series.month ?? 1) - 1];
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
@@ -258,31 +300,40 @@ export function SeriesView({ walletClient, chainId }: SeriesViewProps) {
       />
 
       {/* Header card */}
-      <div className="mx-4 mb-3 card bg-white/5">
+      <div className="mx-4 mb-3 card">
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-base font-bold">{series.name}</p>
-            <p className="text-xs text-[#7b6950] mt-0.5">
+            <p className="text-xs text-white/40 mt-0.5">
               {monthLabel} {series.day}
-              {deadline && ` · Voting closes ${format(fromUnixTime(deadline), "MMM d")}`}
+              {deadline && ` · ${t.seriesVotingCloses} ${format(fromUnixTime(deadline), "MMM d")}`}
             </p>
             {series.description && (
-              <p className="text-xs text-[#6f5c3f] mt-1">{series.description}</p>
+              <p className="text-xs text-white/30 mt-1">{series.description}</p>
             )}
           </div>
-          <div className={`text-xs px-2 py-1 rounded-full flex-shrink-0 ${
-            isOpen ? "bg-amber-500/20 text-amber-300" : "bg-white/10 text-white/40"
-          }`}>
-            {isOpen ? "Open" : "Closed"}
+          <div
+            className="text-[10px] font-semibold px-2 py-1 rounded-full flex-shrink-0"
+            style={
+              isOpen
+                ? {
+                    background: "rgba(201,154,46,0.20)",
+                    color: "#9c6d16",
+                    border: "1px solid rgba(201,154,46,0.35)",
+                  }
+                : {
+                    background: "rgba(255,255,255,0.10)",
+                    color: "rgba(255,255,255,0.40)",
+                  }
+            }
+          >
+            {isOpen ? t.seriesOpenStatus : t.seriesClosedStatus}
           </div>
         </div>
 
-        {/* Vote instructions */}
         {isOpen && (
           <p className="text-xs text-white/30 mt-3 border-t border-white/10 pt-2">
-            {connectedAccount
-              ? "Tap any design to cast your vote. You can switch your vote any time."
-              : "Connect your Universal Profile to vote."}
+            {connectedAccount ? t.seriesVoteInstructions : t.seriesConnectToVote}
           </p>
         )}
       </div>
@@ -290,13 +341,14 @@ export function SeriesView({ walletClient, chainId }: SeriesViewProps) {
       {/* Submissions grid */}
       <div className="flex-1 overflow-y-auto px-4 pb-4">
         {subsLoading ? (
-          <div className="flex justify-center py-8"><LoadingSpinner /></div>
+          <div className="flex justify-center py-8">
+            <LoadingSpinner />
+          </div>
         ) : sortedSubs.length === 0 ? (
           <div className="card text-center py-10">
-            <p className="text-3xl mb-2">🎨</p>
-            <p className="text-sm text-[#7b6950]">No submissions yet.</p>
+            <p className="text-sm text-white/40 mb-1">{t.seriesNoSubmissions}</p>
             {isOpen && connectedAccount && (
-              <p className="text-xs text-white/30 mt-1">Be the first artist to submit!</p>
+              <p className="text-xs text-white/25">{t.seriesFirstArtist}</p>
             )}
           </div>
         ) : (
@@ -322,7 +374,7 @@ export function SeriesView({ walletClient, chainId }: SeriesViewProps) {
             onClick={() => setShowSubmitForm(true)}
             className="mt-4 w-full btn-secondary flex items-center justify-center gap-2 text-sm py-3"
           >
-            🎨 Submit your design
+            {t.seriesSubmitDesignCta}
           </button>
         )}
 
@@ -337,15 +389,13 @@ export function SeriesView({ walletClient, chainId }: SeriesViewProps) {
               onClick={() => setShowSubmitForm(false)}
               className="mt-2 w-full text-xs text-white/30 hover:text-white/50 py-1"
             >
-              Cancel
+              {t.cancel}
             </button>
           </div>
         )}
 
         {!connectedAccount && isOpen && (
-          <p className="text-xs text-white/30 text-center mt-4">
-            Open this app inside the LUKSO Grid to vote or submit artwork.
-          </p>
+          <p className="text-xs text-white/30 text-center mt-4">{t.seriesGridOnly}</p>
         )}
       </div>
     </div>
