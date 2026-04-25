@@ -355,14 +355,12 @@ function GlobalSection({
   walletClient,
   chainId,
   onGreetNetwork,
-  onCreateGlobal,
 }: {
   allDrops: IndexedDrop[];
   viewer: Address | null;
   walletClient?: WalletClient;
   chainId: number;
   onGreetNetwork: () => void;
-  onCreateGlobal: () => void;
 }) {
   const t = useT();
   const monthNames = useMemo(() => getMonthNames(t), [t]);
@@ -447,9 +445,6 @@ function GlobalSection({
                   <button onClick={onGreetNetwork} className="btn-ghost text-[11px] py-1 px-2.5">
                     {t.dropsGlobalGreetCta}
                   </button>
-                  <button onClick={onCreateGlobal} className="btn-primary text-[11px] py-1 px-2.5">
-                    {t.dropsGlobalCreateCta}
-                  </button>
                 </div>
               )}
             </div>
@@ -506,7 +501,7 @@ function SocialBirthdayChip({
 // ── Main view ─────────────────────────────────────────────────────────────────
 
 export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewProps) {
-  const { connectedAccount, setView, setActiveSeriesId, goBack, setPendingDropCreate } =
+  const { connectedAccount, setView, setActiveSeriesId, goBack } =
     useAppStore();
   const t = useT();
   const monthNames = useMemo(() => getMonthNames(t), [t]);
@@ -640,10 +635,6 @@ export function DropsDiscoverView({ walletClient, chainId }: DropsDiscoverViewPr
           walletClient={walletClient}
           chainId={chainId}
           onGreetNetwork={() => setShowBulkGreet(true)}
-          onCreateGlobal={() => {
-            setPendingDropCreate(true);
-            setView("drops-manage");
-          }}
         />
 
         {/* ── De quienes sigues ────────────────────────────────────────────── */}

@@ -534,49 +534,51 @@ export function DropForm({ host, chainId = 4201, onSave, onCancel, isSaving, pre
         </div>
       )}
 
-      {/* ── Type + carousel ─────────────────────────────────────────── */}
-      <div>
-        <label className="block text-xs text-[#7b6950] mb-1">{t.dropFormType}</label>
-        <select value={typeMenuValue}
-          onChange={(e) => { void handleTypeMenuChange(e.target.value); }}
-          className="input w-full">
-          {typeMenuOptions.map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
-          ))}
-        </select>
+      {/* ── Type + carousel — hidden in global-holiday mode (type is fixed) ── */}
+      {sourceOptions.length === 0 && (
+        <div>
+          <label className="block text-xs text-[#7b6950] mb-1">{t.dropFormType}</label>
+          <select value={typeMenuValue}
+            onChange={(e) => { void handleTypeMenuChange(e.target.value); }}
+            className="input w-full">
+            {typeMenuOptions.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
 
-        <div className="mt-2">
-          <div className="flex gap-2.5 overflow-x-auto pb-2 px-1 -mx-1 snap-x snap-mandatory scroll-px-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-            {HOLIDAY_DROP_TEMPLATES.map((tpl) => {
-              const active = selectedTplId === tpl.id;
-              return (
-                <button
-                  key={tpl.id}
-                  type="button"
-                  onClick={() => { void applyHolidayTemplate(tpl.id); }}
-                  className={`w-[102px] shrink-0 rounded-xl border p-1.5 transition-all snap-center ${
-                    active ? "border-lukso-purple bg-lukso-purple/15 shadow-[0_4px_16px_rgba(106,27,154,0.18)]" : "border-lukso-border bg-white/5 hover:border-white/30"
-                  }`}
-                  title={lang === "es" ? tpl.nameEs : tpl.name}
-                >
-                  <img
-                    src={templateThumbs[tpl.id]}
-                    alt={lang === "es" ? tpl.nameEs : tpl.name}
-                    className="w-full aspect-square rounded-md object-cover"
-                    onError={(e) => {
-                      const svg = generateHolidaySVG(tpl, currentYear, lang);
-                      e.currentTarget.src = `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
-                    }}
-                  />
-                  <span className="block mt-1.5 text-[11px] leading-tight text-center text-[#6f5c3f] truncate">
-                    {lang === "es" ? tpl.nameEs : tpl.name}
-                  </span>
-                </button>
-              );
-            })}
+          <div className="mt-2">
+            <div className="flex gap-2.5 overflow-x-auto pb-2 px-1 -mx-1 snap-x snap-mandatory scroll-px-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+              {HOLIDAY_DROP_TEMPLATES.map((tpl) => {
+                const active = selectedTplId === tpl.id;
+                return (
+                  <button
+                    key={tpl.id}
+                    type="button"
+                    onClick={() => { void applyHolidayTemplate(tpl.id); }}
+                    className={`w-[102px] shrink-0 rounded-xl border p-1.5 transition-all snap-center ${
+                      active ? "border-lukso-purple bg-lukso-purple/15 shadow-[0_4px_16px_rgba(106,27,154,0.18)]" : "border-lukso-border bg-white/5 hover:border-white/30"
+                    }`}
+                    title={lang === "es" ? tpl.nameEs : tpl.name}
+                  >
+                    <img
+                      src={templateThumbs[tpl.id]}
+                      alt={lang === "es" ? tpl.nameEs : tpl.name}
+                      className="w-full aspect-square rounded-md object-cover"
+                      onError={(e) => {
+                        const svg = generateHolidaySVG(tpl, currentYear, lang);
+                        e.currentTarget.src = `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+                      }}
+                    />
+                    <span className="block mt-1.5 text-[11px] leading-tight text-center text-[#6f5c3f] truncate">
+                      {lang === "es" ? tpl.nameEs : tpl.name}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* ── Badge image ────────────────────────────────────────────── */}
       <div>

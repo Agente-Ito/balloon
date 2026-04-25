@@ -393,6 +393,24 @@ export function DropsManageView({ walletClient, chainId }: DropsManageViewProps)
       />
 
       <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-4">
+        {/* ── Admin ──────────────────────────────────────────────────────────── */}
+        {isAdmin && (
+          <section>
+            <h2 className="title-premium text-xs uppercase mb-3">{t.dropsAdminSection}</h2>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={() => {
+                  setGlobalHolidayMode(true);
+                  setSelectedGlobalSourceId(null);
+                }}
+                className="btn-primary text-xs"
+              >
+                {t.dropsAdminCreateGlobal}
+              </button>
+            </div>
+          </section>
+        )}
+
         {/* ── Create new drop inline CTA ─────────────────────────────────── */}
         {connectedAccount && (
           <button
@@ -530,23 +548,6 @@ export function DropsManageView({ walletClient, chainId }: DropsManageViewProps)
           </>
         )}
 
-        {/* ── Admin ──────────────────────────────────────────────────────────── */}
-        {isAdmin && (
-          <section>
-            <h2 className="title-premium text-xs uppercase mb-3">{t.dropsAdminSection}</h2>
-            <div className="flex flex-col gap-2">
-              <button
-                onClick={() => {
-                  setGlobalHolidayMode(true);
-                  setSelectedGlobalSourceId(null);
-                }}
-                className="btn-primary text-xs"
-              >
-                {t.dropsAdminCreateGlobal}
-              </button>
-            </div>
-          </section>
-        )}
       </div>
     </div>
   );
